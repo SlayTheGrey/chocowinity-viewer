@@ -44,13 +44,16 @@ function newSession(s, opsMode) {
   buildCars(); if (audio && audio.started) attachSounds(); if (thr) thr.refreshList();
 }
 // ------------------------------------------------------------------ rolling stock (InstancedMesh per model)
-function buildCars() {
+let _SLOTGEN = 0; /* [CHOCO-SLOTGEN] */
+let _GHOSTSIG = null; /* [CHOCO-GHOST] signature of the car set drawn by the last buildCars */
+function _carSig() { let n = 0, h = 0; for (const cut of eng.cuts) for (const c of cut.cars) { if (c._gh === undefined) c._gh = hash(String(c.id || c.addr || '')) | 1; n++; h = (h + Math.imul(c._gh, 2654435761)) >>> 0; } return n + ':' + h; }
+function buildCars() { _SLOTGEN++; _GHOSTSIG = _carSig();
   for (const k in inst) { scene.remove(inst[k].grp || inst[k].mesh); delete inst[k]; } if (trucks) scene.remove(trucks);
   const cnt = {}, cars = []; for (const cut of eng.cuts) for (const c of cut.cars) { const k = geoKey(c); cnt[k] = (cnt[k] || 0) + 1; cars.push(c); }
   for (const k in cnt) { const [kind, a, b, li] = k.split('|');
     if (kind === 'X') { const grp = new T3.Group(); scene.add(grp); const m = L3D.ext.rsMesh(a, cnt[k] + 2, grp, +b); m.count = cnt[k] + 2; inst[k] = { mesh: m, n: 0, grp, ext: true }; continue; } const g = kind === 'L' ? L3D.rs.locoGeo(a, b, +li) : L3D.rs.carGeo(a, +b, +li || 0);
     const m = new T3.InstancedMesh(g, L3D.mat('livery'), cnt[k] + 2); m.frustumCulled = false; m.castShadow = true; m.instanceMatrix.setUsage(T3.DynamicDrawUsage); scene.add(m); inst[k] = { mesh: m, n: 0 }; }
-  for (const c of cars) { c._key = geoKey(c); const e = inst[c._key]; c._slot = [e, e.n++]; e.mesh.setColorAt(c._slot[1], grime(c)); }
+  for (const c of cars) { c._key = geoKey(c); const e = inst[c._key]; c._slot = [e, e.n++, _SLOTGEN]; e.mesh.setColorAt(c._slot[1], grime(c)); }
   buildLoads(cars);
   trucks = new T3.InstancedMesh(L3D.rs.TRUCK2, L3D.mat('plain'), cars.length * 2 + 4); trucks.frustumCulled = false; trucks.instanceMatrix.setUsage(T3.DynamicDrawUsage); scene.add(trucks);
   for (const k in inst) { const e = inst[k]; for (let i = e.n; i < e.mesh.count; i++) { _m.compose(ZERO, _q.identity(), new T3.Vector3(0, 0, 0)); e.mesh.setMatrixAt(i, _m); if (e.mesh.rig) for (const kk of [0, 1]) e.mesh.setTruckAt(i, kk, _m, 0); } if (e.mesh.instanceColor) e.mesh.instanceColor.needsUpdate = true; }
@@ -143,8 +146,9 @@ function placeCarwork() { if (!eng) return; if (!CW.g) cwBuild(); const dt = Mat
 H.carwork = CW; H._placeCars = () => placeCars();
 const _cpv = new T3.Vector3();
 function placeCars() {
+  if (_carSig() !== _GHOSTSIG) { buildCars(); }   /* [CHOCO-GHOST] a train taken out of the sim (meet/track-time staging) leaves eng.cuts: rebuild so its bodies, trucks and loads are not left drawn frozen on the main */
   let ti = 0; const hideAddr = mode === 'cab' && sel != null ? sel : null;
-  for (const cut of eng.cuts) for (let i = 0; i < cut.cars.length; i++) { const c = cut.cars[i]; if (!c._slot) { buildCars(); return; }
+  for (const cut of eng.cuts) for (let i = 0; i < cut.cars.length; i++) { const c = cut.cars[i]; if (!c._slot || c._slot[2] !== _SLOTGEN) { buildCars(); return; }
     const P = l3map(eng, eng.carPose(cut, i)), y = deckY(P.level) + api.RAILTOP; let ang = P.a; if (c._pose) c._mv = [P.x - c._pose.x, P.y - c._pose.y]; if ((c.loco || c.type === 'loco') && (c.fwd || 1) < 0) ang += Math.PI; /* [R34] trailing MU units carry type 'loco' but loco:false (only the lead is the throttle car) -> their fwd -1 flip was ignored: the NS 211 ET44s faced the same way */ if (c.rear && !c.loco) ang += Math.PI; /* [REVIEW1] rear cab unit faces out */ c._pose = P; c._ang = ang; c._y = y;
     _p.set(P.x, y, P.y); _q.setFromEuler(_e.set(0, -ang, 0)); const hid = hideAddr != null && c.loco && c.addr === hideAddr; _s.setScalar(hid ? 0 : 1); _m.compose(_p, _q, _s);
     const [e, k] = c._slot; e.mesh.setMatrixAt(k, _m); e.mesh.instanceMatrix.needsUpdate = true;
@@ -333,7 +337,7 @@ H.attach = function (a) {
   placeCars(); stepAgents(0);
   const ride = QS.get('ride'); if (ride) { if (ride !== 'first') sel = +ride; setOpsMode('cab'); } if (QS.get('follow')) { stepAgents(0.01); follow = AG[+(QS.get('follow')) % Math.max(1, AG.length)]; fp = QS.get('fp') === '1'; setOpsMode('follow'); }
   if (QS.get('chase')) setOpsMode('chase');
-  H.agents = AG; window.__ops3d = H; if (window.L3D_LIFE3) L3D_LIFE3.attach(H); /* [CHOCO-LIFE3D] */ /* [UI] viewer shell (app/ui.js) train list */ H.uiApi = { locos: () => locos().map(l => ({ addr: l.addr, label: l.label, train: l.car.train || '', road: l.car.road || '', mph: Math.abs(OE.MPH(l.cut.v)), pos: l.car._pose ? { x: l.car._pose.x, y: l.car._pose.y, level: Math.round(l.car._pose.level) } : null })), select: a => { sel = a; if (thr) thr.select(a); const s = document.getElementById('o3loco'); if (s) s.value = a; }, setOpsMode, getMode: () => mode, getSel: () => sel, throttle: () => sel != null && eng.throttles[sel], speed: () => { const l = locoByAddr(sel); return l ? Math.abs(OE.MPH(l.cut.v)) : 0; }, consist: () => { const l = locoByAddr(sel); return l && eng.consistOf ? eng.consistOf(l.cut) : null; }, horn: () => audio && audio.horn('loco' + sel, 'long'), bell: on => audio && audio.bell('loco' + sel, on) }; // H.agents: read-only test hook (crossing stop-line check)
+  H.agents = AG; window.__ops3d = H; H.slotGen = () => _SLOTGEN; H.inst = () => inst; /* [CHOCO-OVERLAPGATE] read-only probe hook */ if (window.L3D_LIFE3) L3D_LIFE3.attach(H); /* [CHOCO-LIFE3D] */ /* [UI] viewer shell (app/ui.js) train list */ H.uiApi = { locos: () => locos().map(l => ({ addr: l.addr, label: l.label, train: l.car.train || '', road: l.car.road || '', mph: Math.abs(OE.MPH(l.cut.v)), pos: l.car._pose ? { x: l.car._pose.x, y: l.car._pose.y, level: Math.round(l.car._pose.level) } : null })), select: a => { sel = a; if (thr) thr.select(a); const s = document.getElementById('o3loco'); if (s) s.value = a; }, setOpsMode, getMode: () => mode, getSel: () => sel, throttle: () => sel != null && eng.throttles[sel], speed: () => { const l = locoByAddr(sel); return l ? Math.abs(OE.MPH(l.cut.v)) : 0; }, consist: () => { const l = locoByAddr(sel); return l && eng.consistOf ? eng.consistOf(l.cut) : null; }, horn: () => audio && audio.horn('loco' + sel, 'long'), bell: on => audio && audio.bell('loco' + sel, on) }; // H.agents: read-only test hook (crossing stop-line check)
 };
 H.lookAtCar = function (pred, dist = 14, h = 6) {   // test/screenshot helper: park an orbit-style camera beside the first car matching pred
   for (const cut of eng.cuts) for (const c of cut.cars) if (c._pose && pred(c)) { setOpsMode(null); const P = c._pose, y = c._y; const nx = -Math.sin(P.a), nz = Math.cos(P.a);
