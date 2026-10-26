@@ -133,7 +133,7 @@ function placeCarwork() { if (!eng) return; if (!CW.g) cwBuild(); const dt = Mat
       if (workable && w.spot == null) { w.spot = now; w.dir = c.status === 'setout' ? (w.f > 0.5 ? -1 : 1) : 0; if (w.dir) CW.st.worked++; } if (moving) { w.spot = null; w.dir = 0; }
       const tgt = (workable && (w.dir || c.status === 'pickup' || c.status === 'stay')) ? 1 : 0; w.door += Math.sign(tgt - w.door) * Math.min(Math.abs(tgt - w.door), dt * 1.0);
       if (moving && w.door > 0.02) { CW.st.forced++; w.door = 0; } if (moving && w.door > 0.02) CW.st.openMoving++;
-      if (workable && w.dir && w.door > 0.9) { const f0 = w.f; w.f = Math.max(0, Math.min(1, w.f + w.dir * dt / CW.work)); if ((w.f - f0) * w.dir < -1e-9) CW.st.nonmono++; if (w.f === 0 || w.f === 1) w.dir = 0; }
+      if (workable && w.dir && w.door > 0.9) { const f0 = w.f; w.f = Math.max(0, Math.min(1, w.f + w.dir * dt / CW.work)); if ((w.f - f0) * w.dir < -1e-9) CW.st.nonmono++; if (w.f === 0 || w.f === 1) { w.dir = 0; /* [CHOCO-LOADSTATE] viewer-side only; the engine never reads .load */ if (w.f === 1) c.load = 'loaded'; else { c.load = 'empty'; c.wasCom = c.com || true; } } }
       const P = c._pose, a = c._ang, ca = Math.cos(a), sa = Math.sin(a), L = c.len || 4, y0 = c._y; CW.cars.push({ id: c.id, type: c.type, f: w.f, door: w.door, moving, x: P.x, z: P.y });
       if (T.door) { const dw = Math.min(0.75, L * 0.17), dh = 0.74; for (const sd of [-1, 1]) { const nx = -sa * sd, nz = ca * sd, off = T.hw + 0.06;
           if (w.door > 0.01) { put('dark', P.x + nx * (off + 0.004), y0 + T.fl + dh / 2 + 0.02, P.y + nz * (off + 0.004), a, dw * w.door, dh, 0.006);
@@ -330,7 +330,7 @@ function pick(e) {
 }
 // ------------------------------------------------------------------ hook API used by viewer.js
 H.attach = function (a) {
-  api = a; scene = a.scene; camera = a.camera;
+  api = a; scene = a.scene; camera = a.camera; H._api = a; /* [CHOCO-LABELS] */
   newSession(seed, QS.get('opsmode') || 'auto'); initAgents(); ui(); bindInput();
   if (window.OpsAudio) { audio = OpsAudio.create(); H.audio = audio; addEventListener('pointerdown', () => { if (audio.start()) attachSounds(); }, { once: true }); }
   const pre = +(QS.get('t') || 0); for (let k = 0; k < pre / 0.05; k++) { eng.tick(0.05); }
@@ -345,7 +345,7 @@ H.lookAtCar = function (pred, dist = 14, h = 6) {   // test/screenshot helper: p
 H._fx = function (dt) { trainLights(); exhaust(dt); }; H._sm = SM;   // screenshot/test helper: lights + exhaust only (engine frozen)
 H.update = function (dt) {
   if (!eng) return; acc += dt * rate; let n = 0; while (acc >= 0.05 && n++ < 400) { eng.tick(0.05); acc -= 0.05; }
-  placeCars(); stepAgents(dt * Math.min(rate, 4)); trainLights(); exhaust(dt); hornLogic(); if (radio) radio.poll();
+  placeCars(); stepAgents(dt * Math.min(rate, 4)); trainLights(); exhaust(dt); hornLogic(); if (radio) radio.poll(); if (window.L3D_LABELS) try { L3D_LABELS.update(H, dt); } catch (e) { if (!H._lblErr) { H._lblErr = 1; console.warn('labels', e); } } /* [CHOCO-LABELS] */
   if (audio && audio.started) { const yaw = Math.atan2(camera.getWorldDirection(_p).z, _p.x); audio.setListener(camera.position.x, camera.position.z, camera.position.y, yaw);
     const fc = (D.session && D.session.fast_clock) || 4; if (!H._water) H._water = api.LV.flatMap(o => (o.water || []).map(P => ({ x: P.reduce((t, q) => t + q[0], 0) / P.length, y: P.reduce((t, q) => t + q[1], 0) / P.length })));   /* [REAL] frogs near the river / ponds */
     audio.setAmbient({ hour: (6 + eng.t * fc / 3600) % 24, water: H._water, industry: D.industries.slice(0, 6).map(i => { const t = eng.trk[i.tid], nd = eng.N[t.a]; return { x: nd.x, y: nd.y }; }) }); }
