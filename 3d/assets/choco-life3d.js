@@ -1,0 +1,367 @@
+/* [CHOCO-LIFE3D 2026-10-25] 3D port of the life3 layer (tools/life3.js, the same code the gated 2D ops-sim runs; inlined below unchanged).
+   DRAWING ONLY: life3 reads ops state (car poses, jobs) and never writes it; stepped once per 0.05 s ops tick (same as ops-sim tickAgents),
+   so the 3D shows the same planned lots, trucks, crews and animals. Rendered with the viewer's instanced vehicle/person models.
+   Fallback: ?life=old keeps the old ops3d road agents (life.js / life2.js untouched either way). */
+(function () {
+  const QS = new URLSearchParams(location.search); if (QS.get('life') === 'old') return;
+  const make = (D, eng) => { const cx = null, sel = {}, crossings = [], agents = [], audio = null; /* 2D-only names life3 refers to */
+const LIFE = (() => {
+  const MPH = m => m * 17.6 / 160, H = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  let seed = 90017; const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+  const SC = D.scene, TRIPS = [], ENT = [], SPAWN = [], NOTES = [], STAT = { through: 0, visits: 0, crossWaits: 0, crossings: 0, despawn: 0 };
+  let T = 0, idn = 0, lastScan = -9, CARS = { 1: [], 2: [] };
+  const inPoly = (p, P) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) { const a = P[i], b = P[j]; if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) c = !c; } return c; };
+  const on1 = (li, x, y) => { const S = SC[li - 1]; for (const b of S.boards || []) if (x >= b[0] && x <= b[2] && y >= b[1] && y <= b[3]) return true; for (const P of S.polys || []) if (inPoly([x, y], P)) return true; return false; };
+  const onB = (li, x, y, m = 0.32) => on1(li, x, y) && on1(li, x + m, y) && on1(li, x - m, y) && on1(li, x, y + m) && on1(li, x, y - m);
+  const segD = (p, a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], L = dx * dx + dy * dy || 1e-9; let t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L; t = Math.max(0, Math.min(1, t)); return [Math.hypot(p[0] - a[0] - t * dx, p[1] - a[1] - t * dy), t]; };
+  const segX = (p, q, r, s) => { const d = (q[0] - p[0]) * (s[1] - r[1]) - (q[1] - p[1]) * (s[0] - r[0]); if (!d) return null;
+    const t = ((r[0] - p[0]) * (s[1] - r[1]) - (r[1] - p[1]) * (s[0] - r[0])) / d, u = ((r[0] - p[0]) * (q[1] - p[1]) - (r[1] - p[1]) * (q[0] - p[0])) / d; return t >= 0 && t <= 1 && u >= 0 && u <= 1 ? t : null; };
+  /* ---- track index (grid, 2 in cells) per level */
+  const TG = { 1: new Map(), 2: new Map() }, GK = (x, y) => (Math.floor(x / 2) * 1000 + Math.floor(y / 2));
+  for (const e of eng.E) { if (!e.pts || !(e.level === 1 || e.level === 2) || e.lift) continue; for (let i = 1; i < e.pts.length; i++) { const a = e.pts[i - 1], b = e.pts[i];
+    const x0 = Math.floor(Math.min(a[0], b[0]) / 2) - 1, x1 = Math.floor(Math.max(a[0], b[0]) / 2) + 1, y0 = Math.floor(Math.min(a[1], b[1]) / 2) - 1, y1 = Math.floor(Math.max(a[1], b[1]) / 2) + 1;
+    for (let gx = x0; gx <= x1; gx++) for (let gy = y0; gy <= y1; gy++) { const k = gx * 1000 + gy; if (!TG[e.level].has(k)) TG[e.level].set(k, []); TG[e.level].get(k).push([a, b, e.id]); } } }
+  const trackD = (li, p) => { const L = TG[li] && TG[li].get(GK(p[0], p[1])); let m = 9; if (L) for (const [a, b] of L) m = Math.min(m, segD(p, a, b)[0]); return m; };
+  const LIFT = D.graph.lift; const liftD = p => LIFT ? segD(p, LIFT.pts[0], LIFT.pts[LIFT.pts.length - 1])[0] : 9;
+  const tidOf = {}; for (const t of D.tracks) for (const e of t.edges) tidOf[e] = t.id;
+  const inStruct = (li, p, m = 0) => (SC[li - 1].structures || []).some(s => p[0] > s.r[0] + m && p[0] < s.r[2] - m && p[1] > s.r[1] + m && p[1] < s.r[3] - m);
+  /* ---- road graph per level: roads split at T-junctions (an endpoint within half a road width of another road) */
+  const CLS = n => /NC-\d|Weyerhaeuser|US-17/.test(n) && !/Yard Rd/.test(n) ? 'pub' : /Main St/.test(n) ? 'town' : /fuel/.test(n) ? 'lane' : /Yard Rd/.test(n) ? 'yard' : 'ind';
+  const VMAX = { pub: MPH(45), town: MPH(25), ind: MPH(15), yard: MPH(10), lane: MPH(10), lot: MPH(5), rev: MPH(4) };
+  const G = {};
+  for (const li of [1, 2]) { const R = (SC[li - 1].roads || []).filter(r => r.pts && r.pts.length > 1); const cuts = R.map(r => r.pts.slice(1).map(() => [])), links = [];
+    R.forEach((r, k) => [0, r.pts.length - 1].forEach(ei => { const q = r.pts[ei]; R.forEach((o, i) => { if (i === k) return; for (let j = 1; j < o.pts.length; j++) { const [d, t] = segD(q, o.pts[j - 1], o.pts[j]);
+      if (d < Math.max(0.35, (o.w || 1.6) / 2 + 0.15)) { cuts[i][j - 1].push(t); const pp = [o.pts[j - 1][0] + t * (o.pts[j][0] - o.pts[j - 1][0]), o.pts[j - 1][1] + t * (o.pts[j][1] - o.pts[j - 1][1])]; if (d > 0.05) links.push([q, pp, r]); return; } } }); }));
+    const N = [], adj = [], E = [], node = p => { let i = N.findIndex(q => H(q, p) < 0.35); if (i < 0) { N.push(p); adj.push([]); i = N.length - 1; } return i; };
+    const add = (p, q, r) => { const a = node(p), b = node(q); if (a === b) return; const e = { a, b, pts: [N[a], N[b]], len: H(N[a], N[b]), cls: CLS(r.name), w: r.w || 1.6, name: r.name, id: E.length }; E.push(e); adj[a].push(e); adj[b].push(e); };
+    R.forEach((r, i) => { for (let j = 1; j < r.pts.length; j++) { const a = r.pts[j - 1], b = r.pts[j], ts = [0, 1, ...cuts[i][j - 1]].sort((x, y) => x - y); for (let k = 1; k < ts.length; k++) if (ts[k] - ts[k - 1] > 1e-4) add([a[0] + ts[k - 1] * (b[0] - a[0]), a[1] + ts[k - 1] * (b[1] - a[1])], [a[0] + ts[k] * (b[0] - a[0]), a[1] + ts[k] * (b[1] - a[1])], r); } });
+    for (const [q, pp, r] of links) add(q, pp, r);
+    const EX = []; N.forEach((p, i) => { if (adj[i].length !== 1) return; const e = adj[i][0], o = N[e.a === i ? e.b : e.a], L = H(o, p), d = [(p[0] - o[0]) / L, (p[1] - o[1]) / L];
+      if (!on1(li, p[0] + d[0] * 0.8, p[1] + d[1] * 0.8) || /off layout|runs off|toward|fascia/.test(e.name)) EX.push({ n: i, p, d, cls: e.cls, name: e.name }); });
+    G[li] = { N, adj, E, EX }; }
+  const dijk = (li, starts, goals) => { const g = G[li], dist = new Map(), prev = new Map(), Q = []; for (const [n, d, seg] of starts) if (!dist.has(n) || d < dist.get(n)) { dist.set(n, d); prev.set(n, ['start', seg]); Q.push(n); }
+    const done = new Set(); while (Q.length) { Q.sort((a, b) => dist.get(a) - dist.get(b)); const u = Q.shift(); if (done.has(u)) continue; done.add(u);
+      for (const e of g.adj[u]) { const v = e.a === u ? e.b : e.a, d = dist.get(u) + e.len * (e.cls === 'lane' ? 3 : 1); if (!dist.has(v) || d < dist.get(v)) { dist.set(v, d); prev.set(v, [u, e]); Q.push(v); } } }
+    let best = null, bd = 1e9; for (const [n, extra, seg] of goals) if (dist.has(n) && dist.get(n) + extra < bd) { bd = dist.get(n) + extra; best = [n, seg]; }
+    if (!best) return null; const out = []; let v = best[0]; while (true) { const pv = prev.get(v); if (pv[0] === 'start') { if (pv[1]) out.unshift(pv[1]); out.unshift({ p: G[li].N[v], e: out.length ? out[0].e : null }); /* [CHOCO-LIFE] keep the first node: no shortcut across the room */ break; } out.unshift({ p: G[li].N[v], e: pv[1] }); v = pv[0]; }
+    if (best[1]) out.push(best[1]); return { pts: out, len: bd }; };
+  const proj = (li, p, cls) => { let b = null; for (const e of G[li].E) { if (cls && !cls(e)) continue; const [d, t] = segD(p, e.pts[0], e.pts[1]); if (!b || d < b.d) b = { e, t, d, q: [e.pts[0][0] + t * (e.pts[1][0] - e.pts[0][0]), e.pts[0][1] + t * (e.pts[1][1] - e.pts[0][1])] }; } return b; };
+  /* route as a list of {p, e} vertices (e = road edge used to reach p) from point A (on road) to point B (on road); A/B from proj() or exit nodes */
+  const route = (li, A, B) => { const g = G[li];
+    if (A.e && B.e && A.e === B.e) return [{ p: A.q, e: A.e }, { p: B.q, e: A.e }];
+    const st = A.n !== undefined ? [[A.n, 0, null]] : [[A.e.a, A.e.len * A.t, null], [A.e.b, A.e.len * (1 - A.t), null]];
+    const gl = B.n !== undefined ? [[B.n, 0, null]] : [[B.e.a, B.e.len * B.t, { p: B.q, e: B.e }], [B.e.b, B.e.len * (1 - B.t), { p: B.q, e: B.e }]];
+    const r = dijk(li, st, gl); if (!r) return null; return [{ p: A.n !== undefined ? g.N[A.n] : A.q, e: A.e || null }].concat(r.pts); };
+  /* ---- trip: polyline with per-segment speed, lane offset, reverse flag; markers: STOP (private -> public) and grade crossings */
+  const mkTrip = (li, legs, veh) => { const P = [], S = []; let last = null;
+    for (const lg of legs) for (const v of lg) { if (last && H(last.p, v.p) < 1e-3) continue; if (last) S.push({ v: v.v || (v.e ? VMAX[v.e.cls] : VMAX.lot), off: v.off !== undefined ? v.off : (v.e ? Math.min(0.45, v.e.w / 4) : 0), rev: !!v.rev, cls: v.e ? v.e.cls : 'lot', w: v.e ? v.e.w : 0 }); P.push(v.p); last = v; }
+    if (P.length < 2) return null;
+    /* offset polyline (right-hand traffic), miter at vertices */
+    const O = P.map((p, i) => { const sa = S[Math.max(0, i - 1)], sb = S[Math.min(S.length - 1, i)]; const n = q => { const a = P[q], b = P[q + 1], L = H(a, b) || 1; return [-(b[1] - a[1]) / L, (b[0] - a[0]) / L]; };
+      if (i === 0) { const k = n(0); return [p[0] - k[0] * sb.off, p[1] - k[1] * sb.off]; } if (i === P.length - 1) { const k = n(i - 1); return [p[0] - k[0] * sa.off, p[1] - k[1] * sa.off]; }
+      const k1 = n(i - 1), k2 = n(i), off = Math.min(sa.off, sb.off), m = [k1[0] + k2[0], k1[1] + k2[1]], ml = Math.hypot(m[0], m[1]) || 1, cs = Math.max(0.5, (m[0] * k1[0] + m[1] * k1[1]) / ml); return [p[0] - m[0] / ml * off / cs, p[1] - m[1] / ml * off / cs]; });
+    const C = [0]; for (let i = 1; i < O.length; i++) C.push(C[i - 1] + H(O[i - 1], O[i]));
+    const tr = { li, P: O, S, C, L: C[C.length - 1], mk: [], P0c: P[0], P1c: P[P.length - 1] };
+    for (let i = 1; i < P.length; i++) { /* STOP at a private -> public junction */
+      if (i < S.length && S[i - 1].cls !== 'pub' && S[i - 1].cls !== 'lot' && S[i].cls === 'pub') tr.mk.push({ k: 'stop', s: C[i] - (S[i].w / 2 + 0.25) - veh.len / 2, node: P[i] });
+      if (i < S.length && S[i - 1].cls === 'lot' && (S[i].cls === 'pub' || S[i].cls === 'town')) tr.mk.push({ k: 'stop', s: C[i] - 0.2 - veh.len / 2, node: P[i] }); }
+    for (let i = 1; i < O.length; i++) { const a = O[i - 1], b = O[i]; const seen = new Set();
+      for (const [k, L] of TG[li]) for (const [r, s, eid] of L) { const t = segX(a, b, r, s); if (t === null) continue; const sx = C[i - 1] + t * (C[i] - C[i - 1]); if (tr.mk.some(m => m.k === 'xing' && Math.abs(m.sx - sx) < 0.6)) continue;
+        tr.mk.push({ k: 'xing', sx, s: sx - 1.13 - veh.len / 2, pt: [a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])], e: eid, tid: tidOf[eid] }); } }
+    tr.mk.sort((x, y) => x.s - y.s); return tr; };
+  const poseOn = (tr, s) => { s = Math.max(0, Math.min(tr.L, s)); let i = 1; while (i < tr.C.length - 1 && tr.C[i] < s) i++; const a = tr.P[i - 1], b = tr.P[i], f = (s - tr.C[i - 1]) / ((tr.C[i] - tr.C[i - 1]) || 1);
+    return { x: a[0] + (b[0] - a[0]) * f, y: a[1] + (b[1] - a[1]) * f, h: Math.atan2(b[1] - a[1], b[0] - a[0]), seg: tr.S[i - 1] }; };
+  /* ---- vehicle types (N scale, in): length, width, colour */
+  const VT = { car: [1.13, 0.45, ['#b33', '#36c', '#ddd', '#444', '#9a9', '#c90', '#eee', '#335']], pickup: [1.35, 0.5, ['#a22', '#ccc', '#262', '#333', '#fff']], box: [2.0, 0.6, ['#eee']], spreader: [2.2, 0.6, ['#c62']],
+    fuel: [2.4, 0.6, ['#ddd']], bobtail: [2.0, 0.6, ['#eee']], repair: [1.8, 0.6, ['#e8e8e8']], reefer: [4.9, 0.6, ['#f2f2f2']], van53: [5.3, 0.6, ['#e6e6e6']], flat: [4.9, 0.6, ['#777']], bulk: [4.9, 0.6, ['#bbb']],
+    tanker: [4.6, 0.6, ['#ccc']], chem: [3.4, 0.6, ['#d8d8d8']] /* [CHOCO-GCFTANK] 45 ft straight chem tank truck */, reefer28: [3.4, 0.6, ['#f2f2f2']], tractor: [0.9, 0.55, ['#2a7a2a', '#c33']], forklift: [0.6, 0.32, ['#e6c000']], service: [1.35, 0.5, ['#fff']] };
+  const mkVeh = (type, li, name) => { const [l, w, cols] = VT[type]; const a = { id: ++idn, kind: 'vehicle', type, len: l, w, col: cols[Math.floor(rnd() * cols.length)], level: 0, li, name: name || type, x: 0, y: 0, a: 0, v: 0, s: 0 }; ENT.push(a); return a; };
+  const park = (a, x, y, h) => { a.x = x; a.y = y; a.a = h; a.level = a.li; a.mode = 'park'; a.tr = null; };
+  /* ---- lots: stalls 9 x 18 ft (0.675 x 1.35 in); 2 rows + 20 ft aisle when deep enough, else 1 row on the side away from the road */
+  const byName = (li, re, key = 'lots') => (SC[li - 1][key] || []).find(l => re.test(l.name));
+  const LOTS = [];
+  const mkLot = (li, re, target, opts = {}) => { const l = byName(li, re); if (!l) { NOTES.push('lot not found: ' + re); return null; }
+    const r = l.r, wx = r[2] - r[0], wy = r[3] - r[1], alongX = wx >= wy, Lg = alongX ? wx : wy, Dp = alongX ? wy : wx, rd = proj(li, [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2]);
+    const c = [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2], roadSide = alongX ? Math.sign(rd.q[1] - c[1]) : Math.sign(rd.q[0] - c[0]);
+    const rows = Dp >= 2 * 1.35 + 1.5 ? [-1, 1] : Dp >= 1.35 ? [-roadSide] : [], n = Math.floor((Lg - 0.2) / 0.675), stalls = [];
+    for (const side of rows) for (let k = 0; k < n; k++) { const u = (alongX ? r[0] : r[1]) + 0.1 + 0.675 * (k + 0.5), vv = side < 0 ? (alongX ? r[1] : r[0]) + 0.675 : (alongX ? r[3] : r[2]) - 0.675;
+      const p = alongX ? [u, vv] : [vv, u], h = alongX ? Math.PI / 2 : 0; const hx = alongX ? 0.34 : 0.7, hy = alongX ? 0.7 : 0.34; const bad = (SC[li - 1].lots || []).some(o => o !== l && p[0] + hx > o.r[0] && p[0] - hx < o.r[2] && p[1] + hy > o.r[1] && p[1] - hy < o.r[3]) /* [CHOCO-LIFE] no stall on a walk, driveway or other lot */ || inStruct(li, p, -0.3);
+      if (!bad && onB(li, p[0], p[1], 0.32)) stalls.push({ p, h: alongX ? (side < 0 ? -Math.PI / 2 : Math.PI / 2) : (side < 0 ? Math.PI : 0), side, occ: null }); }
+    const aisle = rows.length === 2 ? (alongX ? [[r[0] + 0.3, c[1]], [r[2] - 0.3, c[1]]] : [[c[0], r[1] + 0.3], [c[0], r[3] - 0.3]]) : rows.length ? (alongX ? [[r[0] + 0.3, c[1] + roadSide * (Dp / 2 - Math.min(0.9, (Dp - 1.35) / 2))], [r[2] - 0.3, c[1] + roadSide * (Dp / 2 - Math.min(0.9, (Dp - 1.35) / 2))]] : [[c[0] + roadSide * (Dp / 2 - Math.min(0.9, (Dp - 1.35) / 2)), r[1] + 0.3], [c[0] + roadSide * (Dp / 2 - Math.min(0.9, (Dp - 1.35) / 2)), r[3] - 0.3]]) : null;
+    const L = { li, name: l.name, r, target, cap: stalls.length, stalls, aisle, rd, alongX, type: opts.type || 'car', mix: opts.mix || ['car', 'car', 'pickup'], churn: opts.churn || 0 }; LOTS.push(L);
+    const k0 = Math.min(target, stalls.length); const order = stalls.map((s, i) => i).sort(() => rnd() - 0.5);
+    for (let i = 0; i < k0; i++) { const s = stalls[order[i]], ty = L.mix[Math.floor(rnd() * L.mix.length)], a = mkVeh(ty, li, (opts.who || 'staff') + ' ' + ty + ' (' + l.name + ')'); s.occ = a; a.lot = L; a.stall = s; park(a, s.p[0], s.p[1], s.h); }
+    return L; };
+  /* path in/out of a stall: stall -> aisle -> lot entrance (aisle point nearest the road) -> road */
+  const lotLeg = (L, s, out) => { const ap = L.aisle ? (L.alongX ? [s.p[0], L.aisle[0][1]] : [L.aisle[0][0], s.p[1]]) : s.p; const ent = L.aisle ? (H(L.aisle[0], L.rd.q) < H(L.aisle[1], L.rd.q) ? L.aisle[0] : L.aisle[1]) : s.p;
+    const entP = L.aisle ? (L.alongX ? [ent[0], ent[1]] : [ent[0], ent[1]]) : s.p; const ex = proj(L.li, entP);
+    const pts = out ? [{ p: s.p }, { p: ap, rev: true }, { p: entP }, { p: ex.q }] : [{ p: ex.q }, { p: entP }, { p: ap }, { p: s.p }]; return { pts, road: ex }; };
+  /* ---- slots on aprons / courts / pads (one vehicle each): back-in to a dock face if a building abuts the lot, else drive in */
+  const SLOTS = [];
+  const mkSlot = (li, re, type, opts = {}) => { const l = byName(li, re); if (!l) { NOTES.push('slot lot not found: ' + re); return null; } const r = l.r, [len, w] = VT[type];
+    const c = [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2], rd = proj(li, c); const S = SC[li - 1].structures || [];
+    const face = opts.dock !== false && S.map(s => { const sides = [[s.r[2], 'x', 1], [s.r[0], 'x', -1], [s.r[3], 'y', 1], [s.r[1], 'y', -1]];
+      for (const [v, ax, sg] of sides) { const lotEdge = ax === 'x' ? (sg > 0 ? r[0] : r[2]) : (sg > 0 ? r[1] : r[3]); const ov = ax === 'x' ? Math.min(r[3], s.r[3]) - Math.max(r[1], s.r[1]) : Math.min(r[2], s.r[2]) - Math.max(r[0], s.r[0]);
+        if (Math.abs(lotEdge - v) < 0.3 && ov > w + 0.4) return { ax, v, sg, lo: ax === 'x' ? Math.max(r[1], s.r[1]) : Math.max(r[0], s.r[0]), hi: ax === 'x' ? Math.min(r[3], s.r[3]) : Math.min(r[2], s.r[2]), st: s }; } return null; }).find(Boolean);
+    let A, B, rev = false; const k = opts.k || 0;
+    if (face) { const u = (face.lo + face.hi) / 2 + (k - (opts.n || 1) / 2 + 0.5) * Math.min(1.6, (face.hi - face.lo) / (opts.n || 1));
+      const far = face.ax === 'x' ? (face.sg > 0 ? r[2] : r[0]) : (face.sg > 0 ? r[3] : r[1]), dockP = face.ax === 'x' ? [face.v + face.sg * (0.15 + len / 2), u] : [u, face.v + face.sg * (0.15 + len / 2)];
+      const depth = Math.abs(far - face.v); if (depth < len + 0.3) { NOTES.push(`${type} does not fit ${l.name} (depth ${depth.toFixed(2)} < ${len + 0.3})`); return null; }
+      const pull = 0.1 + len / 2, outP = face.ax === 'x' ? [far - face.sg * pull, u] : [u, far - face.sg * pull]; /* [CHOCO-LIFE] whole truck stays on the court while it lines up */ A = outP; B = dockP; rev = true; }
+    else { const alongX = (r[2] - r[0]) >= (r[3] - r[1]), Lg = alongX ? r[2] - r[0] : r[3] - r[1], Dp = alongX ? r[3] - r[1] : r[2] - r[0]; if (Lg < len + 0.4 || Dp < w + 0.1) { NOTES.push(`${type} does not fit ${l.name}`); return null; }
+      const side = opts.far ? -1 : 1, roadSide = alongX ? Math.sign(rd.q[1] - c[1]) || 1 : Math.sign(rd.q[0] - c[0]) || 1, off = side * roadSide * Math.max(0, Dp / 2 - w / 2 - 0.3) * (opts.edge ? 1 : 0);
+      const e0 = alongX ? [r[0] + 0.2 + len / 2, c[1] + off] : [c[0] + off, r[1] + 0.2 + len / 2], e1 = alongX ? [r[2] - 0.2 - len / 2, c[1] + off] : [c[0] + off, r[3] - 0.2 - len / 2];
+      if (opts.at) { A = B = opts.at; } else if (opts.mid) { B = [(e0[0] + e1[0]) / 2, (e0[1] + e1[1]) / 2]; A = H(proj(li, B).q, B) < len ? (opts.enter === 'e0' ? e0 : e1) : B; /* [CHOCO-LIFE] lane runs through the pad: line up along it */ } else { const q = proj(li, c).q; if (H(q, e0) <= H(q, e1)) { A = e0; B = e1; } else { A = e1; B = e0; } } }
+    if (opts.path) { A = opts.path.A; B = opts.path.B; rev = !!opts.path.rev; }
+    const sl = { li, name: l.name, r, type, A, B, rev, via: (opts.path && opts.path.via) || [], rd: proj(li, A), busy: null, face: !!face };
+    if (opts.pull && !face && !opts.mid && !opts.at && !opts.path && H(A, B) > 0.5) { const u = [(B[0] - A[0]) / H(A, B), (B[1] - A[1]) / H(A, B)]; /* [CHOCO-LIFE] apron along the road: ease in from behind and pull through ahead, no square turns */
+      const pa = [A[0] - u[0] * len * 0.8, A[1] - u[1] * len * 0.8], pb = [B[0] + u[0] * len * 0.8, B[1] + u[1] * len * 0.8], ra = proj(li, pa), rb = proj(li, pb); /* only when the road really runs alongside the apron */
+      if (H(ra.q, pa) < 2.0 && H(rb.q, pb) < 2.0 && ra.e && rb.e && ra.e.name === rb.e.name && ra.e.name === sl.rd.e.name) { sl.rd = ra; sl.rdOut = rb; } }
+    SLOTS.push(sl); return sl; };
+  /* ---- visits: a vehicle comes in from the nearest public exit, works the slot or lot, and leaves */
+  const exitsFor = (li, p, kinds) => { const ex = G[li].EX.filter(x => kinds.includes(x.cls)); return ex; };
+  const roadTo = (li, fromExit, to) => route(li, { n: fromExit.n }, to), roadFrom = (li, from, toExit) => route(li, from, { n: toExit.n });
+  const pickExit = (li, from, kinds = ['pub', 'yard', 'town', 'ind']) => { const c = G[li].EX.filter(x => kinds.includes(x.cls)).map(x => { const r = roadFrom(li, from, x); return r ? [x, r.reduce((s, v, i) => i ? s + H(r[i - 1].p, v.p) : 0, 0)] : null; }).filter(Boolean);
+    if (!c.length) return null; c.sort((a, b) => a[1] - b[1]); const ok = c.filter(x => x[1] <= c[0][1] * 1.6 + 5); return ok[Math.floor(rnd() * ok.length)][0]; };
+  const VISITS = [];
+  const visit = (sl, n, dwell, label, opts = {}) => { if (!sl) return; for (let i = 0; i < n; i++) VISITS.push({ sl, t: (i + 0.25 + 0.5 * rnd()) * 7200 / n + (opts.t0 || 0), dwell: dwell * (0.8 + 0.4 * rnd()), label, kinds: opts.kinds, when: opts.when, leaveRev: opts.leaveRev, done: false }); };
+  const startTrip = (a, legs, then) => { const tr = mkTrip(a.li, legs, a); if (!tr) { NOTES.push('no trip for ' + a.name); return false; } a.tr = tr; a.s = 0; a.v = 0; const isEx = p => G[a.li].EX.some(x => H(x.p, p) < 0.8); if (isEx(tr.P0c)) a.s = Math.min(tr.L, 0.7 + a.len / 2); tr.Lend = isEx(tr.P1c) ? Math.max(a.s, tr.L - 0.7 - a.len / 2) : tr.L; const fits = s => { const q = poseOn(tr, s), c = Math.cos(q.h), sn = Math.sin(q.h), l = a.len / 2 + 0.05, w = a.w / 2; return [[l, w], [l, -w], [-l, -w], [-l, w]].every(([u, v]) => on1(a.li, q.x + u * c - v * sn, q.y + u * sn + v * c)); }; /* [CHOCO-LIFE] appear/vanish only with the whole body on the benchwork */ if (isEx(tr.P0c)) while (a.s < tr.L - 0.1 && !fits(a.s)) a.s += 0.1; if (isEx(tr.P1c)) while (tr.Lend > a.s + 0.1 && !fits(tr.Lend)) tr.Lend -= 0.1; if (!a.level) { const q0 = poseOn(tr, a.s); if (ENT.some(b => b !== a && b.level === a.li && (b.kind === 'vehicle' || b.kind === 'machine') && ((b.mode === 'park' ? Math.abs((b.x - q0.x) * Math.cos(q0.h) + (b.y - q0.y) * Math.sin(q0.h)) < (a.len + b.len) / 2 + 1.0 && Math.abs(-(b.x - q0.x) * Math.sin(q0.h) + (b.y - q0.y) * Math.cos(q0.h)) < (a.w + b.len) / 2 + 0.2 : H([b.x, b.y], [q0.x, q0.y]) < (a.len + b.len) / 2 + 1.0) /* [CHOCO-VAN53] a car parked beside the road (not on the entry lane) does not hold a long truck off-layout forever */ || (b.mode === 'drive' && H([b.x, b.y], [q0.x, q0.y]) < (a.len + b.len) / 2 + 5.0 && (q0.x - b.x) * Math.cos(b.hd) + (q0.y - b.y) * Math.sin(b.hd) > 0)))) { /* [CHOCO-LIFE] also wait for traffic heading toward the entry */ SPAWN.push({ t: T + 15, f: () => startTrip(a, legs, then) }); return true; } } /* [CHOCO-LIFE] wait off-layout until the entry is clear */ a.mode = 'drive'; a.level = a.li; if (TRIPS.length < 4000) TRIPS.push({ a, tr, s0: a.s }); /* [CHOCO-LIFE] step 2 gate log */ a.mi = 0; a.then = then; a.wait = 0; Object.assign(a, poseXY(a)); return true; };
+  const poseXY = a => { const q = poseOn(a.tr, a.s), l = a.len * 0.45, f = poseOn(a.tr, a.s + l), r = poseOn(a.tr, a.s - l), d = Math.hypot(f.x - r.x, f.y - r.y); /* [CHOCO-LIFE] body rides the path chord (front/rear axle on the path): no swinging over the fascia at corners */
+    const h = d > 0.2 ? Math.atan2(f.y - r.y, f.x - r.x) : q.h, x0 = d > 0.2 ? (f.x + r.x) / 2 : q.x, y0 = d > 0.2 ? (f.y + r.y) / 2 : q.y, off = Math.hypot(x0 - q.x, y0 - q.y), kk = off > 0.25 ? 0.25 / off : 1, x = q.x + (x0 - q.x) * kk, y = q.y + (y0 - q.y) * kk; /* [CHOCO-LIFE] off-tracking capped at 0.25 in (~3.5 ft): trucks swing wide, they do not cut the inside of a corner by 20 ft */
+    const ok = (x, y, h) => { if (!a.li || !a.w) return true; const c = Math.cos(h), sn = Math.sin(h), l = a.len / 2, w = a.w / 2; return [[l, w], [l, -w], [-l, -w], [-l, w]].every(([u, v]) => on1(a.li, x + u * c - v * sn, y + u * sn + v * c)); };
+    const C = [[x, y, h], [q.x, q.y, h], [(x + q.x) / 2, (y + q.y) / 2, (h + q.h) / 2 + (Math.abs(h - q.h) > Math.PI ? Math.PI : 0)], [q.x, q.y, q.h], ...[0.5, 0.75, 1.0, 1.5].filter(m => m < off).map(m => [q.x + (x0 - q.x) * m / off, q.y + (y0 - q.y) * m / off, h]), ...[0.2, -0.2, 0.4, -0.4, 0.6, -0.6].map(o => [x - o * Math.sin(h), y + o * Math.cos(h), h]), ...[0.25, -0.25, 0.5, -0.5].flatMap(d => [0, 0.3, -0.3].map(o => [x - o * Math.sin(h), y + o * Math.cos(h), h + d])), [x0, y0, h]] /* [CHOCO-LIFE] last resort: swing wide across the other lane, as a truck driver does at a tight corner */.find(c => ok(...c)) || [x, y, h]; /* [CHOCO-LIFE] at tight corners by the fascia take the body line that stays on the wood */
+    return { x: C[0], y: C[1], a: C[2] + (q.seg && q.seg.rev ? Math.PI : 0), hd: C[2] }; };
+  const roadLeg = r => r.map(v => ({ p: v.p, e: v.e }));
+  const runVisit = V => { const sl = V.sl, li = sl.li; if (sl.busy || (V.when && !V.when())) { V.t += 120; return; } const ex = pickExit(li, sl.rd, V.kinds || ['pub']); if (!ex) { NOTES.push('no exit for ' + sl.name); V.done = true; return; }
+    const r = roadTo(li, ex, sl.rd); if (!r) { V.done = true; NOTES.push('no route to ' + sl.name); return; } const a = mkVeh(sl.type, li, V.label + ' (' + sl.name + ')'); sl.busy = a; V.done = true; STAT.visits++;
+    const into = sl.rev ? [{ p: sl.rd.q, e: sl.rd.e }, { p: sl.A, v: VMAX.lot }, ...sl.via.map(p => ({ p, v: VMAX.rev, rev: true })), { p: sl.B, v: VMAX.rev, rev: true }] : [{ p: sl.rd.q, e: sl.rd.e }, { p: sl.A, v: VMAX.lot }, { p: sl.B, v: VMAX.lot }];
+    const go = startTrip(a, [roadLeg(r).map((v, i) => i === 0 ? { p: v.p, e: v.e, v: VMAX.pub } : v), into.map((v, i) => i === 0 ? { p: v.p, e: v.e } : v)], () => {
+      park(a, a.x, a.y, a.a); a.until = T + V.dwell; a.stay = V.stay; a.onDone = V.onDone; a.after = () => { const rdO = sl.rdOut || sl.rd; let ex2 = pickExit(li, rdO, V.kinds || ['pub']); if (sl.rdOut) { const u = [sl.B[0] - sl.A[0], sl.B[1] - sl.A[1]], fwd = x => { const r = roadFrom(li, rdO, x); if (!r) return false; const q = r.find(v => H(v.p, rdO.q) > 0.3); return q && (q.p[0] - rdO.q[0]) * u[0] + (q.p[1] - rdO.q[1]) * u[1] > 0; }; const ok = G[li].EX.filter(x => (V.kinds || ['pub']).includes(x.cls) && fwd(x)); if (ok.length) ex2 = ok[Math.floor(rnd() * ok.length)]; } /* [CHOCO-LIFE] no U-turn after a pull-through */ const r2 = roadFrom(li, rdO, ex2);
+        const out = V.leaveRev ? [{ p: sl.B, v: VMAX.rev, rev: true }, { p: sl.A, v: VMAX.rev, rev: true }, { p: sl.rd.q, v: VMAX.rev, rev: true }] : sl.outVia ? [{ p: sl.B, v: VMAX.lot }, ...sl.outVia.map(p => ({ p, v: VMAX.lot })), { p: rdO.q, v: VMAX.lot }] : sl.rev ? [{ p: sl.B, v: VMAX.lot }, ...sl.via.slice().reverse().map(p => ({ p, v: VMAX.lot })), { p: sl.A, v: VMAX.lot }, { p: sl.rd.q, v: VMAX.lot }] : [{ p: sl.B, v: VMAX.lot }, { p: [sl.B[0] + (sl.B[0] - sl.A[0]) * 0.001, sl.B[1] + (sl.B[1] - sl.A[1]) * 0.001], v: VMAX.lot }, { p: rdO.q, v: VMAX.lot }];
+        const back = V.leaveRev ? roadLeg(r2).map(v => ({ p: v.p, e: v.e, rev: v.e && v.e.cls === 'lane', v: v.e && v.e.cls === 'lane' ? VMAX.rev : undefined })) : roadLeg(r2);
+        startTrip(a, [out, back], () => { despawn(a); sl.busy = null; if (V.onDone) V.onDone(); }); }; });
+    if (!go) { despawn(a); sl.busy = null; if (V.onDone) V.onDone(); } };
+  const despawn = a => { a.level = 0; a.mode = 'gone'; a.tr = null; STAT.despawn++; };
+  /* lot churn: a parked car leaves for an exit; later an arrival takes a free stall (never above the stall count) */
+  const churn = (L, n) => { for (let i = 0; i < n; i++) { const t = (i + 0.2 + 0.6 * rnd()) * 7200 / n; const this_f = () => { const occ = L.stalls.filter(s => s.occ && s.occ.mode === 'park'); if (!occ.length) return; const s = occ[Math.floor(rnd() * occ.length)], a = s.occ, a0 = a;
+      if (ENT.some(b => b.mode === 'drive' && b !== a0 && b.lot === L && ((b.lotIn && b.inLot) || b.lotOut))) { SPAWN.push({ t: T + 10, f: this_f }); return; } /* [CHOCO-LIFE] wait while someone is pulling in */ const lg = lotLeg(L, s, true), ex = pickExit(L.li, lg.road, ['pub', 'yard', 'town']); if (!ex) return; const r = roadFrom(L.li, lg.road, ex); if (!r) return; s.occ = 'leaving'; a.lotOut = true;
+      startTrip(a, [lg.pts.map((v, k) => ({ p: v.p, rev: v.rev, v: v.rev ? VMAX.rev : VMAX.lot })), roadLeg(r)], () => { despawn(a); s.occ = null; }); }; SPAWN.push({ t, f: this_f });
+    SPAWN.push({ t: t + 400 + 600 * rnd(), f: () => { const free = L.stalls.filter(s => !s.occ); if (!free.length) return; const s = free[Math.floor(rnd() * free.length)], lg = lotLeg(L, s, false), ex = pickExit(L.li, lg.road, ['pub', 'yard', 'town']); if (!ex) return;
+      const r = roadTo(L.li, ex, lg.road); if (!r) return; const ty = L.mix[Math.floor(rnd() * L.mix.length)], a = mkVeh(ty, L.li, 'arriving ' + ty + ' (' + L.name + ')'); s.occ = a; a.lot = L; a.stall = s; a.lotIn = true; a.gateP = lg.road.q;
+      startTrip(a, [roadLeg(r), lg.pts.map(v => ({ p: v.p, rev: v.rev, v: v.rev ? VMAX.rev : VMAX.lot }))], () => { a.lotIn = false; park(a, s.p[0], s.p[1], a.a); }); } }); } };
+  /* ---- through traffic on public roads: exit -> exit pairs whose route is mostly public road */
+  const THRU = [];
+  for (const li of [1, 2]) { const ex = G[li].EX; for (const a of ex) for (const b of ex) { if (a === b) continue; const r = route(li, { n: a.n }, { n: b.n }); if (!r) continue; let L = 0, P = 0; for (let i = 1; i < r.length; i++) { const d = H(r[i - 1].p, r[i].p); L += d; if (r[i].e && r[i].e.cls === 'pub') P += d; }
+    if (L > 10 && P / L >= 0.8) THRU.push({ li, a, b, r, L }); } }
+  const thruNext = {}; THRU.forEach((x, i) => thruNext[i] = 20 + rnd() * 120);
+  /* ---- people: walk paths (clipped to the part that is on board, off structures and clear of track) */
+  const WALK = [];
+  const walkers = (li, re, n, label, opts = {}) => { const l = byName(li, re); if (!l) { NOTES.push('walk not found: ' + re); return; } const r = l.r, alongX = r[2] - r[0] >= r[3] - r[1], c = [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2];
+    const a0 = alongX ? [r[0], c[1]] : [c[0], r[1]], a1 = alongX ? [r[2], c[1]] : [c[0], r[3]], L = H(a0, a1), ok = []; for (let s = 0; s <= L; s += 0.05) { const p = [a0[0] + (a1[0] - a0[0]) * s / L, a0[1] + (a1[1] - a0[1]) * s / L];
+      ok.push(onB(li, p[0], p[1], 0.2) && !inStruct(li, p, 0.05) && (opts.catwalk || trackD(li, p) >= 0.55) && liftD(p) > 1); }
+    let best = [0, -1], cur = -1; ok.forEach((v, i) => { if (v) { if (cur < 0) cur = i; if (i - cur > best[1] - best[0]) best = [cur, i]; } else cur = -1; });
+    if (best[1] - best[0] < 4) { NOTES.push('walk too short after clipping: ' + l.name); return; } const p0 = [a0[0] + (a1[0] - a0[0]) * best[0] * 0.05 / L, a0[1] + (a1[1] - a0[1]) * best[0] * 0.05 / L], p1 = [a0[0] + (a1[0] - a0[0]) * best[1] * 0.05 / L, a0[1] + (a1[1] - a0[1]) * best[1] * 0.05 / L];
+    for (let i = 0; i < n; i++) { const a = { id: ++idn, kind: 'person', type: opts.type || 'person', len: 0.25, w: 0.25, col: opts.col || ['#fc8', '#f84', '#8cf', '#ff6', '#fff'][Math.floor(rnd() * 5)], level: 0, li, name: label, x: p0[0], y: p0[1], a: 0, walk: { p0, p1, L: H(p0, p1), xwalk: /crosswalk/.test(l.name) }, s: 0, dir: 1, mode: 'in', until: 60 + rnd() * 900 }; ENT.push(a); WALK.push(a); } };
+  /* ---- forklifts / machines working pads: move only while there is work (a stopped car spotted within 2 in, or a truck in the pad's slot) */
+  const MACH = [];
+  const machine = (li, re, type, label, opts = {}) => { const l = byName(li, re); if (!l) { NOTES.push('pad not found: ' + re); return; } const r = l.r, alongX = r[2] - r[0] >= r[3] - r[1], c = [(r[0] + r[2]) / 2, (r[1] + r[3]) / 2], Dp = alongX ? r[3] - r[1] : r[2] - r[0];
+    const off = opts.off || 0, a0 = alongX ? [r[0] + 0.4, c[1] + off] : [c[0] + off, r[1] + 0.4], a1 = alongX ? [r[2] - 0.4, c[1] + off] : [c[0] + off, r[3] - 0.4];
+    const L = H(a0, a1), ok = []; for (let s = 0; s <= L; s += 0.05) { const p = [a0[0] + (a1[0] - a0[0]) * s / L, a0[1] + (a1[1] - a0[1]) * s / L]; ok.push(onB(li, p[0], p[1], 0.32) && !inStruct(li, p, -0.2) && trackD(li, p) >= 0.6); }
+    let best = [0, -1], cur = -1; ok.forEach((v, i) => { if (v) { if (cur < 0) cur = i; if (i - cur > best[1] - best[0]) best = [cur, i]; } else cur = -1; }); if (best[1] - best[0] < 6) { NOTES.push('no clear lane for ' + label); return; }
+    const P0 = [a0[0] + (a1[0] - a0[0]) * best[0] * 0.05 / L, a0[1] + (a1[1] - a0[1]) * best[0] * 0.05 / L], P1 = [a0[0] + (a1[0] - a0[0]) * best[1] * 0.05 / L, a0[1] + (a1[1] - a0[1]) * best[1] * 0.05 / L];
+    const a = mkVeh(type, li, label); a.kind = 'machine'; a.m = { P0, P1, L: H(P0, P1), r, slot: opts.slot, always: opts.always, ph: rnd() * 100 }; park(a, P0[0], P0[1], Math.atan2(P1[1] - P0[1], P1[0] - P0[0])); MACH.push(a); };
+  /* ---- animals [PROPOSED in PHASE3-PLAN.md; the plan has none] */
+  const ANI = [];
+  const animal = (li, type, spots, label, opts = {}) => { const good = spots.filter(p => onB(li, p[0], p[1], 0.4) && trackD(li, p) >= 1.2 && !inStruct(li, p, -0.3) && !(SC[li - 1].roads || []).some(r => r.pts.some((q, i) => i && segD(p, r.pts[i - 1], q)[0] < (r.w || 1.6) / 2 + 0.4)));
+    for (let i = 0; i < (opts.n || 1) && good.length; i++) { const h = good.splice(Math.floor(rnd() * good.length), 1)[0]; const a = { id: ++idn, kind: 'animal', type, len: opts.len || 0.4, w: opts.w || 0.15, col: opts.col || '#8b5a2b', level: li, li, name: label, x: h[0], y: h[1], a: rnd() * 6.28, home: h, spots: good.slice(), fly: !!opts.fly, r: opts.r || 0, ph: rnd() * 6.28, rect: opts.rect, wpts: opts.wpts, s: 0 }; ENT.push(a); ANI.push(a); } };
+  const grid = (r, step, m = 0.2) => { const o = []; for (let x = r[0] + m; x <= r[2] - m; x += step) for (let y = r[1] + m; y <= r[3] - m; y += step) o.push([x, y]); return o; };
+
+  /* ================= the plan (rev6h README element checklist + PHASE3-PLAN.md section 1) ================= */
+  // L1 lots (plan counts; capped by stalls)
+/* [CHOCO-GCFTANK] in-memory lane lot so no staff stall sits on the gated truck lane */ if (!(SC[1].lots || []).some(o => /GCF chemical truck lane/.test(o.name))) (SC[1].lots = SC[1].lots || []).push({ name: 'GCF chemical truck lane (gated)', r: [57.2, 106.25, 58.6, 108.6], kind: 'court' });
+  const ccf = mkLot(1, /^CCF staff parking/, 20, { churn: 4 }), tl = mkLot(1, /^TL staff parking/, 6, { churn: 2 }), psr = mkLot(1, /^PSR customer/, 5, { churn: 2, mix: ['pickup', 'pickup', 'car'] }),
+    ff = mkLot(1, /^FF staff \+ farmer/, 5, { churn: 3, mix: ['pickup', 'pickup', 'car'] }), crew = mkLot(1, /^Marsden crew parking/, 12, { churn: 4, who: 'crew' }), grill = mkLot(1, /^Pamlico Grill parking/, 4, { churn: 4, who: 'customer' });
+  // L2 lots
+  const nut = mkLot(2, /^Nutrien staff parking/, 14, { churn: 3 }), gcf = mkLot(2, /^GCF staff parking/, 8, { churn: 2 }), wl = mkLot(2, /^WL staff parking/, 25, { churn: 4 }),
+    church = mkLot(2, /^Church parking/, 3, { churn: 2, who: 'visitor' }), hw = mkLot(2, /^Hardware parking/, 3, { churn: 4, who: 'customer', mix: ['pickup', 'car'] });
+  for (const L of LOTS) churn(L, L.churn);
+  // static parked: tractors on display, tire shop, house driveways, RIP truck, Nutrien service truck
+  { const l = byName(2, /Coastal Tractor display/); if (l) { const r = l.r; for (let i = 0; i < 4; i++) { const a = mkVeh('tractor', 2, 'display tractor (Coastal Tractor)'); park(a, r[0] + 1.0 + i * 1.4, (r[1] + r[3]) / 2, -Math.PI / 2 + 0.3); } } }
+  { const l = byName(2, /Tire & Auto apron/); if (l) { const r = l.r; for (let i = 0; i < 2; i++) { const a = mkVeh('car', 2, 'car in for tyres (Pamlico Tire & Auto)'); park(a, r[0] + 0.75 + i * 1.4, (r[1] + r[3]) / 2, 0); } } }
+  for (const [li, re] of [[2, /Mill house 1 /], [2, /Mill house 2 /], [2, /Mill house 4 /], [2, /Mill house 5 /], [2, /Mill house 7 /], [2, /Ranch NC-306 W/], [2, /Ranch NC-306 E/], [2, /Ranch behind hardware/]]) {
+    const l = byName(li, re); if (!l) continue; const r = l.r, a = mkVeh(rnd() < 0.5 ? 'pickup' : 'car', li, 'resident car (' + l.name + ')'); park(a, (r[0] + r[2]) / 2, r[3] - a.len / 2 - 0.15, Math.PI / 2); }
+  const TEST = { badOrderY6: false }; /* [CHOCO-LIFE] test-page hook only (window.__life.TEST): ops has no bad-order flag */
+  const y6Bad = () => { if (TEST.badOrderY6) return true; if (T - lastScan > 2) scanCars(); return (CARS[1] || []).some(c => !c.mv && c.x > 84.9 && c.x < 104.6 && Math.abs(c.y - 15.863) < 0.3); }; /* plan: Y6 is the RIP / bad-order track (rev6h README: 'Y6 RIP / bad order'); any car standing on it is a bad order */
+  { const sl = mkSlot(1, /RIP repair-truck pad/, 'repair', { dock: false, mid: true }); if (sl) { let pend = false; /* [CHOCO-LIFE] plan: the RIP truck is on the pad only while a bad-order car is on Y6 */
+    SPAWN.push({ t: 30, f: function chk() { if (!sl.busy && !pend && y6Bad()) { pend = true; VISITS.push({ sl, t: T, dwell: 1e6, label: 'mobile car-repair truck', kinds: ['yard', 'pub'], stay: y6Bad, done: false, onDone: () => { pend = false; } }); } SPAWN.push({ t: T + 30, f: chk }); } }); } }
+  { const sl = mkSlot(2, /Nutrien tank-yard service apron/, 'service', { dock: false, mid: true }); if (sl) { const a = mkVeh('service', 2, 'Nutrien tank-yard service pickup'); park(a, sl.B[0], sl.B[1], 0); sl.busy = a; } }
+  // truck visits (per 2 h session) [counts PROPOSED within plan fleets]
+  visit(mkSlot(1, /CCF truck court/, 'reefer28', { n: 2, k: 0 }), 2, 1500, '28 ft reefer pup (93 ft court: no 48/53 ft as default)'); visit(mkSlot(1, /CCF truck court/, 'reefer28', { n: 2, k: 1 }), 1, 1500, '28 ft reefer pup', { t0: 900 });
+  const tlS = mkSlot(1, /TL transload pad/, 'flat', { dock: false, edge: true }); visit(tlS, 2, 1200, 'flatbed (coil/pipe)');
+  visit(mkSlot(1, /PSR shed truck apron/, 'flat', { dock: false }), 1, 1200, 'flatbed (baled scrap)');
+  visit(mkSlot(1, /FF warehouse truck apron/, 'box'), 2, 900, 'box truck (bagged feed)'); visit(mkSlot(1, /FF bin load-out apron/, 'spreader', { dock: false, mid: true }), 2, 600, 'bulk spreader truck');
+  visit(mkSlot(1, /E-1 fuel \+ sand pad/, 'fuel', { dock: false, path: { A: [3.707 + 1.6, 95.5], via: [[3.707, 95.5 - 0.6]], B: [3.707, 88.6], rev: true } }), 2, 900, 'DTL fuel truck', { when: () => { if (T - lastScan > 2) scanCars(); return eng.cuts.some(c => Math.abs(c.v) <= 0.05 && c.cars.some((k, i) => { if (!k.loco) return false; const q = eng.carPose(c, i); return Math.round(q.level) === 1 && q.x > 3.9 && q.x < 6.0 && q.y > 56 && q.y < 84; })); } }); /* [CHOCO-LIFE] plan: works E-1 only when an engine is standing on the E-1 pad track (T18); otherwise it re-checks every 2 min */ /* [CHOCO-LIFE] the E-1 lane is a 40 ft wide dead-end strip between the lead and the pad track: no turnaround or pull-through. The truck pulls past the corner and backs ~8 in (~110 ft scale incl. the swing) into the spur, stopping ~45 ft short of the engine on the pad; hose to the engine [UNVERIFIED: DTL hose reach ~50-100 ft]; leaves forward */
+  visit(mkSlot(1, /Quick Mart pump apron/, 'car', { dock: false, at: [114.85, 102.0] }), 8, 180, 'customer car at the pumps', { kinds: ['pub'] });
+  visit(mkSlot(2, /Nutrien dome load-out apron/, 'bulk', { dock: false, pull: true }), 3, 600, 'bulk hopper semi', { kinds: ['pub'] });
+  visit(mkSlot(2, /GCF truck court/, 'van53', { n: 2, k: 0 }), 1, 1500, '53 ft van'); visit(mkSlot(2, /GCF truck court/, 'van53', { n: 2, k: 1 }), 1, 1500, '53 ft van', { t0: 1800 });
+  /* [CHOCO-GCFTANK] gated lane off Weyerhaeuser Rd (rendered by choco_bldg C): straight chem tanker pulls in nose-first to the fill pad and backs out */ { const ln = byName(2, /GCF chemical truck lane/); const gs = ln && mkSlot(2, /^GCF staff parking/, 'chem', { dock: false, path: { A: [57.9, 107.0], B: [57.9, 108.1] } }); if (gs) { gs.rd = proj(2, [57.9, 105.05]); gs.name = 'GCF chemical-tank fill pad via gated lane'; gs.via = []; } if (gs) visit(gs, 2, 1200, 'GCF chemical tank truck', { t0: 900, leaveRev: true }); else NOTES.push('GCF lane lot missing'); }
+  const wlS = mkSlot(2, /WL lumber storage yard/, 'flat', { dock: false, edge: true }); if (wlS) { const S0 = wlS.A[1] < wlS.B[1] ? wlS.A : wlS.B, N0 = wlS.A[1] < wlS.B[1] ? wlS.B : wlS.A, mr = e => /Mill Rd/.test(e.name), Aq = proj(2, [wlS.r[2] + 1, S0[1] - 4.6], mr).q; wlS.rd = proj(2, [wlS.r[2] + 1, S0[1] + 1.5], mr); wlS.A = Aq; wlS.via = [[(S0[0] + Aq[0]) / 2 + 0.15, S0[1] - 2.3], S0]; wlS.B = [S0[0], S0[1] + 2.4]; /* backs straight on up the lane so the whole rig is square in the lane before it stops */ wlS.rev = true; wlS.outVia = [N0]; wlS.rdOut = proj(2, [wlS.r[2] + 1, N0[1] + 3.1], mr); } /* [CHOCO-LIFE] Mill Rd dead-ends at the PR yard, so no turnaround: the flatbed comes down Mill Rd, pulls past the yard, backs ~3 in (~45 ft) into its south end, works, then drives up the truck lane and angles out at the north end */ visit(wlS, 2, 1200, 'flatbed (packaged lumber)');
+  visit(mkSlot(2, /Gas & Grocery apron/, 'car', { dock: false, mid: true }), 6, 240, 'customer car', { kinds: ['pub'] });
+  // PR propane: 2 bobtails in the fenced yard; each makes one delivery run: yard -> bobtail rack (fill) -> Mill Rd -> out; back later
+  { const l = byName(2, /PR bobtail \+ staff parking/), lane = byName(2, /PR yard lane to bobtail rack/); if (l && lane) { const r = l.r, lx = (lane.r[0] + lane.r[2]) / 2;
+    for (let i = 0; i < 4; i++) { const a = mkVeh('car', 2, 'PR staff car'); park(a, r[2] - 1.35 / 2 - 0.25, r[1] + 0.35 + i * 0.6, 0); }
+    for (let i = 0; i < 2; i++) { const a = mkVeh('bobtail', 2, 'propane bobtail (Pamlico Propane)'), bx = r[0] + 0.4 + i * 0.75, by = r[1] + 0.25 + 1.0; /* [CHOCO-LIFE] clear of the exit row */ park(a, bx, by, Math.PI / 2); const t0 = 900 + i * 3600; /* [CHOCO-LIFE] second run after the first bobtail is back in the yard */
+      const rack = [lx, lane.r[1] + 6.0], laneEnd = [lx, lane.r[3] - 0.3], yRow = r[3] - 0.35, mill = proj(2, [lane.r[2] + 1, lane.r[3] - 0.3], e => /Mill Rd/.test(e.name)), millN = proj(2, [lane.r[2] + 1, yRow], e => /Mill Rd/.test(e.name));
+      SPAWN.push({ t: t0, f: () => startTrip(a, [[{ p: [bx, by] }, { p: [bx, yRow], v: VMAX.lot }, { p: [lx, yRow], v: VMAX.lot }, { p: rack, v: VMAX.lot }]], () => { park(a, rack[0], rack[1], Math.PI / 2); a.until = T + 600; a.after = () => {
+        const ex = pickExit(2, mill, ['pub']), rr = ex && roadFrom(2, mill, ex); if (!rr) return; startTrip(a, [[{ p: rack }, { p: laneEnd, v: VMAX.lot }, { p: mill.q, v: VMAX.lot }], roadLeg(rr)], () => { a.level = 0; a.mode = 'away';
+          SPAWN.push({ t: T + 1800, f: () => { const rr2 = roadTo(2, ex, millN); if (!rr2) return; startTrip(a, [roadLeg(rr2), [{ p: millN.q }, { p: [lx, yRow], v: VMAX.lot }, { p: [bx, yRow], v: VMAX.lot }, { p: [bx, by], v: VMAX.rev, rev: true }]], () => park(a, bx, by, Math.PI / 2)); } }); }); }; }) }); }
+    animal(2, 'dog', grid([r[0] + 0.2, r[1] + 0.15, r[0] + 1.6, r[1] + 0.6], 0.3, 0), 'yard dog (PR fenced yard)', { len: 0.22, w: 0.1, col: '#3a2a1a', rect: [r[0] + 0.15, r[1] + 0.12, r[0] + 1.7, r[1] + 0.62] }); } }
+  // people (visible outside only; the rest are indoors)
+  walkers(1, /^CCF staff path lot -> cold-store/, 1, 'CCF worker'); walkers(1, /^CCF staff path \(lot leg\)/, 1, 'CCF worker'); walkers(1, /^CCF rack path/, 1, 'CCF tank-rack operator');
+  /* [CHOCO-LIFE 11:10] train crews (PHASE3-PLAN.md): on duty at the Marsden yard office 10 min before each L1 job that starts in the yard, walk path 21
+     (office -> lead walkway, then the walkway 11 ft clear of the lead), cross the lead only at the walkway when nothing is on the lead within 300 ft scale, then ride hidden aboard. */
+  const CREWS = []; { const P = byName(1, /^crew path office -> lead/), W = byName(1, /^crew walkway along yard lead/);
+    if (P && W) { const px = (P.r[0] + P.r[2]) / 2, wy = (W.r[1] + W.r[3]) / 2, door = [px, P.r[3] - 0.1], LEADY = 6.06;
+      SPAWN.push({ t: 1, f: () => { const DJ = (typeof D !== 'undefined' && D.jobs) || []; for (const j of (eng.session && eng.session.jobs) || []) { const dj = DJ.find(y => y.id === j.id); if (!dj || j.level !== 1 || /from L3/.test(j.name)) continue; /* CLNA 120 arrives with its crew aboard */
+        const t0 = (dj.start_min || 0) * 60 * 0.6; /* engine compresses timetable minutes x0.6 (engine.js [R34]) */
+        ['engineer', 'conductor'].forEach((role, k) => { const a = { id: ++idn, kind: 'person', type: 'crew', len: 0.25, w: 0.25, col: k ? '#f60' : '#fa0', level: 0, li: 1, name: 'train crew: ' + role + ' (' + j.id + ')', x: door[0] + (k ? 0.3 : 0), y: door[1], a: 0, crew: { j, t0, ph: 0, k, after: dj.after || [] }, mode: 'off' }; ENT.push(a); CREWS.push(a); }); } } });
+      const leadClear = (x) => { if (T - lastScan > 0.45) scanCars(); return !(CARS[1] || []).some(c => Math.hypot(c.x - x, c.y - LEADY) < 22.5 && (c.mv || Math.abs(c.y - LEADY) < 0.3 && Math.abs(c.x - x) < 1.2)); };
+      const locoX = j => { for (const c of eng.cuts) for (let i = 0; i < c.cars.length; i++) if (c.cars[i].loco && c.cars[i].addr === j.addr) return eng.carPose(c, i).x; return null; };
+      var stepCrew = (a, dt) => { const C = a.crew, v = MPH(3) * dt, go = (q) => { const d = H(q, [a.x, a.y]); if (d <= v) { a.x = q[0]; a.y = q[1]; return true; } a.a = Math.atan2(q[1] - a.y, q[0] - a.x); a.x += (q[0] - a.x) / d * v; a.y += (q[1] - a.y) / d * v; return false; };
+        if (C.ph === 0) { const _ai = eng.ai, _pre = C.after.filter(id => !(_ai && _ai.execs || []).some(x => x.job.id === id && (x.done || x.fail))); /* [CHOCO-LIFE item5] on duty only once the jobs it follows are off duty (engine [CHOCO-AFTER]), not at the timetable minute */ if (C.t0 - T <= 600 && !_pre.length) { C.ph = 1; a.level = 1; a.mode = 'office'; C.walkAt = Math.max(T + 30, C.t0 - 150); } return; } /* on duty: appears at the office door */
+        if (C.ph === 1) { if (T >= C.walkAt) C.ph = 2; return; }
+        if (C.ph === 2) { a.mode = 'walk'; if (go([px + (C.k ? 0.12 : -0.12), wy])) { const lx = locoX(C.j); C.wx = Math.max(W.r[0] + 0.3, Math.min(W.r[2] - 0.3, lx == null ? W.r[2] : lx)) + (C.k ? 0.3 : 0); C.ph = 3; } return; }
+        if (C.ph === 3) { if (go([C.wx, wy])) C.ph = 4; return; }
+        if (C.ph === 4) { a.mode = 'wait'; if (leadClear(C.wx)) { C.ph = 5; a.xc = true; STAT.crewX = (STAT.crewX || 0) + 1; } else STAT.crewWaits = (STAT.crewWaits || 0) + dt; return; } /* waits at the walkway for a clear lead */
+        if (C.ph === 5) { a.mode = 'cross'; if (!leadClear(C.wx) && a.y > LEADY + 0.6) { C.ph = 4; a.xc = false; return; } if (go([C.wx, LEADY + 0.45])) { C.ph = 6; a.level = 0; a.mode = 'aboard'; a.xc = false; } } }; /* steps to the lead and boards (hidden while the train moves) */
+    } else NOTES.push('crew paths not found'); }
+  walkers(1, /^crew path lot -> office/, 1, 'engineer', { col: '#f60' });
+  walkers(1, /^TL path lot/, 1, 'TL clerk'); walkers(1, /^PSR path lot/, 1, 'PSR customer'); walkers(1, /^TL crosswalk/, 1, 'TL worker'); walkers(1, /^PSR crosswalk/, 1, 'PSR worker'); walkers(1, /^FF crosswalk/, 1, 'FF worker');
+  walkers(2, /^Nutrien path lot -> control/, 1, 'Nutrien operator'); walkers(2, /^Nutrien path control room -> pipe-bridge catwalk/, 1, 'Nutrien rack operator', { catwalk: true, col: '#ff0' }); walkers(2, /^Nutrien path road -> unloading shed/, 1, 'Nutrien shed operator', { col: '#ff0' });
+  walkers(2, /^WL path lot/, 1, 'WL clerk'); walkers(2, /^PR path office -> riser/, 1, 'PR riser operator', { col: '#ff0' }); walkers(2, /^GCF path lot/, 1, 'GCF warehouse worker');
+  // machines
+  machine(1, /^TL transload pad/, 'forklift', 'coil-ram forklift (TL pad)', { off: 1.3, slot: tlS }); machine(1, /^PSR prepared-scrap piles/, 'forklift', 'scrap material handler (PSR)', {});
+  machine(2, /^WL forklift lane kilns/, 'forklift', 'WL forklift (kilns -> shed)', { always: true }); machine(2, /^WL lumber storage yard/, 'forklift', 'WL yard forklift', { off: -0.6, slot: wlS });
+  // animals
+  { const w = byName(2, /Blounts Creek/, 'water'); if (w) { const xs = w.pts.map(p => p[0]), ys = w.pts.map(p => p[1]); animal(2, 'deer', grid([Math.min(...xs) - 1.5, Math.min(...ys) - 1.5, Math.max(...xs) + 1.5, Math.max(...ys) + 1.5], 0.5).filter(p => !inPoly(p, w.pts) && w.pts.some((q, i) => i && segD(p, w.pts[i - 1], q)[0] < 1.2)) /* [CHOCO-LIFE] on the creek bank, not in the water */, 'white-tailed deer (Blounts Creek swamp, dawn/dusk)', { wpts: w.pts, n: 3, len: 0.42, w: 0.14, col: '#9a6a3a' });
+    animal(2, 'heron', grid([Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)], 0.5), 'great blue heron (Blounts Creek)', { n: 1, len: 0.3, w: 0.08, col: '#9ab' }); } }
+  { const w = byName(2, /Pamlico River edge/, 'water'); if (w) animal(2, 'gull', grid([99.5, 8, 103.5, 14], 1.0), 'laughing gull (Pamlico River)', { n: 3, fly: true, r: 1.2, len: 0.22, w: 0.06, col: '#f4f4f4' }); }
+  { const l = byName(1, /^PSR prepared-scrap piles/); if (l) animal(1, 'vulture', [[(l.r[0] + l.r[2]) / 2, (l.r[1] + l.r[3]) / 2]], 'turkey vulture (over PSR)', { n: 1, fly: true, r: 2.0, len: 0.3, w: 0.08, col: '#222' }); }
+
+  /* ================= stepping ================= */
+  const scanCars = () => { CARS = { 1: [], 2: [] }; for (const c of eng.cuts) for (let i = 0; i < c.cars.length; i++) { const q = eng.carPose(c, i), lv = Math.round(q.level); if (CARS[lv] && Math.abs(q.level - lv) < 0.05) CARS[lv].push({ x: q.x, y: q.y, mv: Math.abs(c.v) > 0.05, cut: c, len: c.cars[i].len }); } lastScan = T; };
+  const xingClear = m => { if (T - lastScan > 0.45) scanCars(); const tk = eng.trk[m.tid]; const near = (CARS[eng.E[m.e].level] || []).filter(c => Math.hypot(c.x - m.pt[0], c.y - m.pt[1]) < 22.5);
+    if (!near.length) return true; const edges = tk ? tk.edges : [m.e]; return !near.some(c => edges.some(eid => { const P = eng.E[eid].pts; for (let i = 1; i < P.length; i++) if (segD([c.x, c.y], P[i - 1], P[i])[0] < 0.35) return true; return false; }) || (c.mv && Math.hypot(c.x - m.pt[0], c.y - m.pt[1]) < 22.5)); };
+  const blockedBy = (a, look) => { const hd = a.hd, cs = Math.cos(hd), sn = Math.sin(hd); let best = 1e9; const inAisle = a.tr && poseOn(a.tr, a.s + 0.01).seg.cls === 'lot';
+    for (const b of ENT) { if (b === a || b.level !== a.level || b.kind === 'animal') continue; if (inAisle && b.mode === 'park' && b.stall !== a.stall && !(b.kind === 'machine')) continue; /* [CHOCO-LIFE] STOP sign: only moving traffic counts (no jam deadlock) ; cars in their stalls are beside the aisle, not in it */ const dx = b.x - a.x, dy = b.y - a.y; if (Math.abs(dx) > look + 6 || Math.abs(dy) > look + 6) continue;
+      const lon = dx * cs + dy * sn, lat = -dx * sn + dy * cs; const half = (a.len + b.len) / 2; if (lon <= 0.05 || lon > look + half) continue; if (Math.abs(lat) > (a.w + b.w) / 2 + 0.08) continue; if (b.mode === 'park' && a.tr) { /* [CHOCO-LIFE] parked: test its real rotated footprint against the path ahead (not the body heading, which swings at corners) */ const cb = Math.cos(b.a || 0), sb = Math.sin(b.a || 0), hl = b.len / 2, hw = b.w / 2, cl = a.w / 2 + 0.08; let hit = -1; for (let k = 0; k <= look; k += 0.1) { const p = poseOn(a.tr, a.s + a.len / 2 + k), ux = p.x - b.x, uy = p.y - b.y, u = Math.abs(ux * cb + uy * sb) - hl, v = Math.abs(-ux * sb + uy * cb) - hw; if (Math.hypot(Math.max(u, 0), Math.max(v, 0)) < cl) { hit = k; break; } } if (hit < 0) continue; const g2 = hit - 0.25; if (g2 < best) { best = g2; a.blkBy = b.id; } continue; }
+      if (b.mode === 'drive' && b.blk === a.id && b.id > a.id) continue; const gap = lon - half - 0.25; if (gap < best) { best = gap; a.blkBy = b.id; } } return best; };
+  const stepVeh = (a, dt) => { const tr = a.tr; let vmax = poseOn(tr, a.s + 0.01).seg.v; a.blk = 0;
+    // markers
+    let lim = 1e9; for (let i = a.mi; i < tr.mk.length; i++) { const m = tr.mk[i]; if (m.ok) continue; if (m.s < a.s - 0.05) { if (m.k === 'xing' && !m.ok) { m.ok = true; } continue; }
+      lim = Math.min(lim, m.s - a.s); if (m.s - a.s < 0.06 && a.v < 0.05) { if (!m.t0) m.t0 = T; if (T - m.t0 >= 2.0) { if (m.k === 'stop') { const busy = ENT.some(b => b !== a && b.mode === 'drive' && b.v > 0.05 && b.level === a.level && b.tr && poseOn(b.tr, b.s).seg.cls === 'pub' && Math.hypot(b.x - m.node[0], b.y - m.node[1]) < 9);
+        if (!busy) m.ok = true; } else { if (xingClear(m)) { m.ok = true; STAT.crossings++; } else if (!m.cw) { m.cw = 1; STAT.crossWaits++; } } } } break; }
+    if (a.lot) { const r = a.lot.r, dR = (x, y, m) => Math.hypot(Math.max(r[0] - m - x, 0, x - r[2] - m), Math.max(r[1] - m - y, 0, y - r[3] - m)); /* [CHOCO-LIFE] one-at-a-time lot entrance */
+      if (a.lotOut && dR(a.x, a.y, 0) > a.len / 2 + 1.0) a.lotOut = false;
+      if (a.lotIn && !a.inLot && a.gateP) { const g = H([a.x, a.y], a.gateP); if (g < 0.5 || dR(a.x, a.y, 0) < 0.05) a.inLot = true; /* committed: past the turn-in point */ else if (g < a.len / 2 + 1.0 && ENT.some(b => b !== a && b.mode === 'drive' && b.lot === a.lot && b.lotOut)) lim = 0; /* wait on the road before turning in */ } }
+    const gap = blockedBy(a, a.len / 2 + 0.6 + a.v * 1.5); if (gap < 1e9) { lim = Math.min(lim, gap); a.blk = a.blkBy; }
+    const vt = Math.min(vmax, Math.sqrt(Math.max(0, 2 * 1.5 * Math.max(0, lim)))); a.v = vt > a.v ? Math.min(vt, a.v + 1.0 * dt) : vt; if (lim <= 0.001) a.v = 0;
+    a.s = Math.min(tr.Lend, a.s + Math.min(a.v * dt, Math.max(0, lim))); Object.assign(a, poseXY(a));
+    if (a.s >= tr.Lend - 1e-3) { const f = a.then; a.tr = null; a.mode = 'park'; if (f) f(); } };
+  const stepWalk = (a, dt) => { const w = a.walk; if (a.mode === 'in') { if (T >= a.until) { a.mode = 'walk'; a.dir = rnd() < 0.5 ? 1 : -1; a.s = a.dir > 0 ? 0 : w.L; a.level = a.li; } else return; }
+    if (a.mode === 'dwell') { if (T >= a.until) { a.mode = 'walk'; a.dir = -a.dir; } }
+    if (a.mode === 'walk') { let v = MPH(3);
+      if (w.xwalk && (a.s <= 0.01 || a.s >= w.L - 0.01) && ENT.some(b => b.mode === 'drive' && b.level === a.level && Math.hypot(b.x - a.x, b.y - a.y) < 5)) v = 0;   // wait at the kerb for traffic
+      a.s += a.dir * v * dt; if (a.s >= w.L || a.s <= 0) { a.s = Math.max(0, Math.min(w.L, a.s)); if (a.back) { a.mode = 'in'; a.level = 0; a.back = false; a.until = T + 300 + rnd() * 1500; } else { a.mode = 'dwell'; a.back = true; a.until = T + 15 + rnd() * 120; } } }
+    const f = a.s / w.L; a.x = w.p0[0] + (w.p1[0] - w.p0[0]) * f; a.y = w.p0[1] + (w.p1[1] - w.p0[1]) * f; a.a = Math.atan2(w.p1[1] - w.p0[1], w.p1[0] - w.p0[0]) + (a.dir < 0 ? Math.PI : 0); };
+  const stepMach = (a, dt) => { const m = a.m; let work = m.always; if (!work && m.slot && m.slot.busy && m.slot.busy.mode === 'park') work = true;
+    if (!work) { if (T - lastScan > 2) scanCars(); const r = m.r; work = (CARS[a.li] || []).some(c => !c.mv && c.x > r[0] - 2 && c.x < r[2] + 2 && c.y > r[1] - 2 && c.y < r[3] + 2); }
+    a.working = work; if (!work) return; m.ph += dt * MPH(5) / Math.max(1, m.L); const f = 0.5 - 0.5 * Math.cos(m.ph * Math.PI); a.x = m.P0[0] + (m.P1[0] - m.P0[0]) * f; a.y = m.P0[1] + (m.P1[1] - m.P0[1]) * f;
+    a.a = Math.atan2(m.P1[1] - m.P0[1], m.P1[0] - m.P0[0]) + (Math.sin(m.ph * Math.PI) < 0 ? Math.PI : 0); };
+  const deerSeg = (a, p) => { const L = H(p, [a.x, a.y]) || 1e-6; for (let k = 1; k <= Math.ceil(L / 0.1); k++) { const f = Math.min(1, k * 0.1 / L), q = [a.x + (p[0] - a.x) * f, a.y + (p[1] - a.y) * f]; if (!onB(a.li, q[0], q[1], 0.25) || (a.wpts && inPoly(q, a.wpts)) || trackD(a.li, q) < 0.9 || inStruct(a.li, q, -0.2)) return false; } return true; };
+  const stepAni = (a, dt) => { if (a.type === 'deer') { const dusk = T < 1800 || T > 5400; if (!dusk) { a.level = 0; return; } a.level = a.li;
+      if (T - lastScan > 2) scanCars(); const tr = (CARS[a.li] || []).filter(c => c.mv && Math.hypot(c.x - a.x, c.y - a.y) < 22.5);
+      if (tr.length && !a.flee) { const d0 = Math.min(...tr.map(c => Math.hypot(c.x - a.x, c.y - a.y))); /* [CHOCO-LIFE 10:25] bolt along a line that stays on the board, out of the water, off track and out of walls */
+        const segOk = p => deerSeg(a, p), _u = p => { const L = H(p, [a.x, a.y]); for (let k = 1; k <= Math.ceil(L / 0.1); k++) { const f = k * 0.1 / L, q = [a.x + (p[0] - a.x) * Math.min(1, f), a.y + (p[1] - a.y) * Math.min(1, f)]; if (!onB(a.li, q[0], q[1], 0.25) || (a.wpts && inPoly(q, a.wpts)) || trackD(a.li, q) < 0.9 || inStruct(a.li, q, -0.2)) return false; } return true; };
+        const far = a.spots.map(p => [p, Math.min(...tr.map(c => Math.hypot(c.x - p[0], c.y - p[1])))]).filter(x => x[1] > d0 + 1 && H(x[0], [a.x, a.y]) < 6).sort((x, y) => y[1] - x[1]).find(x => segOk(x[0])); if (far) { a.flee = far[0]; a.bolt = T; STAT.deerBolts = (STAT.deerBolts || 0) + 1; } }
+      const tgt = a.flee || (a.wTo && T < a.wT ? a.wTo : null); if (!tgt) { if (rnd() < dt / 40) { const c = a.spots.filter(p => H(p, [a.x, a.y]) < 1.6 && deerSeg(a, p)); /* [CHOCO-LIFE 10:25] wander lines also stay out of the water */ if (c.length) { a.wTo = c[Math.floor(rnd() * c.length)]; a.wT = T + 60; } } return; }
+      const d = H(tgt, [a.x, a.y]), v = (a.flee ? MPH(30) : MPH(2)) * dt; if (d <= v) { a.x = tgt[0]; a.y = tgt[1]; a.flee = null; a.wTo = null; return; } a.a = Math.atan2(tgt[1] - a.y, tgt[0] - a.x); a.x += (tgt[0] - a.x) / d * v; a.y += (tgt[1] - a.y) / d * v; return; }
+    if (a.type === 'heron') { if (T - lastScan > 2) scanCars(); const near = (CARS[a.li] || []).some(c => c.mv && Math.hypot(c.x - a.x, c.y - a.y) < 15); if (near && !a.gone) { a.gone = T + 600; a.level = 0; } if (a.gone && T > a.gone) { a.gone = 0; a.level = a.li; } return; }
+    if (a.fly) { a.ph += dt * MPH(20) / Math.max(0.5, a.r); let x = a.home[0] + Math.cos(a.ph) * a.r, y = a.home[1] + Math.sin(a.ph) * a.r; if (!onB(a.li, x, y, 0.2)) { a.ph -= dt * MPH(20) / Math.max(0.5, a.r); return; } a.x = x; a.y = y; a.a = a.ph + Math.PI / 2; return; }
+    if (a.type === 'dog') { if (!a.wTo || H(a.wTo, [a.x, a.y]) < 0.02) { if (rnd() < dt / 20) a.wTo = a.spots.length ? a.spots[Math.floor(rnd() * a.spots.length)] : null; if (!a.wTo) return; }
+      const d = H(a.wTo, [a.x, a.y]), v = MPH(4) * dt; if (d <= v) { a.x = a.wTo[0]; a.y = a.wTo[1]; a.wTo = null; return; } a.a = Math.atan2(a.wTo[1] - a.y, a.wTo[0] - a.x); a.x += (a.wTo[0] - a.x) / d * v; a.y += (a.wTo[1] - a.y) / d * v; } };
+  let acc = 0;
+  const step = dt => { acc += dt; if (acc < 0.25) return; const h = acc; acc = 0; T = eng.t;
+    for (const s of SPAWN) if (!s.done && T >= s.t) { s.done = true; s.f(); }
+    for (const V of VISITS) if (!V.done && T >= V.t) runVisit(V);
+    THRU.forEach((x, i) => { if (T < thruNext[i]) return; const p0 = x.r[0].p, busy = ENT.some(b => b.level === x.li && b.kind === 'vehicle' && Math.hypot(b.x - p0[0], b.y - p0[1]) < 3.5);
+      if (busy) { thruNext[i] = T + 5; return; } thruNext[i] = T + (x.li === 1 ? 70 : 80) * (0.6 + 0.8 * rnd()) * THRU.filter(y => y.li === x.li).length / 2;
+      const ty = ['car', 'car', 'pickup', 'pickup', 'car', 'box'][Math.floor(rnd() * 6)], a = mkVeh(ty, x.li, 'through traffic ' + ty + ' (' + x.a.name.split(' (')[0] + ' -> ' + x.b.name.split(' (')[0] + ')'); STAT.through++;
+      startTrip(a, [x.r.map(v => ({ p: v.p, e: v.e || x.r[1].e }))], () => despawn(a)); });
+    for (const a of ENT) { if (a.mode === 'park' && a.after && a.stay && !a.stay()) a.until = T; /* [CHOCO-LIFE] leaves once the bad order is gone */ if (a.mode === 'park' && a.after && a.until !== undefined && T >= a.until) { const f = a.after; a.after = null; f(); } }
+    for (const a of ENT) { if (a.mode === 'drive' && a.tr) stepVeh(a, h); else if (a.crew) stepCrew(a, h); else if (a.kind === 'person') stepWalk(a, h); else if (a.kind === 'machine') stepMach(a, h); else if (a.kind === 'animal') stepAni(a, h); }
+    for (let i = ENT.length - 1; i >= 0; i--) if (ENT[i].mode === 'gone') ENT.splice(i, 1); };
+  const draw = (a, p) => { cx.save(); cx.translate(a.x, a.y); cx.rotate(a.a); const l = a.len, w = a.w;
+    if (a.kind === 'vehicle' || a.kind === 'machine') { if (/reefer|van53|flat|bulk|tanker/.test(a.type)) { cx.fillStyle = a.type === 'flat' ? '#555' : a.col; cx.fillRect(-l / 2, -w / 2, l - 1.35, w); cx.fillStyle = '#246'; cx.fillRect(l / 2 - 1.3, -w / 2, 1.3, w); if (a.type === 'flat' && a.mode === 'park') { cx.fillStyle = '#89a'; cx.fillRect(-l / 2 + 0.4, -w / 2 + 0.08, l - 2.2, w - 0.16); } }
+      else { cx.fillStyle = a.col; cx.fillRect(-l / 2, -w / 2, l, w); cx.fillStyle = 'rgba(0,0,0,0.35)'; cx.fillRect(l / 2 - Math.min(0.45, l * 0.3), -w / 2 + 0.05, 0.12, w - 0.1); if (a.type === 'fuel' || a.type === 'bobtail') { cx.fillStyle = '#c00'; cx.fillRect(-l / 2 + 0.1, -0.05, l - 0.8, 0.1); } }
+      if (a.kind === 'machine' && a.working) { cx.fillStyle = '#f80'; cx.fillRect(l / 2, -0.12, 0.25, 0.24); } }
+    else if (a.kind === 'person') { cx.fillStyle = a.col; cx.beginPath(); cx.arc(0, 0, 0.13, 0, 7); cx.fill(); }
+    else { cx.fillStyle = a.col; if (a.fly) { cx.beginPath(); cx.moveTo(-w, -l); cx.lineTo(0, 0); cx.lineTo(-w, l); cx.lineWidth = 0.07; cx.strokeStyle = a.col; cx.stroke(); } else { cx.beginPath(); cx.ellipse(0, 0, l / 2, w / 2 + 0.03, 0, 0, 7); cx.fill(); } }
+    if (a === sel.agent) { cx.strokeStyle = '#ff0'; cx.lineWidth = 0.1; cx.strokeRect(-l / 2 - 0.2, -w / 2 - 0.2, l + 0.4, w + 0.4); } cx.restore(); };
+  const snap = () => ENT.filter(a => a.level).map(a => ({ id: a.id, kind: a.kind, type: a.type, li: a.li, x: +a.x.toFixed(3), y: +a.y.toFixed(3), a: +a.a.toFixed(3), len: a.len, w: a.w, mode: a.mode, name: a.name, s: a.tr ? +a.s.toFixed(2) : null, L: a.tr ? +a.tr.L.toFixed(2) : null, fly: !!a.fly, xc: !!a.xc, cat: !!(a.walk && /catwalk/.test(a.name)) || a.name === 'Nutrien rack operator' }));
+  const gateDump = () => { const out = []; for (const { a, tr, s0 } of TRIPS) { const Le = tr.Lend || tr.L; for (let s = s0; s <= Le + 1e-6; s += 0.25) { const q = poseXY({ tr, s, len: a.len, w: a.w, li: a.li }); out.push([a.li, a.kind, a.name, +q.x.toFixed(3), +q.y.toFixed(3), +q.a.toFixed(3), a.len, a.w]); } }
+    for (const L of LOTS) for (const st of L.stalls) out.push([L.li, 'stall', L.name, st.p[0], st.p[1], st.h, 1.13, 0.45]);
+    for (const e of ENT) if (e.walk) for (let f = 0; f <= 1.0001; f += 0.05) out.push([e.li, 'walk', e.name, e.walk.p0[0] + (e.walk.p1[0] - e.walk.p0[0]) * f, e.walk.p0[1] + (e.walk.p1[1] - e.walk.p0[1]) * f, 0, 0.25, 0.25]);
+    return { trips: TRIPS.length, pts: out }; };
+  return { ENT, TEST, step, draw, snap, gateDump, T: () => T, report: () => ({ lots: LOTS.map(L => ({ li: L.li, name: L.name, target: L.target, cap: L.cap, now: L.stalls.filter(s => s.occ && s.occ.mode === 'park').length })), slots: SLOTS.map(s => ({ li: s.li, name: s.name, type: s.type, back: s.rev, busy: !!s.busy })), notes: NOTES, stat: STAT, thru: THRU.map(x => [x.li, x.a.name, x.b.name, +x.L.toFixed(1)]), exits: [1, 2].map(li => G[li].EX.map(x => [li, x.name, x.cls, x.p.map(v => +v.toFixed(2))])), counts: ENT.reduce((m, a) => { const k = a.kind + ':' + a.type; m[k] = (m[k] || 0) + (a.level ? 1 : 0); return m; }, {}) }), CARS: () => CARS, scanCars, xingClear };
+});
+    return LIFE(); };
+  const API = window.L3D_LIFE3 = { on: true, L: null, eng: null, err: null, steps: 0, ms: 0 };
+  API.attach = H => { const eng = H && H.engine; if (!eng || API.eng === eng) return; API.eng = eng;
+    try { API.L = window.__life = make(window.OPS_DATA, eng); } catch (e) { API.err = String(e && e.stack || e); console.error('[CHOCO-LIFE3D] init failed', e); API.L = null; return; }
+    const t0 = eng.tick.bind(eng); eng.tick = dt => { const r = t0(dt); if (API.L && API.eng === eng) { const q = performance.now(); try { API.L.step(dt); } catch (e) { if (!API.err) { API.err = String(e && e.stack || e); console.error('[CHOCO-LIFE3D] step', e); } } API.ms += performance.now() - q; API.steps++; } return r; }; };
+  /* models: [geometry id, model length, model width] (dims_in from assets/scenery.js); life3 type -> model */
+  const MOD = { sedan: ['veh-sedan', 1.16, 0.45], suv: ['veh-suv', 1.24, 0.48], pickup: ['veh-pickup', 1.43, 0.5], semi: ['veh-semi', 5.6, 0.64], box: ['veh-boxtruck', 1.8, 0.6], tow: ['veh-tow', 1.6, 0.55], tractor: ['veh-tractor', 1.05, 0.6], walk: ['person-walk', 1, 1], worker: ['person-worker', 1, 1] };
+  const TY = { car: a => (a.id % 3 === 0 ? 'suv' : 'sedan'), pickup: 'pickup', service: 'pickup', box: 'box', spreader: 'box', fuel: 'box', bobtail: 'box', repair: 'tow', reefer: 'semi', van53: 'semi', flat: 'semi', bulk: 'semi', tanker: 'semi', reefer28: 'semi', chem: 'box', tractor: 'tractor' };
+  let M = null, hidOld = false; const CAP = { sedan: 160, suv: 90, pickup: 140, semi: 16, box: 24, tow: 4, tractor: 10, walk: 60, worker: 30, forklift: 12, deer: 12, dog: 6, bird: 12 };
+  const build = () => { const T = THREE, U = T.BufferGeometryUtils || window.BufferGeometryUtils, sc = window.__choco.scene; M = {};
+    const box = (x, y, z, l, h, w) => { const g = new T.BoxGeometry(l, h, w); g.translate(x, y, z); return g.toNonIndexed ? g.index ? g.toNonIndexed() : g : g; };
+    const mg = parts => { const g = U && U.mergeBufferGeometries ? U.mergeBufferGeometries(parts.map(p => { p.deleteAttribute('uv'); return p; })) : parts[0]; return g; };
+    /* [CHOCO-LIFE3D-SHAPES] low-poly ellipsoid bodies / tapered legs / wheels instead of plain boxes (still one instanced draw per kind) */
+    const ell = (x, y, z, l, h, w, rz) => { const g = new T.SphereGeometry(0.5, 8, 6); g.scale(l, h, w); if (rz) g.rotateZ(rz); g.translate(x, y, z); return g.toNonIndexed(); };
+    const leg = (x, y, z, h, r) => { const g = new T.CylinderGeometry(r * 0.7, r, h, 5); g.translate(x, y, z); return g.toNonIndexed(); };
+    const whl = (x, y, z, r, w) => { const g = new T.CylinderGeometry(r, r, w, 10); g.rotateX(Math.PI / 2); g.translate(x, y, z); return g.toNonIndexed(); };
+    const G = { forklift: mg([box(-0.02, 0.1, 0, 0.36, 0.12, 0.28), box(-0.14, 0.2, 0, 0.12, 0.14, 0.26), box(0.02, 0.2, 0, 0.12, 0.06, 0.16), box(0.0, 0.36, 0.11, 0.015, 0.26, 0.015), box(0.0, 0.36, -0.11, 0.015, 0.26, 0.015), box(-0.16, 0.36, 0.11, 0.015, 0.26, 0.015), box(-0.16, 0.36, -0.11, 0.015, 0.26, 0.015), box(-0.08, 0.49, 0, 0.2, 0.012, 0.24), box(0.2, 0.22, 0.06, 0.02, 0.4, 0.025), box(0.2, 0.22, -0.06, 0.02, 0.4, 0.025), box(0.22, 0.12, 0, 0.015, 0.1, 0.18), box(0.31, 0.03, 0.06, 0.18, 0.015, 0.04), box(0.31, 0.03, -0.06, 0.18, 0.015, 0.04), whl(0.1, 0.045, 0.15, 0.045, 0.04), whl(0.1, 0.045, -0.15, 0.045, 0.04), whl(-0.13, 0.04, 0.14, 0.04, 0.04), whl(-0.13, 0.04, -0.14, 0.04, 0.04)]),
+      deer: mg([ell(0, 0.3, 0, 0.38, 0.16, 0.13), ell(0.17, 0.38, 0, 0.12, 0.16, 0.06, -0.7), ell(0.24, 0.46, 0, 0.12, 0.06, 0.055), ell(0.2, 0.51, 0.03, 0.03, 0.06, 0.015), ell(0.2, 0.51, -0.03, 0.03, 0.06, 0.015), ell(-0.2, 0.34, 0, 0.05, 0.05, 0.03), leg(0.13, 0.12, 0.04, 0.24, 0.016), leg(0.13, 0.12, -0.04, 0.24, 0.016), leg(-0.13, 0.12, 0.04, 0.24, 0.018), leg(-0.13, 0.12, -0.04, 0.24, 0.018)]),
+      dog: mg([ell(0, 0.11, 0, 0.21, 0.08, 0.075), ell(0.11, 0.16, 0, 0.08, 0.07, 0.06), ell(0.155, 0.15, 0, 0.05, 0.035, 0.035), ell(0.1, 0.2, 0.02, 0.02, 0.03, 0.012), ell(0.1, 0.2, -0.02, 0.02, 0.03, 0.012), ell(-0.12, 0.14, 0, 0.08, 0.018, 0.018, 0.6), leg(0.07, 0.04, 0.025, 0.08, 0.012), leg(0.07, 0.04, -0.025, 0.08, 0.012), leg(-0.07, 0.04, 0.025, 0.08, 0.012), leg(-0.07, 0.04, -0.025, 0.08, 0.012)]),
+      bird: mg([ell(0, 0, 0, 0.13, 0.04, 0.05), ell(0.07, 0.01, 0, 0.04, 0.035, 0.035), ell(-0.08, 0, 0, 0.06, 0.008, 0.04), ell(-0.01, 0.01, 0.11, 0.08, 0.008, 0.2, 0.08), ell(-0.01, 0.01, -0.11, 0.08, 0.008, 0.2, 0.08)]) };
+    for (const k in CAP) { const g = MOD[k] ? L3D.geo(MOD[k][0]) : G[k]; if (!g.attributes.color) L3D.vcol(g, L3D.WHITE); const m = new T.InstancedMesh(g, L3D.mat(/walk|worker/.test(k) ? 'plain' : 'glossy'), CAP[k]); m.name = 'life3d-' + k; m.frustumCulled = false; m.count = 0; m.instanceMatrix.setUsage(T.DynamicDrawUsage); m.setColorAt(0, new T.Color(1, 1, 1)); sc.add(m); M[k] = m; } };
+  /* [CHOCO-LIFE3D-HI 2026-10-25] detailed Blender-pipeline glbs (window.L3D_LIFE_GLB, embedded in life-data.js) instanced near the camera, the shapes above beyond
+     ?lifed= (default 90 in, 10% hysteresis). Skinned glbs are drawn in their bind pose (one instanced draw per variant). Kinds with no detailed glb
+     (deer, bird) keep the shapes; vehicles already use L3D.geo (detailed ext glb, or the likeness.js model where the glb failed the likeness audit). ?lifehi=0 = shapes only. */
+  const HI_D = +(QS.get('lifed') || 90), HIK = QS.get('lifehi') === '0' ? {} : { walk: ['person-ped-a', 'person-ped-b', 'person-ped-c', 'person-ped-d', 'person-church', 'person-farmhand'], worker: ['person-crew', 'person-yard', 'person-operator', 'person-operator-b'], dog: ['dog-lab', 'dog-collie'], forklift: ['forklift'] };
+  const HI = {}, HSEL = new Map(); let hiStarted = false; API.hi = { ready: 0, want: 0, err: [], near: {} };
+  const hiGeo = (scene) => { const T = THREE, parts = []; scene.updateMatrixWorld(true);
+    scene.traverse(m => { if (!m.isMesh) return; let g = m.geometry.index ? m.geometry.toNonIndexed() : m.geometry.clone(); g.applyMatrix4(m.matrixWorld); const mt = Array.isArray(m.material) ? m.material[0] : m.material, c = (mt && mt.color) || new T.Color(1, 1, 1);
+      const vc = g.attributes.color; for (const k of Object.keys(g.attributes)) if (!['position', 'normal', 'color'].includes(k)) g.deleteAttribute(k); if (!g.attributes.normal) g.computeVertexNormals();
+      if (vc && vc.itemSize >= 3) { const n = vc.count, a = new Float32Array(n * 3); for (let i = 0; i < n; i++) { a[i * 3] = vc.getX(i) * c.r; a[i * 3 + 1] = vc.getY(i) * c.g; a[i * 3 + 2] = vc.getZ(i) * c.b; } g.setAttribute('color', new T.BufferAttribute(a, 3)); } else { if (vc) g.deleteAttribute('color'); L3D.vcol(g, c); }
+      parts.push(g); });
+    if (!parts.length) return null; const g = parts.length > 1 ? L3D.merge(parts) : parts[0]; g.scale(1 / 25.4, 1 / 25.4, 1 / 25.4); g.computeBoundingBox(); const b = g.boundingBox; g.translate(-(b.min.x + b.max.x) / 2, -b.min.y, -(b.min.z + b.max.z) / 2); return g; };
+  const hiStart = () => { hiStarted = true; const D = window.L3D_LIFE_GLB, T = THREE; if (!D || !T.GLTFLoader) { API.hi.err.push('no L3D_LIFE_GLB/GLTFLoader'); return; } const ld = new T.GLTFLoader(), sc = window.__choco.scene;
+    for (const k in HIK) { HI[k] = []; for (const id of HIK[k]) { if (!D[id]) { API.hi.err.push('missing ' + id); continue; } API.hi.want++;
+      try { const bin = atob(D[id]), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+        ld.parse(u.buffer, '', gl => { try { const g = hiGeo(gl.scene); if (!g) { API.hi.err.push('empty ' + id); return; } const m = new T.InstancedMesh(g, L3D.mat(k === 'forklift' ? 'glossy' : 'plain'), CAP[k]); m.name = 'life3d-hi-' + id; m.frustumCulled = false; m.count = 0; m.instanceMatrix.setUsage(T.DynamicDrawUsage); { const w = new T.Color(1, 1, 1); for (let i = 0; i < CAP[k]; i++) m.setColorAt(i, w); } /* shared material compiles with instance colour: unset = black */ sc.add(m); HI[k].push(m); API.hi.ready++; } catch (e) { API.hi.err.push(id + ': ' + e); } }, e => API.hi.err.push(id + ': ' + e)); } catch (e) { API.hi.err.push(id + ': ' + e); } } } };
+  const camPos = () => { const c = window.__layout3d && window.__layout3d.api && window.__layout3d.api.camera; return c ? c.position : null; };
+  const _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _e = new THREE.Euler(), _m = new THREE.Matrix4(), _c = new THREE.Color();
+  const deck = li => { const L = window.LAYOUT; return (L.levels[li - 1] && L.levels[li - 1].deck) || L.deckHeights[li - 1]; };
+  const keyOf = a => { if (a.kind === 'person') return a.crew || a.type === 'crew' ? 'worker' : 'walk'; if (a.kind === 'machine') return a.type === 'forklift' ? 'forklift' : 'tractor'; if (a.kind === 'animal') return a.fly ? 'bird' : a.type === 'deer' ? 'deer' : 'dog'; const t = TY[a.type]; return typeof t === 'function' ? t(a) : t || 'sedan'; };
+  const frame = () => { requestAnimationFrame(frame); const H = window.__ops3d; if (H && H.engine && API.eng !== H.engine) API.attach(H); if (!API.L || !window.__choco || !window.LAYOUT) return; if (!M) build(); if (!hiStarted) hiStart(); const cp = camPos(), hn = {}; for (const k in HI) for (const m of HI[k]) hn[m.name] = 0;
+    if (!hidOld) { window.__choco.scene.traverse(o => { if (o.isInstancedMesh && o.userData && o.userData.mk && /^(car:|person)/.test(o.userData.mk)) { o.visible = false; hidOld = true; } }); }
+    const n = {}; for (const k in M) n[k] = 0; const cap = {};
+    for (const a of API.L.ENT) { if (!a.level || a.mode === 'gone') continue; const k = keyOf(a), m = M[k]; if (!m || n[k] >= CAP[k]) { cap[k] = (cap[k] || 0) + 1; continue; } const md = MOD[k];
+      const y = deck(a.li) + 0.012 + (a.fly ? 2.5 + 0.6 * Math.sin(a.id + performance.now() / 900) : 0); _p.set(a.x, y, a.y); _q.setFromEuler(_e.set(0, -a.a, 0));
+      if (md && md[1] !== 1) _s.set(a.len / md[1], 1, a.w / md[2]); else if (k === 'walk' || k === 'worker') _s.setScalar(1); else _s.setScalar(1);
+      _m.compose(_p, _q, _s); const hv = HI[k]; if (hv && hv.length && cp) { const d = cp.distanceTo(_p), was = HSEL.get(a) || 0, near = was ? d < HI_D * 1.1 : d < HI_D * 0.9; HSEL.set(a, near ? 1 : 0); if (near) { const hm = hv[a.id % hv.length]; if (hn[hm.name] < CAP[k]) { hm.setMatrixAt(hn[hm.name]++, _m); continue; } } } const i = n[k]++; m.setMatrixAt(i, _m); m.setColorAt(i, _c.set(a.col || '#ccc')); }
+    for (const k in M) { M[k].count = n[k]; M[k].instanceMatrix.needsUpdate = true; if (M[k].instanceColor) M[k].instanceColor.needsUpdate = true; } for (const k in HI) for (const m of HI[k]) { m.count = hn[m.name]; m.instanceMatrix.needsUpdate = true; } API.hi.near = hn; API.drawn = n; API.over = cap; };
+  requestAnimationFrame(frame);
+})();

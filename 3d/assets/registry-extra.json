@@ -1,0 +1,807 @@
+{
+ "format": "layout3d-registry-extra/1",
+ "doc": "grok-sim ids (tools/grok_sim) accepted by check_external_assets.py; merged under registry.json (registry.json wins)",
+ "assets": {
+  "walthers-933-3892": {
+   "cat": "structure",
+   "name": "Walthers Cornerstone 933-3892 Meadowhead Barn (barn only, no silo) built as the Tar Landin",
+   "size_in": [
+    4.312,
+    2.812,
+    3.0
+   ],
+   "source": "grok-sim batch-1"
+  },
+  "walthers-933-3890": {
+   "cat": "structure",
+   "name": "Walthers Cornerstone 933-3890 Lancaster Farm House (Tar Landing Stables farmhouse).",
+   "size_in": [
+    3.25,
+    2.312,
+    2.5
+   ],
+   "source": "grok-sim batch-1"
+  },
+  "walthers-933-3853": {
+   "cat": "structure",
+   "name": "Walthers Cornerstone 933-3853 Pole Barn (the enclosed pole barn from the Pole Barn and She",
+   "size_in": [
+    4.875,
+    1.938,
+    3.688
+   ],
+   "source": "grok-sim batch-1"
+  },
+  "walthers-933-3853-hay": {
+   "cat": "structure",
+   "name": "open-sided hay barn built from the Walthers 933-3853 pole barn (same footprint) for the Ta",
+   "size_in": [
+    4.875,
+    1.938,
+    3.688
+   ],
+   "source": "grok-sim batch-1"
+  },
+  "walthers-933-3853-shed": {
+   "cat": "structure",
+   "name": "Walthers 933-3853 Large Shed (from the Pole Barn and Sheds kit) built as the Blounts Creek",
+   "size_in": [
+    1.75,
+    0.938,
+    1.375
+   ],
+   "source": "grok-sim batch-1"
+  },
+  "walthers-933-3853-runin": {
+   "cat": "structure",
+   "name": "three-sided horse run-in shed built on the Walthers 933-3853 large-shed footprint, for the",
+   "size_in": [
+    1.75,
+    0.938,
+    1.375
+   ],
+   "source": "grok-sim batch-1"
+  },
+  "walthers-933-3853-garage": {
+   "cat": "structure",
+   "name": "Walthers 933-3853 One-Car Garage (from the Pole Barn and Sheds kit) for the houses and the",
+   "size_in": [
+    1.5,
+    0.875,
+    1.0
+   ],
+   "source": "grok-sim batch-1"
+  },
+  "walthers-933-3888": {
+   "cat": "structure",
+   "name": "Walthers Cornerstone 933-3888 Two-Story Frame House (frame house on Church Ln, home of a r",
+   "size_in": [
+    1.5,
+    2.375,
+    3.375
+   ],
+   "source": "grok-sim batch-1"
+  },
+  "walthers-933-3838": {
+   "cat": "structure",
+   "name": "Walthers Cornerstone 933-3838 Brick Ranch House (on Church Ln).",
+   "size_in": [
+    3.062,
+    1.25,
+    2.281
+   ],
+   "source": "grok-sim batch-1"
+  },
+  "walthers-933-3834": {
+   "cat": "structure",
+   "name": "Walthers Cornerstone 933-3834 Industrial Office (used for the steel office, CLNA crew offi",
+   "size_in": [
+    3.625,
+    1.75,
+    2.25
+   ],
+   "source": "grok-sim batch-1"
+  },
+  "walthers-933-3240": {
+   "cat": "structure",
+   "name": "Walthers Cornerstone 933-3240 Clarkesville Depot built as the Riverton depot (Amtrak waiti",
+   "size_in": [
+    5.25,
+    1.875,
+    2.0
+   ],
+   "source": "grok-sim batch-1"
+  },
+  "walthers-933-3855": {
+   "cat": "structure",
+   "name": "Walthers Cornerstone 933-3855 Modern Steel Warehouse built as Albemarle Ag (bagged feed +  [RV3: cut to 1.76 in deep]",
+   "size_in": [
+    10.5,
+    2.203,
+    1.76
+   ],
+   "source": "grok-sim batch-2"
+  },
+  "walthers-933-3893": {
+   "cat": "structure",
+   "name": "Walthers Cornerstone 933-3893 Oil Storage Tank (single tank) used for the Coastal Carolina",
+   "size_in": [
+    2.125,
+    2.75,
+    2.125
+   ],
+   "source": "grok-sim batch-2"
+  },
+  "walthers-933-3200-rack": {
+   "cat": "structure",
+   "name": "tank-car unloading rack from Walthers Cornerstone 933-3200 Interstate Fuel & Oil (rack onl",
+   "size_in": [
+    3.75,
+    1.835,
+    1.2
+   ],
+   "source": "grok-sim batch-2"
+  },
+  "walthers-933-3200-pump": {
+   "cat": "structure",
+   "name": "pump house from Walthers Cornerstone 933-3200 Interstate Fuel & Oil, used as the rack pump",
+   "size_in": [
+    1.5,
+    1.125,
+    1.05
+   ],
+   "source": "grok-sim batch-2"
+  },
+  "walthers-933-3885-canopy": {
+   "cat": "structure",
+   "name": "Walthers Cornerstone 933-3885 Modern Gas Station auto island: pump canopy with pump island",
+   "size_in": [
+    6.0,
+    2.0,
+    1.875
+   ],
+   "source": "grok-sim batch-2"
+  },
+  "load-pellet-rack": {
+   "cat": "structure-detail",
+   "name": "plastic-pellet vacuum-transfer rack (Pamlico Polymers covered-hopper unloading) beside one",
+   "size_in": [
+    4.5,
+    1.575,
+    0.9
+   ],
+   "source": "grok-sim batch-3"
+  },
+  "load-pellet-silo": {
+   "cat": "structure-detail",
+   "name": "plastic-pellet storage silo (one of three at Pamlico Polymers), kit-tagged 933-3893 footpr",
+   "size_in": [
+    2.126,
+    4.5,
+    2.126
+   ],
+   "source": "grok-sim batch-3"
+  },
+  "load-hopper-pit": {
+   "cat": "structure-detail",
+   "name": "covered-hopper pneumatic/gravity unloading pit set between and beside the rails (Medusa ce",
+   "size_in": [
+    2.1,
+    0.6,
+    1.5
+   ],
+   "source": "grok-sim batch-3"
+  },
+  "load-dump-shed": {
+   "cat": "structure-detail",
+   "name": "grain truck dump shed over the receiving pit at the Riverton Prairie Co-op elevator.",
+   "size_in": [
+    3.0,
+    1.45,
+    1.5
+   ],
+   "source": "grok-sim batch-3"
+  },
+  "struct-autorack-adjustable-ramp": {
+   "cat": "structure-detail",
+   "name": "portable height-adjustable steel autorack end ramp ('Buck loader' type) with bridge plate,",
+   "size_in": [
+    1.181,
+    1.535,
+    4.134
+   ],
+   "source": "grok-sim batch-3"
+  },
+  "load-coil-rack": {
+   "cat": "structure-detail",
+   "name": "steel coil storage rack (timber-lined steel saddles) with coils, for the Pamlico Steel coi",
+   "size_in": [
+    3.0,
+    0.525,
+    0.6
+   ],
+   "source": "grok-sim batch-3"
+  },
+  "load-scrap-bins": {
+   "cat": "structure-detail",
+   "name": "concrete-block scrap bins (Pamlico Scrap & Metal pad).",
+   "size_in": [
+    4.5,
+    0.75,
+    1.5
+   ],
+   "source": "grok-sim batch-3"
+  },
+  "load-material-handler": {
+   "cat": "structure-detail",
+   "name": "scrap material handler with lifting magnet (Sennebogen 835 / Liebherr LH 40 style) at the ",
+   "size_in": [
+    3.15,
+    3.375,
+    0.9
+   ],
+   "source": "grok-sim batch-3"
+  },
+  "load-pipe-rack": {
+   "cat": "structure-detail",
+   "name": "timber dunnage pipe racks loaded with steel line pipe (Riverton Pipe & Supply pipe yard).",
+   "size_in": [
+    3.15,
+    0.45,
+    0.9
+   ],
+   "source": "grok-sim batch-3"
+  },
+  "load-pipe-bridge": {
+   "cat": "structure-detail",
+   "name": "steel pipe bridge carrying 3 process pipes from the CCF tanks over two tracks to the plant",
+   "size_in": [
+    3.0,
+    2.1,
+    0.6
+   ],
+   "source": "grok-sim batch-3"
+  },
+  "load-forklift": {
+   "cat": "instanced",
+   "name": "large pneumatic-tyre yard forklift with long lumber forks (transload and lumber-yard work)",
+   "size_in": [
+    1.2,
+    0.75,
+    0.562
+   ],
+   "source": "grok-sim batch-3"
+  },
+  "horse": {
+   "cat": "instanced",
+   "name": "standing riding horse (Quarter Horse / Thoroughbred cross, 16 hands) for the Tar Landing S",
+   "size_in": [
+    0.615,
+    0.57,
+    0.158
+   ],
+   "source": "grok-sim batch-4"
+  },
+  "horse-grazing": {
+   "cat": "instanced",
+   "name": "grazing horse, head down, for the paddocks.",
+   "size_in": [
+    0.645,
+    0.405,
+    0.158
+   ],
+   "source": "grok-sim batch-4"
+  },
+  "horse-rider": {
+   "cat": "instanced",
+   "name": "horse with rider walking in the riding ring.",
+   "size_in": [
+    0.615,
+    0.645,
+    0.173
+   ],
+   "source": "grok-sim batch-4"
+  },
+  "jump": {
+   "cat": "instanced",
+   "name": "show-jumping vertical (riding ring jump).",
+   "size_in": [
+    0.9,
+    0.375,
+    0.188
+   ],
+   "source": "grok-sim batch-4"
+  },
+  "jump-oxer": {
+   "cat": "instanced",
+   "name": "show-jumping oxer (spread fence) for the riding ring.",
+   "size_in": [
+    0.9,
+    0.375,
+    0.338
+   ],
+   "source": "grok-sim batch-4"
+  },
+  "trough": {
+   "cat": "instanced",
+   "name": "galvanised oval stock-water trough.",
+   "size_in": [
+    0.6,
+    0.15,
+    0.225
+   ],
+   "source": "grok-sim batch-4"
+  },
+  "hay-bale": {
+   "cat": "instanced",
+   "name": "round hay bale, net-wrapped, sitting on its curved side.",
+   "size_in": [
+    0.375,
+    0.375,
+    0.375
+   ],
+   "source": "grok-sim batch-4"
+  },
+  "hay-bale-stack": {
+   "cat": "instanced",
+   "name": "stack of small square hay bales.",
+   "size_in": [
+    0.75,
+    0.375,
+    0.45
+   ],
+   "source": "grok-sim batch-4"
+  },
+  "horse-trailer": {
+   "cat": "instanced",
+   "name": "gooseneck 3-horse slant-load aluminium horse trailer, parked unhitched on its jack.",
+   "size_in": [
+    1.949,
+    0.713,
+    0.587
+   ],
+   "source": "grok-sim batch-4"
+  },
+  "veh-pickup-dually": {
+   "cat": "instanced",
+   "name": "heavy-duty crew-cab dually pickup with gooseneck hitch (towing truck for the horse trailer",
+   "size_in": [
+    1.665,
+    0.495,
+    0.6
+   ],
+   "source": "grok-sim batch-4"
+  },
+  "deer-stand": {
+   "cat": "instanced",
+   "name": "elevated box deer blind on legs (woods edges).",
+   "size_in": [
+    0.488,
+    1.35,
+    0.488
+   ],
+   "source": "grok-sim batch-4"
+  },
+  "ws-785-2253": {
+   "cat": "structure-detail",
+   "name": "Woodland Scenics N 785-2253 (US2253) Substation, built and ready (Tideland EMC Riverton su",
+   "size_in": [
+    3.626,
+    2.374,
+    2.626
+   ],
+   "source": "grok-sim batch-5"
+  },
+  "cell-tower": {
+   "cat": "structure-detail",
+   "name": "120 ft cellular monopole with equipment compound.",
+   "size_in": [
+    3.75,
+    9.15,
+    3.75
+   ],
+   "source": "grok-sim batch-5"
+  },
+  "tie-stack": {
+   "cat": "instanced",
+   "name": "stack of used railroad relay ties (MOW pile).",
+   "size_in": [
+    0.638,
+    0.299,
+    0.421
+   ],
+   "source": "grok-sim batch-6"
+  },
+  "ballast-pile": {
+   "cat": "instanced",
+   "name": "granite ballast stockpile (MOW).",
+   "size_in": [
+    1.201,
+    0.299,
+    0.996
+   ],
+   "source": "grok-sim batch-6"
+  },
+  "rail-rack": {
+   "cat": "instanced",
+   "name": "steel rail lengths on timber racks (MOW).",
+   "size_in": [
+    2.925,
+    0.189,
+    0.449
+   ],
+   "source": "grok-sim batch-6"
+  },
+  "junk-car": {
+   "cat": "instanced",
+   "name": "junked 1990s mid-size sedan in a salvage yard.",
+   "size_in": [
+    1.203,
+    0.336,
+    0.448
+   ],
+   "source": "grok-sim batch-6"
+  },
+  "junk-pickup": {
+   "cat": "instanced",
+   "name": "rusted 1980s pickup truck in a salvage yard.",
+   "size_in": [
+    1.244,
+    0.468,
+    0.502
+   ],
+   "source": "grok-sim batch-6"
+  },
+  "car-stack": {
+   "cat": "instanced",
+   "name": "stack of crushed car hulks (salvage yard).",
+   "size_in": [
+    1.201,
+    0.449,
+    0.449
+   ],
+   "source": "grok-sim batch-6"
+  },
+  "headstone": {
+   "cat": "instanced",
+   "name": "upright granite headstone (Mt. Olive church cemetery).",
+   "size_in": [
+    0.188,
+    0.225,
+    0.06
+   ],
+   "source": "grok-sim batch-6"
+  },
+  "ruin": {
+   "cat": "structure-detail",
+   "name": "old foundation ruin (burned house / gin site remnant).",
+   "size_in": [
+    3.0,
+    0.224,
+    3.0
+   ],
+   "source": "grok-sim batch-6"
+  },
+  "chimney": {
+   "cat": "instanced",
+   "name": "lone brick chimney standing in a field (house burned long ago).",
+   "size_in": [
+    0.449,
+    1.65,
+    0.299
+   ],
+   "source": "grok-sim batch-6"
+  },
+  "stump": {
+   "cat": "instanced",
+   "name": "old tree stump.",
+   "size_in": [
+    0.264,
+    0.114,
+    0.264
+   ],
+   "source": "grok-sim batch-6"
+  },
+  "veh-tanker": {
+   "cat": "instanced",
+   "name": "tractor with stainless food-grade tank trailer (veg-oil / corn-syrup trucks at CCF).",
+   "size_in": [
+    4.237,
+    0.997,
+    0.723
+   ],
+   "source": "grok-sim batch-7"
+  },
+  "veh-bulk-trailer": {
+   "cat": "instanced",
+   "name": "tractor with pneumatic dry-bulk trailer (cement / plastic pellets).",
+   "size_in": [
+    3.986,
+    0.997,
+    0.723
+   ],
+   "source": "grok-sim batch-7"
+  },
+  "veh-flatbed": {
+   "cat": "instanced",
+   "name": "tractor with 48 ft flatbed loaded with lumber.",
+   "size_in": [
+    4.732,
+    0.997,
+    0.723
+   ],
+   "source": "grok-sim batch-7"
+  },
+  "veh-autohauler": {
+   "cat": "instanced",
+   "name": "stinger-steer car-carrier truck (Riverton Vehicle Distribution).",
+   "size_in": [
+    5.626,
+    1.012,
+    0.638
+   ],
+   "source": "grok-sim batch-7"
+  },
+  "veh-hirail": {
+   "cat": "instanced",
+   "name": "MOW hi-rail crew-cab truck.",
+   "size_in": [
+    1.75,
+    0.502,
+    0.598
+   ],
+   "source": "grok-sim batch-7"
+  },
+  "veh-grain-truck": {
+   "cat": "instanced",
+   "name": "grain tractor-trailer (Cascadia + 40 ft hopper, 16.8 m)",
+   "size_in": [
+    4.131,
+    0.997,
+    0.723
+   ],
+   "source": "grok-sim batch-7"
+  },
+  "loco-gp38-ns": {
+   "cat": "rollingstock",
+   "name": "EMD GP38-2 4-axle road switcher, Norfolk Southern (locals P20/P22, R60/R62/R64 and the yar",
+   "size_in": [
+    4.476,
+    1.192,
+    0.822
+   ],
+   "source": "grok-sim batch-8"
+  },
+  "loco-sd70-ns": {
+   "cat": "rollingstock",
+   "name": "EMD SD70ACU (rebuilt SD90MAC), Norfolk Southern (coal unit and NS 165).",
+   "size_in": [
+    6.051,
+    1.224,
+    0.851
+   ],
+   "source": "grok-sim batch-8"
+  },
+  "loco-sd70-up": {
+   "cat": "rollingstock",
+   "name": "EMD SD70M, Union Pacific (foreign power, second unit on NS 165).",
+   "size_in": [
+    5.5,
+    1.173,
+    0.768
+   ],
+   "source": "grok-sim batch-8"
+  },
+  "loco-mp15": {
+   "cat": "rollingstock",
+   "name": "EMD MP15DC yard switcher, Norfolk Southern (YARD job at Pamlico Jct.).",
+   "size_in": [
+    3.615,
+    1.138,
+    0.822
+   ],
+   "source": "grok-sim batch-8"
+  },
+  "car-covered_hopper-g3250": {
+   "cat": "rollingstock",
+   "name": "Gunderson 3,250 cu ft 2-bay covered hopper (CSX phosphate, Medusa cement, dry bulk pits).",
+   "size_in": [
+    3.3,
+    1.056,
+    0.8
+   ],
+   "source": "grok-sim batch-9"
+  },
+  "car-tank-gbrx": {
+   "cat": "rollingstock",
+   "name": "Greenbrier 30,000 gal DOT-117 ethanol tank car (BNSF ethanol unit).",
+   "size_in": [
+    4.598,
+    1.13,
+    0.799
+   ],
+   "source": "grok-sim batch-9"
+  },
+  "car-boxcar-c60": {
+   "cat": "rollingstock",
+   "name": "60 ft high-cube double-plug-door boxcar (transload, paper, Box & Carton).",
+   "size_in": [
+    5.098,
+    1.276,
+    0.799
+   ],
+   "source": "grok-sim batch-9"
+  },
+  "load-container-53": {
+   "cat": "instanced",
+   "name": "standalone 53 ft domestic intermodal container (team-track yard).",
+   "size_in": [
+    3.976,
+    0.713,
+    0.638
+   ],
+   "source": "grok-sim batch-9"
+  },
+  "load-container-chassis": {
+   "cat": "instanced",
+   "name": "53 ft container on a gooseneck chassis, parked on landing gear (team-track yard).",
+   "size_in": [
+    3.976,
+    1.012,
+    0.638
+   ],
+   "source": "grok-sim batch-9"
+  },
+  "load-trailer-53": {
+   "cat": "instanced",
+   "name": "53 ft dry van semi-trailer parked on landing gear (industry docks).",
+   "size_in": [
+    3.976,
+    1.012,
+    0.638
+   ],
+   "source": "grok-sim batch-9"
+  },
+  "load-lumber-stack": {
+   "cat": "instanced",
+   "name": "stack of wrapped lumber bundles on dunnage (lumber yard / transload pad).",
+   "size_in": [
+    1.201,
+    0.599,
+    0.6
+   ],
+   "source": "grok-sim batch-9"
+  },
+  "veh-grain-straight": {
+   "cat": "instanced",
+   "name": "farm straight tandem grain truck (10.7 m)",
+   "size_in": [
+    2.626,
+    0.811,
+    0.65
+   ],
+   "source": "grok-sim batch-7",
+   "id": "veh-grain-straight"
+  },
+  "car-coil_lod1": {
+   "cat": "rollingstock",
+   "name": "coil car (LOD1, distance)",
+   "size_in": [
+    4.136,
+    1.038,
+    0.792
+   ],
+   "source": "blender round 9 LOD1"
+  },
+  "car-flat_lod1": {
+   "cat": "rollingstock",
+   "name": "flat car (LOD1, distance)",
+   "size_in": [
+    5.551,
+    1.164,
+    0.817
+   ],
+   "source": "blender round 9 LOD1"
+  },
+  "car-gondola_lod1": {
+   "cat": "rollingstock",
+   "name": "gondola car (LOD1, distance)",
+   "size_in": [
+    4.368,
+    0.697,
+    0.812
+   ],
+   "source": "blender round 9 LOD1"
+  },
+  "car-hopper_lod1": {
+   "cat": "rollingstock",
+   "name": "hopper car (LOD1, distance)",
+   "size_in": [
+    4.134,
+    0.923,
+    0.807
+   ],
+   "source": "blender round 9 LOD1"
+  },
+  "loco-gp15_lod1": {
+   "cat": "rollingstock",
+   "name": "GP15 locomotive (LOD1, distance)",
+   "size_in": [
+    4.158,
+    1.176,
+    0.822
+   ],
+   "source": "blender round 9 LOD1"
+  },
+  "loco-gp38-ns_lod1": {
+   "cat": "rollingstock",
+   "name": "EMD GP38-2 4-axle road switcher, Norfolk Southern (locals P20/P22, R60/R62/R64 and the yar (LOD1, distance)",
+   "size_in": [
+    4.476,
+    1.186,
+    0.822
+   ],
+   "source": "blender round 9 LOD1"
+  },
+  "loco-gp40_lod1": {
+   "cat": "rollingstock",
+   "name": "GP40 locomotive (LOD1, distance)",
+   "size_in": [
+    4.476,
+    1.186,
+    0.822
+   ],
+   "source": "blender round 9 LOD1"
+  },
+  "loco-mp15_lod1": {
+   "cat": "rollingstock",
+   "name": "EMD MP15DC yard switcher, Norfolk Southern (YARD job at Pamlico Jct.). (LOD1, distance)",
+   "size_in": [
+    3.615,
+    1.132,
+    0.822
+   ],
+   "source": "blender round 9 LOD1"
+  },
+  "loco-sd40_lod1": {
+   "cat": "rollingstock",
+   "name": "SD40 locomotive (LOD1, distance)",
+   "size_in": [
+    5.202,
+    1.186,
+    0.822
+   ],
+   "source": "blender round 9 LOD1"
+  },
+  "loco-sd70-ns_lod1": {
+   "cat": "rollingstock",
+   "name": "EMD SD70ACU (rebuilt SD90MAC), Norfolk Southern (coal unit and NS 165). (LOD1, distance)",
+   "size_in": [
+    6.051,
+    1.218,
+    0.851
+   ],
+   "source": "blender round 9 LOD1"
+  },
+  "load-guard-shack": {
+   "cat": "structure-detail",
+   "name": "scratch guard shack + gate (1 x 1 in island)",
+   "size_in": [
+    1.0,
+    0.68,
+    1.0
+   ],
+   "source": "RV3 blender-pipeline"
+  },
+  "walthers-933-3856-bay": {
+   "cat": "structure",
+   "name": "Pamlico Steel crane bay (R28 drive-through steel shed to the PSP-bay footprint, kit 933-3856 kitbash)",
+   "size_in": [
+    17.69,
+    3.6,
+    6.94
+   ],
+   "source": "R28 Blender structs.psp_bay"
+  }
+ }
+}

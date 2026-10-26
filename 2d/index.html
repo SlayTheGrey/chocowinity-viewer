@@ -1,0 +1,111 @@
+<!doctype html><html><head><meta name="robots" content="noindex, nofollow"><link rel="icon" href="data:,"><meta charset="utf-8"><title>Ops session — N-scale layout</title>
+<script>/* [OPSFIX 2026-10-18] boot guard for file:// use: a missing or broken file shows a message naming it (and the zip that holds it) instead of a blank page.
+   parts-manifest.js (optional, written by split_ops_parts.py) = window.OPS_PARTS {set, parts, app, where{file: part}}. Voice packs are optional (browser speech fallback). */
+window.OPSBOOT = (function () { var B = { failed: false, errs: [], missing: [], notes: [] }, ROOT = 'ops-sim';
+ function el() { var o = document.getElementById('ops-boot'); if (o || !document.body) return o; o = document.createElement('div'); o.id = 'ops-boot';
+  o.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#3a2020;color:#eef;font:16px/1.45 Segoe UI,Arial,sans-serif';
+  o.innerHTML = '<div style="max-width:720px;padding:24px 28px;background:#0007;border-radius:10px"><b style="font-size:20px">Ops simulator</b><div id="ops-boot-msg"></div><div id="ops-boot-det" style="font-size:13px;opacity:.85;margin-top:8px;white-space:pre-wrap"></div></div>';
+  document.body.appendChild(o); return o; }
+ function show() { if (!B.failed || !el()) return; document.getElementById('ops-boot-msg').innerHTML = '<b>The ops simulator could not start.</b><br>' + B.t; document.getElementById('ops-boot-det').textContent = (B.d || '') + (B.errs.length ? '\n\nDetails:\n' + B.errs.slice(0, 6).join('\n') : ''); }
+ B.fail = function (t, d) { if (B.failed) return; B.failed = true; B.t = t; B.d = d; show(); };
+ B.note = function (t) { if (B.notes.indexOf(t) >= 0) return; B.notes.push(t); var go = function () { var n = document.getElementById('ops-note'); if (!n) { n = document.createElement('div'); n.id = 'ops-note'; n.title = 'click to hide';
+   n.style.cssText = 'position:fixed;left:10px;bottom:10px;z-index:99998;max-width:460px;background:#5a4300e8;color:#fff;font:13px Segoe UI,Arial,sans-serif;padding:8px 12px;border-radius:6px;cursor:pointer'; n.onclick = function () { n.style.display = 'none'; }; document.body.appendChild(n); }
+   n.innerHTML = B.notes.join('<br>'); n.style.display = 'block'; }; document.body ? go() : document.addEventListener('DOMContentLoaded', go); };
+ B.rel = function (u) { u = decodeURIComponent(String(u || '')).split('?')[0]; var i = u.lastIndexOf('/' + ROOT + '/'); return i >= 0 ? u.slice(i + ROOT.length + 2) : u.split('/').pop(); };
+ B.where = function (rel) { var P = window.OPS_PARTS; if (!P) return ''; var n = P.where && P.where[rel] || (/^audio\/voice\/pack\//.test(rel) ? 0 : P.app); return n ? P.parts[n - 1] + '.zip' : ''; };
+ B.nestHint = function () { var m = /\/([^\/]*part\d+of\d+)\/(?:\1\/)?ops-sim\/index\.html$/i.exec(decodeURIComponent(location.pathname));
+  return m ? '\n\nThis page is in a folder named after one zip (' + m[1] + '). Windows "Extract All..." suggests a NEW folder for every zip. Extract every part again and type the SAME destination folder each time, then open ops-sim\\index.html there.' : ''; };
+ B.need = function (ok, rel) { if (!ok) { if (B.missing.indexOf(rel) < 0) B.missing.push(rel); var z = B.where(rel);
+   B.fail('A required file is missing or did not load: <b>ops-sim/' + rel + '</b>' + (z ? '<br>It is in <b>' + z + '</b>.' : '') + (B.missing.length > 1 ? '<br>Also missing: ' + B.missing.slice(1).join(', ') : ''),
+     'Extract the WHOLE zip again (right-click > Extract All... > Extract), then double-click ops-sim\\index.html inside the extracted folder. Opening index.html straight from inside the zip (without extracting) does not work.' + (window.OPS_PARTS ? ' With several zips, extract them all into the SAME folder.' : '') + B.nestHint());
+   if (B.failed) show(); } return ok; };
+ /* capture phase: <script>/<link> load failures (voice packs are optional; parts-manifest.js is optional) */
+ window.addEventListener('error', function (e) { var t = e.target; if (!t || t === window || !(t.tagName === 'SCRIPT' || t.tagName === 'LINK')) return; var rel = B.rel(t.src || t.href);
+  if (/^audio\/voice\/pack\//.test(rel) || /parts-manifest\.js$|logistics-data\.js$|logistics-core\.js$|industry\.js$/.test(rel)) return; B.need(false, rel); }, true);
+ /* the other parts' folders, when they were extracted next to (or inside) this one */
+ window.OPSALT = function (rel) { var P = window.OPS_PARTS, h = location.href.split('?')[0].split('#')[0], i = h.lastIndexOf('/' + ROOT + '/'); if (!P || i < 0) return []; var par = h.slice(0, i + 1), gp = par.replace(/[^\/]*\/$/, ''), ggp = gp.replace(/[^\/]*\/$/, ''), out = [], n = P.where && P.where[rel], ps = n ? [P.parts[n - 1]] : P.parts;
+  ps.forEach(function (p) { [par + p + '/', par + p + '/' + p + '/', gp + p + '/', gp + p + '/' + p + '/', ggp + p + '/' + p + '/'].forEach(function (b) { var c = b + ROOT + '/' + rel; if (out.indexOf(c) < 0 && c !== par + ROOT + '/' + rel) out.push(c); }); }); return out; };
+ window.VOICE_PACK_REL = 'audio/voice/pack/'; window.L3DALT = window.L3DALT || window.OPSALT;
+ window.L3DPackMissing = function (rel) { var z = B.where(rel); B.note('Radio voice ' + rel.split('/').pop().replace('.js', '') + ' not found, so that speaker uses the browser voice.' + (z ? ' Its recordings are in <b>' + z + '</b>: extract it into the same folder as part 1.' : '')); };
+ window.addEventListener('error', function (e) { if (!e || !e.message) return; B.errs.push(e.message + (e.filename ? ' (' + B.rel(e.filename) + ':' + e.lineno + ')' : '')); if (window.__opsGame) return;
+  B.fail('A script error stopped loading.', (e.message === 'Script error.' ? 'Chrome hides the details of errors in files opened from disk. The usual cause is a missing or partly extracted file: extract the zip again (all parts into the same folder). ' : '') + 'Otherwise use a current Chrome or Edge.' + B.nestHint()); });
+ document.addEventListener('DOMContentLoaded', show);
+ /* after every core script ran: the game must have started */
+ window.addEventListener('load', function () { if (!window.__opsGame && !B.failed) B.fail('The game did not start.', 'A core file is missing or damaged. Extract the zip again and open ops-sim\\index.html.' + B.nestHint()); });
+ return B; })();</script>
+<script src="parts-manifest.js"></script>
+<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="theme.css"></head><body>
+<div id="top">
+ <div class="tb-brand">&#128642; <b id="title">Ops</b></div>
+ <div class="tb-session" title="Session status">
+  <span id="ss-status" class="ss-pill ready">Ready</span>
+  <button id="pause" class="primary" title="Start / pause the session [P]">&#9654; Run</button>
+  <div class="seg" id="rates" title="Simulation speed">
+   <button data-rate="1" title="Real time">1&times;</button><button data-rate="2">2&times;</button><button data-rate="4">4&times;</button><button data-rate="8">8&times;</button></div>
+  <select id="rate" class="hidden-sel" aria-hidden="true" tabindex="-1"><option>1</option><option>2</option><option>4</option><option>8</option></select>
+  <span class="clock" id="clock" title="Fast clock 4:1">06:00</span>
+ </div>
+ <label class="tb-view" title="What the map shows">View <select id="view"><option value="both">Both levels</option><option value="1">L1 Pamlico</option><option value="2">L2 Riverton</option><option value="3">L3 staging</option><option value="ride">Ride along (cab)</option><option value="follow">Follow person/vehicle</option></select></label>
+ <div class="tb-right">
+  <button id="ctcb" title="CTC panel: line routes, throw turnouts, hold signals [C]">&#128678; CTC<kbd>C</kbd></button>
+  <button id="ymb" title="Yardmaster screen [Y]">&#128203; Yard<kbd>Y</kbd></button>
+  <button id="voiceb" title="Two-way radio voices on/off [V]">&#128251; Radio<kbd>V</kbd></button>
+  <button id="sound" title="Sound on/off [M]. Starts on first click.">&#128266;</button>
+  <button id="sessb" title="Session setup: mode, seed, save / load">&#9881; Session</button>
+  <button id="helpb" title="How to play [H]">? Help<kbd>H</kbd></button>
+ </div>
+</div>
+<button id="ui-eye" title="Hide / show all panels [Tab]">&#128065;</button>
+<div id="main"><canvas id="cv"></canvas>
+ <div id="side">
+  <div class="ph" id="side-h" title="Click to minimise / restore">Session <button class="minb" id="side-min" title="Minimise / restore this panel">&ndash;</button></div>
+  <div class="sbody">
+  <div id="nextmove" aria-live="polite"></div>
+  <details class="sec" data-sec="job" open><summary>Your job &amp; car cards</summary>
+   <div class="frow"><select id="job" title="Your job"></select><button id="autojob" title="Let the AI crew run this job's planned moves">&#129302; AI crew</button></div><div id="cards"></div></details>
+  <details class="sec" data-sec="throttle" open><summary>Throttle <small id="locoinfo"></small></summary><div id="throttle"></div></details>
+  <details class="sec" data-sec="trains"><summary>All trains <small>Drive / Ride any loco</small></summary><div id="traincards"></div></details>
+  <details class="sec" data-sec="lift"><summary>Lift &amp; score <small id="liftst"></small></summary><div class="frow"><button id="lift1" title="Send the lift to L1">Lift &rarr; L1</button><button id="lift2" title="Send the lift to L2">Lift &rarr; L2</button></div><div id="score"></div></details>
+  <details class="sec" data-sec="log" open><summary>Dispatcher log</summary>
+   <div class="seg small" id="logf"><button data-f="all" class="on">All</button><button data-f="disp">Dispatcher</button><button data-f="radio">Radio</button><button data-f="warn">Warnings</button></div>
+   <div id="log"></div>
+   <div class="frow small"><button id="chatb" class="on" title="Crew chatter on/off (dispatcher, detectors and emergencies always come through)">Chatter on</button><label>Radio level <select id="radlvl" title="Radio level"><option value="full">full</option><option value="essential">essential</option></select></label></div>
+   <div id="radiofeed"></div></details>
+  <details class="sec" data-sec="sound"><summary>Sound</summary><div id="vols"></div><button id="credb" title="Sound credits and licenses">Credits</button></details>
+  </div>
+ </div></div>
+<div id="ss" class="modal hidden"><div class="card">
+ <h2>&#128642; <span id="ss-title">Operating session</span></h2>
+ <p class="lead">Pick how you want to run it, then press <b>Start session</b>. The fast clock starts at 06:00 (4:1).</p>
+ <ol class="ss-steps"><li><b>Start</b> — Mixed mode gives you a job; the AI runs everything else.</li><li><b>Follow &ldquo;Next move&rdquo;</b> (top right) — the target track glows yellow; ringed turnouts must be green-ticked.</li><li><b>Drive</b> with &uarr;/&darr; (or the knob), stop, click the white dot between cars to cut them off. Car cards tick themselves off.</li></ol>
+ <div class="frow"><label for="mode">Mode</label><select id="mode"><option value="mixed">Mixed: you run your job, AI dispatcher + through trains</option><option value="auto">Automated: AI runs everything (watch / ride along)</option><option value="manual">Manual CTC: you line turnouts + lift for everyone</option></select></div>
+ <div class="frow"><label for="seed" title="Same seed = same switch lists">Seed</label><input id="seed" type="number" value="1" min="1" style="width:5em"><button id="new" title="Start over with this mode and seed">&#8635; New session</button><span class="spacer"></span><button id="save" title="Save to this browser">Save</button><button id="load" title="Load the saved session">Load</button></div>
+ <div id="ss-jobs" class="small"></div>
+ <div class="qs-grid small"><div><b>Drive</b>: &uarr;/&darr; or wheel on the knob, R reverse, Space step 0, E emergency, 0&ndash;8 functions</div><div><b>Work</b>: click turnout dots to throw, click coupler dots to uncouple; couple at &le; 4 smph</div><div><b>Panels</b>: Tab hides all UI, &ndash; minimises a panel, C CTC, Y yard, P pause</div></div>
+ <div class="qs-foot"><span></span><span><button id="ss-help" class="ghost">How to play</button><button id="ss-start" class="primary">&#9654; Start session</button></span></div></div></div>
+<div id="ctc" class="pop hidden"><button class="x">✕</button><h2>CTC panel</h2>
+ <div>Line route from <select id="ctcfrom"></select> to <select id="ctcto"></select> <button id="ctcline">Line route</button> <button id="ctcclear">Release all signals</button></div>
+ <h3>Turnouts <small>(click: throw · • = lined for a train · red outline = occupied)</small></h3><div id="ctcT"></div>
+ <h3>Signals <small>(click: hold at stop / release · also clickable on the map)</small></h3><div id="ctcS"></div>
+ <h3>Occupied blocks</h3><div id="ctcB" class="small"></div></div>
+<div id="ym" class="pop hidden"><button class="x">✕</button><h2>Yardmaster</h2><div id="ymbody"></div></div>
+<div id="cred" class="pop hidden"><button class="x">✕</button><h2>Credits</h2><div id="credbody"></div></div>
+<div id="tip"></div><div id="toast"></div>
+<div id="help" class="hidden"><div class="in"><button class="x" title="Close (Esc)">✕</button><h2>How to play</h2>
+<p><b>Goal:</b> work your job's switch list: set out every <i>set out</i> car on its industry track and bring every <i>pick up</i> car back into your train, without violations. Through trains are run by the AI dispatcher (Amtrak &gt; intermodal &gt; manifest &gt; locals) and use the elevator lift. They run by train number, as on the prototype: <b>odd numbers counter-clockwise, even numbers clockwise</b>; the dispatcher keeps opposing trains off the same level.</p>
+<p><b>Next move</b> (top of the side panel) tells you what to do next for your job; the target track glows yellow on the map and the turnouts to line are ringed (green = set). Click a car card to focus on that car.</p>
+<ul><li><b>Throttle</b> (right): mouse wheel/drag on the knob or ↑/↓; R reverses (stopped only); Space = step 0; E = emergency stop; 0–8 = F0–F8 (F1 bell, F2 horn crossing pattern, F3 short horn). CV3/CV4 = momentum. 28/128 steps (click the step label). +MU adds a loco to the consist.</li>
+<li><b>Turnouts</b>: click the dot at the points (green = normal, orange = reverse). Throwing under a car derails it; running through one set against you is a <i>run-through</i>. #4 turnouts: ≤ 10 smph diverging and no cars over 68 ft (reefers, centerbeams, 89 ft flats, autoracks, Amfleet).</li>
+<li><b>Uncoupling</b> is by hand: stop, then click the white coupler dot between two cars. Coupling is automatic on contact at ≤ 4 smph (4–8 = hard coupling violation, more = collision).</li>
+<li><b>Lift</b>: 18 in in 8 s; it only moves with every car on it wholly aboard and stopped (interlock). Driving into the pit derails.</li>
+<li>Speed limits: main 40, sidings 15, spurs/yard 10 smph. Blue-flagged tracks (blue) must not be entered.</li>
+<li><b>View</b>: wheel = zoom, drag = pan, double-click = reset. <i>Ride along</i> follows the selected loco (cab-style, track ahead up). <i>Follow</i>: click a person or vehicle.</li>
+<li><b>Modes</b>: Mixed (you run your job), Automated (AI crews run the planned moves — watch or ride), Manual CTC (you line turnouts and the lift for all trains; the AI only drives).</li>
+<li><b>Signals / CTC</b>: block signals sit at each end of every main and siding (green clear, yellow approach, red stop). Click one (map or CTC panel, key C) to hold it at stop; AI trains obey. The CTC panel lines whole routes. The dispatcher breaks head-on standoffs by backing the lower-priority train clear for a meet. Y = yardmaster screen, V = speak radio chatter (Web Speech).</li>
+<li>P = pause, H = help, M = mute. Save/Load keep one session in this browser.</li></ul>
+<p class="small">Data: track graph, industries and move plans from build_ops.py (layout.json + ops.json + roster.json). Scale speed in/s = mph × 17.6 / 160.</p>
+<button onclick="document.getElementById('help').classList.add('hidden')">Start</button></div></div>
+<script src="ops-data.js"></script><script src="engine/physics.js"></script><script src="engine/easement.js"></script><script src="engine/engine.js"></script><script src="audio/samples.js"></script><script src="audio/audio.js"></script><script src="audio/voice/voices.js"></script><script src="audio/voice/radio-voice.js"></script><script src="audio/radio.js"></script><script src="control/control.js"></script>
+<script>/* [OPSFIX] every core script defines its global; name the first one that did not */ (function (B) { if (!B) return; [['ops-data.js','OPS_DATA'],['engine/physics.js','L3DPhysics'],['engine/easement.js','L3DEase'],['engine/engine.js','OpsEngine'],['audio/samples.js','OpsAudioSamples'],['audio/audio.js','OpsAudio'],['audio/voice/voices.js','RadioVoiceConfig'],['audio/voice/radio-voice.js','RadioVoice'],['audio/radio.js','OpsRadio'],['control/control.js','OpsControl']].forEach(function (x) { if (!window[x[1]]) B.need(false, x[0]); }); if (!document.getElementById('cv')) B.need(false, 'index.html'); })(window.OPSBOOT);</script>
+<script src="game.js"></script><script src="ui.js"></script><script src="ux.js"></script><script src="logistics-data.js"></script><script src="engine/logistics-core.js"></script><script src="industry.js"></script>
+</body></html>

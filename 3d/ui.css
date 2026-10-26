@@ -1,0 +1,108 @@
+/* layout3d shared UI theme (viewer + ops sim use the same tokens) */
+:root{--bg:#161b22f2;--bg2:#1f2630;--bd:#3a4553;--fg:#e8edf3;--mut:#9fb0c2;--acc:#3b82f6;--acc2:#60a5fa;--ok:#4ade80;--warn:#fbbf24;--bad:#f87171;--r:8px;--font:14px/1.4 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+body{font:var(--font)}
+button,select,input{font:inherit;font-size:13px}
+.panel button,#topbar button,.modal button{background:#2a3340;color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:4px 10px;margin:0;cursor:pointer;transition:background .12s}
+.panel button:hover,#topbar button:hover,.modal button:hover{background:#344052}
+button.on{background:var(--acc)!important;border-color:var(--acc2)!important;color:#fff!important}
+kbd{display:inline-block;min-width:16px;padding:0 4px;margin-left:5px;border:1px solid #fff3;border-bottom-width:2px;border-radius:4px;background:#ffffff12;font:11px/15px ui-monospace,Consolas,monospace;color:var(--mut);text-align:center}
+/* top toolbar */
+#topbar{position:fixed;left:0;right:0;top:0;height:48px;display:flex;align-items:center;gap:14px;padding:0 52px 0 12px;background:var(--bg);border-bottom:1px solid var(--bd);color:var(--fg);z-index:20;box-shadow:0 2px 10px #0006}
+.tb-brand{font-weight:600;white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis}
+.tb-modes{display:flex;background:#0d1117;border:1px solid var(--bd);border-radius:9px;padding:3px;gap:2px}
+.tb-modes button{border:0!important;background:transparent!important;padding:5px 12px!important;border-radius:6px!important;display:flex;align-items:center;gap:5px;color:var(--mut)!important}
+.tb-modes button:hover{background:#ffffff12!important;color:var(--fg)!important}
+.tb-modes button.on{background:var(--acc)!important;color:#fff!important}.tb-modes button.on kbd{color:#fff;border-color:#fff6}
+.tb-modes .ic{font-size:16px}
+.tb-now{display:flex;align-items:center;gap:7px;color:var(--mut);white-space:nowrap;overflow:hidden}.tb-now .dot{width:9px;height:9px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok)}
+#modename{color:var(--fg);font-weight:600}#modehint{font-size:12px;overflow:hidden;text-overflow:ellipsis}
+.tb-right{margin-left:auto;display:flex;gap:6px}.tb-btn{white-space:nowrap}
+#pause.on{background:var(--warn)!important;color:#111!important;border-color:var(--warn)!important}
+/* panels */
+.panel{position:fixed;background:var(--bg);color:var(--fg);border:1px solid var(--bd);border-radius:var(--r);box-shadow:0 6px 24px #0007;z-index:15}
+.panel .ph{height:32px;line-height:32px;padding:0 34px 0 12px;font-weight:600;font-size:13px;letter-spacing:.3px;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--bd);cursor:pointer;user-select:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panel .pbody{padding:8px 12px 10px;overflow:auto}
+.panel .l3d-minb{top:6px!important;right:7px!important;width:22px!important;height:20px!important;padding:0!important;line-height:18px!important}
+.panel.l3d-collapsed{max-height:34px!important}
+#ui.panel{background:var(--bg);color:var(--fg);top:58px;right:10px;left:auto;width:330px;max-height:calc(100vh - 120px);display:flex;flex-direction:column;padding:0;max-width:none}
+#ui .pbody{max-height:calc(100vh - 160px)}
+.plan-sub{font-size:12px;color:var(--mut);margin-bottom:6px}
+details.sec{border-top:1px solid #ffffff10;padding:2px 0}details.sec:first-of-type{border-top:0}
+details.sec>summary{cursor:pointer;padding:7px 2px;font-weight:600;list-style:none;display:flex;align-items:center;gap:7px}
+details.sec>summary::before{content:"\25B8";color:var(--mut);transition:transform .15s;display:inline-block}details.sec[open]>summary::before{transform:rotate(90deg)}
+details.sec>summary:hover{color:var(--acc2)}
+.frow{display:flex;align-items:center;gap:8px;margin:6px 0}.frow>label:first-child{min-width:54px;color:var(--mut);font-size:13px}
+.frow input[type=range]{flex:1;accent-color:var(--acc)}.frow select{flex:1;background:#0d1117;color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:4px}
+.frow .val{min-width:56px;text-align:right;font-variant-numeric:tabular-nums}
+.frow.btns{flex-wrap:wrap;gap:5px}.frow.checks{flex-wrap:wrap;gap:6px 14px}.frow.checks label{display:flex;align-items:center;gap:4px;min-width:0;color:var(--fg)}
+.frow input[type=checkbox]{accent-color:var(--acc);width:15px;height:15px}
+.readout{font-size:12px;color:var(--mut);background:#0d1117;border-radius:6px;padding:5px 8px}
+.hintline{font-size:12px;color:var(--mut);margin-top:4px}
+.hidden-sel{display:none!important}
+#reachslot .row,#reachrow{margin:4px 0;line-height:2}#reachrow input[type=number]{width:52px;background:#0d1117;color:var(--fg);border:1px solid var(--bd);border-radius:5px}
+/* train list */
+.trainlist{list-style:none;margin:0 0 6px;padding:0;max-height:240px;overflow:auto}
+.trainlist li{display:flex;align-items:center;gap:8px;padding:6px 7px;border-radius:6px;border:1px solid transparent}
+.trainlist li.sel{background:#3b82f622;border-color:#3b82f666}
+.trainlist .tn{flex:1;min-width:0}.trainlist .tn b{display:block}.trainlist .tn small{color:var(--mut);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.trainlist button{padding:3px 8px!important;font-size:12px!important}
+/* jump */
+#jump{top:58px;left:50%;transform:translateX(-50%);width:420px;max-width:none}
+#jump .ph{text-transform:none;font-size:14px;color:var(--fg)}#jump .px{position:absolute;right:8px;top:5px;padding:0 7px!important}
+#jump.l3d-collapsed .px{display:none}
+#jump-q{width:100%;box-sizing:border-box;padding:8px 10px;background:#0d1117;color:var(--fg);border:1px solid var(--bd);border-radius:6px;font-size:14px}
+#jump-list{list-style:none;margin:6px 0 0;padding:0;max-height:330px;overflow:auto}
+#jump-list li{padding:6px 8px;border-radius:6px;cursor:pointer;display:flex;justify-content:space-between;gap:10px}
+#jump-list li:hover,#jump-list li.act{background:#3b82f633}#jump-list .cat{font-size:11px;color:var(--mut);white-space:nowrap;text-transform:uppercase}
+/* HUD */
+#stats{position:fixed;right:10px;bottom:10px;left:auto;top:auto;background:var(--bg);color:#86efac;font:12px ui-monospace,Consolas,monospace;padding:6px 9px;border-radius:6px;border:1px solid var(--bd);white-space:pre;z-index:15}
+#zoomind{display:none;position:fixed;left:50%;bottom:16px;transform:translateX(-50%);background:var(--bg);color:var(--fg);padding:4px 12px;border-radius:14px;font-size:13px;pointer-events:none;z-index:16}
+.pill{position:fixed;left:50%;transform:translateX(-50%);background:var(--bg);color:var(--fg);border:1px solid var(--bd);padding:5px 14px;border-radius:16px;font-size:13px;pointer-events:none;z-index:16;white-space:nowrap}
+#lockhint{bottom:52px}#hbadge{top:58px}.pill.hidden,.hidden{display:none!important}
+#cross{width:6px;height:6px;margin:-3px;border:1px solid #fff9;box-shadow:0 0 2px #000}
+/* quick start / help */
+#help.modal{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;z-index:50;transform:none;top:0;left:0;padding:0;max-width:none;box-shadow:none;border-radius:0}
+.modal .card{background:#1a212b;color:var(--fg);border:1px solid var(--bd);border-radius:12px;max-width:900px;width:92%;padding:22px 26px;box-shadow:0 10px 40px #000a}
+.modal h2{margin:0 0 4px;font-size:22px}.modal h3{margin:10px 0 6px;font-size:14px;color:var(--acc2)}.modal .lead{color:var(--mut);margin:0 0 6px}
+.qs-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.qs-grid td{padding:4px 6px;vertical-align:top;font-size:13px}.qs-grid td:first-child{white-space:nowrap}.qs-grid kbd{margin:0 2px 0 0;color:var(--fg)}
+.modal .small{font-size:12px;color:var(--mut)}
+.qs-foot{display:flex;justify-content:space-between;align-items:center;margin-top:12px;gap:10px}.qs-foot span{display:flex;gap:8px}
+button.primary{background:var(--acc)!important;border-color:var(--acc2)!important;color:#fff!important;font-weight:600}button.ghost{background:transparent!important}
+/* ops-in-3D panel (ops3d.js) in the same style, kept off the centre */
+#ops3d{background:var(--bg)!important;border:1px solid var(--bd)!important;border-radius:var(--r)!important;font-size:13px!important;color:var(--fg)!important}
+#l3d-eye{background:var(--bg)!important;border-color:var(--bd)!important;opacity:1!important}
+#stats{bottom:10px}#ui.panel{max-height:calc(100vh - 110px)}
+/* cab control stand (cab.js): bottom strip, clear of the centre */
+#cabstand{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);display:flex;align-items:center;gap:16px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:8px 14px;z-index:17;color:var(--fg);box-shadow:0 6px 24px #0008}
+#cabstand.hidden{display:none!important}.cs-spd{display:flex;flex-direction:column;align-items:center;min-width:64px}.cs-spd b{font:700 26px/1 ui-monospace,Consolas,monospace;color:var(--warn)}.cs-spd small,.cs-spd span{font-size:11px;color:var(--mut)}
+.cs-grp{display:flex;flex-direction:column;gap:3px}.cs-grp label{font-size:11px;text-transform:uppercase;color:var(--mut);letter-spacing:.4px}.cs-grp small{font-size:11px;color:var(--mut)}
+.cs-notch{display:flex;gap:2px}.cs-notch button{width:24px;padding:2px 0!important;font:12px ui-monospace,Consolas,monospace!important;background:#2a3340;color:var(--fg);border:1px solid var(--bd);border-radius:4px;cursor:pointer}
+.cs-notch button.on{background:var(--ok);color:#111;border-color:var(--ok)}
+.cs-bar{width:110px;height:10px;background:#0d1117;border:1px solid var(--bd);border-radius:5px;overflow:hidden}.cs-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--warn),var(--bad))}
+.cs-btns{flex-direction:row}.cs-btns button{background:#2a3340;color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:4px 10px;cursor:pointer}.cs-btns button.on{background:var(--warn);color:#111}
+.cs-msg{position:absolute;left:0;right:0;top:-22px;text-align:center;font-size:12px;color:var(--fg);text-shadow:0 1px 3px #000}
+
+/* [UX 2026-10-18] layout map, task-based welcome */
+#map{position:fixed;right:10px;bottom:10px;left:auto;top:auto;width:262px;z-index:20;padding:6px 6px 4px!important}
+#map .ph{display:flex;align-items:center;gap:8px}#map .map-tabs{display:flex;gap:2px;margin-left:auto;margin-right:24px}
+#map .map-tabs button{padding:1px 8px!important;font-size:12px}#map .map-tabs button.on{background:var(--acc)!important;color:#fff}
+#map canvas{display:block;width:250px;height:231px;border-radius:6px;cursor:crosshair;background:#10161d}
+#map .map-leg{display:flex;gap:10px;font-size:11px;color:var(--mut);margin:4px 2px;align-items:center}#map .map-leg i{display:inline-block;width:8px;height:8px;margin-right:3px;border-radius:2px;vertical-align:-1px}
+#map .map-leg .me{background:#38bdf8}#map .map-leg .tr{background:#ef4444}#map .map-leg .ar{background:#f59e0b;border-radius:4px}#map .map-tip{margin-left:auto;color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px}
+#map .map-areas{flex-wrap:wrap;gap:4px}#map .map-areas button{font-size:12px;padding:3px 7px}
+.qs-choose{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:14px 0 10px}@media (max-width:1100px){.qs-choose{grid-template-columns:repeat(3,1fr)}}
+.qs-choose button{display:flex!important;flex-direction:column;align-items:flex-start;gap:4px;text-align:left;padding:14px!important;border-radius:10px!important;min-height:120px}
+.qs-choose button .ic{font-size:28px}.qs-choose button b{font-size:15px}.qs-choose button small{color:var(--mut);font-size:12px;line-height:1.35}
+.qs-choose button:hover{border-color:var(--acc)!important;background:#22304a!important}
+.qs-more summary{cursor:pointer;color:var(--acc2);font-size:13px;margin:4px 0}
+
+/* [UX] room for the map under Settings; toolbar labels on one line; the long mode hint only on wide screens */
+#ui.panel{max-height:calc(100vh - 460px)!important;min-height:120px}#ui .pbody{max-height:calc(100vh - 500px)!important;overflow:auto}
+#ui.panel.l3d-collapsed{max-height:34px!important;min-height:0!important}  /* [UX] the collapse button works again on the settings panel */
+.tb-modes button{white-space:nowrap}.tb-brand{max-width:170px;min-width:60px}
+@media (max-width:1400px){.tb-now{display:none}}
+/* [UX 2026-10-18] 6 modes + 6 buttons: compact toolbar on narrower screens (icons stay, the active mode keeps its name, tooltips name everything) */
+@media (max-width:1560px){.tb-right kbd{display:none}.tb-brand{max-width:150px}}
+@media (max-width:1400px){.tb-modes kbd{display:none}.tb-modes button{padding:5px 9px!important}}
+@media (max-width:1300px){.tb-right .lb{display:none}.tb-right .tb-btn{padding:4px 8px}#setb .lb{display:inline}}
+@media (max-width:1120px){.tb-modes button:not(.on) .lb{display:none}.tb-brand{max-width:90px}}

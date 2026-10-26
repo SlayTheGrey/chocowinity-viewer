@@ -1,0 +1,141 @@
+/* [CHOCO-BLDG 2026-10-25] Building models for the Chocowinity build copy (viewer3d-v3 only), per PHASE3-STEP4-SPEC.md.
+   World coordinates (x = plan x, z = plan y, y = deck + height), N scale 1 ft = 0.075 in. Every part stays inside its rev6h footprint
+   (walls are the footprint faces). Doors and plates sit flush on the outside face. Every part is recorded in window.__CHOCO_BLDG for the
+   wall/clearance check (tools/bldg_check.js): a part must lie fully inside or fully outside its footprint, never across a wall. */
+(function () {
+  const FT = 0.075, C = c => new THREE.Color(c), LOG = (window.__CHOCO_BLDG = window.__CHOCO_BLDG || []);
+  const LEVELS = { 1: true, 2: true }; /* stage switch: L1 first, then L2 */
+  const mk = (bt, s, Y, ctx) => { const rec = { name: s.name, r: s.r.slice(), parts: [] }; LOG.push(rec);
+    const part = (tag, bb, out) => rec.parts.push({ tag, bb: bb.map(v => +v.toFixed(4)), out: !!out });
+    const B = (key, x0, z0, x1, z1, y0, y1, c, tag, uv) => { bt.box(key, x0, Y + y0, z0, x1, Y + y1, z1, C(c), uv || 1); part(tag || key, [x0, z0, x1, z1, y0, y1]); };
+    const G = (key, g, cx, cz, y0, c, tag, bb) => { bt.geom(key, g, new THREE.Matrix4().makeTranslation(cx, Y + y0, cz), C(c)); g.dispose(); part(tag, bb); };
+    const cyl = (key, cx, cz, rr, y0, y1, c, tag, seg) => G(key, new THREE.CylinderGeometry(rr, rr, y1 - y0, seg || 28).translate(0, (y1 - y0) / 2, 0), cx, cz, y0, c, tag, [cx - rr, cz - rr, cx + rr, cz + rr, y0, y1]);
+    const cone = (key, cx, cz, rr, y0, hh, c, tag) => G(key, new THREE.ConeGeometry(rr, hh, 28).translate(0, hh / 2, 0), cx, cz, y0, c, tag, [cx - rr, cz - rr, cx + rr, cz + rr, y0, y0 + hh]);
+    const gable = (key, x0, z0, x1, z1, yE, yR, c, tag) => { const ax = x1 - x0 >= z1 - z0, cl = C(c), y0 = Y + yE, y1 = Y + yR; /* ridge on the long axis, no overhang past the footprint */
+      if (ax) { const zm = (z0 + z1) / 2; bt.quad(key, [x0, y0, z0], [x1, y0, z0], [x1, y1, zm], [x0, y1, zm], [0, 0], [1, 0], [1, 1], [0, 1], cl, [0, 1, -1]); bt.quad(key, [x0, y0, z1], [x1, y0, z1], [x1, y1, zm], [x0, y1, zm], [0, 0], [1, 0], [1, 1], [0, 1], cl, [0, 1, 1]);
+        bt.tri(key, [x0, y0, z0], [x0, y0, z1], [x0, y1, zm], [0, 0], [1, 0], [0.5, 1], cl, [-1, 0, 0]); bt.tri(key, [x1, y0, z0], [x1, y0, z1], [x1, y1, zm], [0, 0], [1, 0], [0.5, 1], cl, [1, 0, 0]); }
+      else { const xm = (x0 + x1) / 2; bt.quad(key, [x0, y0, z0], [x0, y0, z1], [xm, y1, z1], [xm, y1, z0], [0, 0], [1, 0], [1, 1], [0, 1], cl, [-1, 1, 0]); bt.quad(key, [x1, y0, z0], [x1, y0, z1], [xm, y1, z1], [xm, y1, z0], [0, 0], [1, 0], [1, 1], [0, 1], cl, [1, 1, 0]);
+        bt.tri(key, [x0, y0, z0], [x1, y0, z0], [xm, y1, z0], [0, 0], [1, 0], [0.5, 1], cl, [0, 0, -1]); bt.tri(key, [x0, y0, z1], [x1, y0, z1], [xm, y1, z1], [0, 0], [1, 0], [0.5, 1], cl, [0, 0, 1]); }
+      part(tag || 'roof', [x0, z0, x1, z1, yE, yR]); };
+    /* side i: 0 = low-z face, 1 = high-x, 2 = high-z, 3 = low-x */
+    const r = s.r, mid = i => [[(r[0] + r[2]) / 2, r[1]], [r[2], (r[1] + r[3]) / 2], [(r[0] + r[2]) / 2, r[3]], [r[0], (r[1] + r[3]) / 2]][i], OUT = [[0, -1], [1, 0], [0, 1], [-1, 0]];
+    const tdSide = i => { let d = 9; for (const f of [0.2, 0.5, 0.8]) { const a = i % 2 ? [r[i === 1 ? 2 : 0], r[1] + (r[3] - r[1]) * f] : [r[0] + (r[2] - r[0]) * f, r[i === 0 ? 1 : 3]]; d = Math.min(d, ctx.td(a[0] + OUT[i][0] * 0.6, a[1] + OUT[i][1] * 0.6)); } return d; };
+    const lotSide = re => { let best = null, bd = 1e9; for (let i = 0; i < 4; i++) { const m = mid(i), p = [m[0] + OUT[i][0] * 0.5, m[1] + OUT[i][1] * 0.5]; for (const lt of ctx.L.lots || []) { if (re && !re.test(lt.name || '')) continue; const q = lt.r || null; if (!q) continue; const d = Math.hypot(Math.max(q[0] - p[0], 0, p[0] - q[2]), Math.max(q[1] - p[1], 0, p[1] - q[3])); if (d < bd) { bd = d; best = i; } } } return best; };
+    const trackSide = (only) => { let b = 0, bd = 1e9; for (const i of only || [0, 1, 2, 3]) { const d = tdSide(i); if (d < bd) { bd = d; b = i; } } return b; };
+    /* doors / windows as flush plates 0.01 in outside face i, from fraction f0..f1 along the face, y0..y1 */
+    const plate = (key, i, f0, f1, y0, y1, c, tag) => { const t = 0.012; let bb; if (i % 2 === 0) { const z = i === 0 ? r[1] - t : r[3], xa = r[0] + (r[2] - r[0]) * f0, xb = r[0] + (r[2] - r[0]) * f1; bb = [xa, z, xb, z + t]; } else { const x = i === 3 ? r[0] - t : r[2], za = r[1] + (r[3] - r[1]) * f0, zb = r[1] + (r[3] - r[1]) * f1; bb = [x, za, x + t, zb]; }
+      bt.box(key, bb[0], Y + y0, bb[1], bb[2], Y + y1, bb[3], C(c), 1); part(tag || 'door', [bb[0], bb[1], bb[2], bb[3], y0, y1], true); };
+    const doors = (i, n, w, h, c, tag, f0 = 0.08, f1 = 0.92) => { const dk = /door/.test(tag) && !/man|crew/.test(tag) ? 'dockdoor' : 'plain'; const L = i % 2 ? r[3] - r[1] : r[2] - r[0], fw = w / L; for (let k = 0; k < n; k++) { const f = f0 + (f1 - f0) * (n === 1 ? 0.5 : k / (n - 1)); plate(dk, i, f - fw / 2, f + fw / 2, 0, h, c, tag); } };
+    const walls = (key, h, c, tag) => B(key, r[0], r[1], r[2], r[3], 0, h, c, tag || 'walls', 0.8);
+    return { B, G, cyl, cone, gable, plate, doors, walls, tdSide, trackSide, lotSide, part, r, rec, s, ctx };
+  };
+  const W = { /* builders keyed by structure name; heights in ft from the spec */
+    'CCF plant': (k) => { const h = 32 * FT, r = k.r; k.walls('corr', h, '#e4e2da');
+      k.B('conc', r[0], r[1], r[2], r[3], h, h + 3 * FT, '#9a9890', 'roof + parapet', 0.6); /* parapet drawn as a ring: inner roof plane sits just above */
+      for (const [fx, fz] of [[0.3, 0.25], [0.7, 0.25], [0.5, 0.55], [0.3, 0.8], [0.7, 0.8]]) { const x = r[0] + (r[2] - r[0]) * fx, z = r[1] + (r[3] - r[1]) * fz; k.B('metal', x - 0.22, z - 0.15, x + 0.22, z + 0.15, h + 3 * FT, h + 3 * FT + 6 * FT, '#b8bcbc', 'RTU (inside parapet)'); }
+      const ts = k.trackSide([1, 3]); k.doors(ts, 2, 12 * FT, 14 * FT, '#5a5e60', 'rail-side door'); k.doors((ts + 2) % 4, 3, 10 * FT, 12 * FT, '#6a6e70', 'truck door'); k.doors(0, 1, 4 * FT, 7 * FT, '#3a4048', 'man door'); },
+    'CCF cold storage': (k) => { const h = 46 * FT, r = k.r; k.walls('cold', h, '#eef0ee'); k.B('roofgravel', r[0], r[1], r[2], r[3], h, h + 0.01, '#c8ccc8', 'roof');
+      const ts = k.trackSide([1, 3]); k.doors(ts, 3, 10 * FT, 12 * FT, '#3c4a5a', 'rail dock door (CCF-2)'); k.doors((ts + 2) % 4, 4, 9 * FT, 10 * FT, '#3c4a5a', 'truck dock door');
+      for (const f of [0.3, 0.7]) { const z = r[1] + (r[3] - r[1]) * f, x = (r[0] + r[2]) / 2; k.B('metal', x - 0.25, z - 0.18, x + 0.25, z + 0.18, h, h + 7 * FT, '#a8aeb0', 'roof condenser'); } },
+    'CCF syrup/oil tank': (k) => { const r = k.r, cx = (r[0] + r[2]) / 2, cz = (r[1] + r[3]) / 2, R = Math.min(r[2] - r[0], r[3] - r[1]) / 2 - 0.02, h = 40 * FT;
+      k.cyl('conc', cx, cz, R + 0.01, 0, 0.04, '#bdbab2', 'ring wall'); k.cyl('glossy', cx, cz, R, 0.04, h, '#dcdedb', 'shell'); k.cone('glossy', cx, cz, R, h, 5 * FT, '#d0d2cf', 'cone roof');
+      k.B('metal', cx + R * 0.70 - 0.02, cz + R * 0.70 - 0.02, cx + R * 0.70 + 0.02, cz + R * 0.70 + 0.02, 0.04, h + 3 * FT, '#7a7e80', 'caged ladder (inside footprint)'); },
+    'PSR shear': (k) => { const h = 30 * FT, r = k.r, ps = k.lotSide(/PSR prepared-scrap/), open = ps == null ? 2 : ps;
+      /* three walls + roof on posts; the side facing the scrap piles is open; shear/baler sits inside, the material handler works outside */
+      const t = 0.04; const wall = (i) => { const bb = [[r[0], r[1], r[2], r[1] + t], [r[2] - t, r[1], r[2], r[3]], [r[0], r[3] - t, r[2], r[3]], [r[0], r[1], r[0] + t, r[3]]][i]; k.B('corr', bb[0], bb[1], bb[2], bb[3], 0, h, '#8d918c', 'wall ' + i, 0.8); };
+      for (let i = 0; i < 4; i++) if (i !== open) wall(i);
+      const ax = r[2] - r[0] >= r[3] - r[1]; for (let f = 0; f <= 1.0001; f += 0.2) { const p = open % 2 === 0 ? [r[0] + 0.03 + (r[2] - r[0] - 0.06) * f, open === 0 ? r[1] + 0.03 : r[3] - 0.03] : [open === 3 ? r[0] + 0.03 : r[2] - 0.03, r[1] + 0.03 + (r[3] - r[1] - 0.06) * f]; k.B('metal', p[0] - 0.02, p[1] - 0.02, p[0] + 0.02, p[1] + 0.02, 0, h, '#6f736e', 'post'); }
+      k.gable('metalroof', r[0], r[1], r[2], r[3], h, h + 6 * FT, '#8a8e8a', 'roof');
+      const cx = (r[0] + r[2]) / 2, cz = (r[1] + r[3]) / 2; k.B('metal', cx - 1.5, cz - 0.6, cx + 1.5, cz + 0.6, 0, 12 * FT, '#3f5a6a', 'shear/baler (inside)'); k.doors(k.lotSide(/PSR shed truck apron/) ?? 0, 2, 14 * FT, 16 * FT, '#5c605c', 'truck door'); k.B('metal', cx + 1.6, cz - 0.35, cx + 2.6, cz + 0.35, 0, 8 * FT, '#4a4e50', 'baler power unit (inside)'); },
+    'FF warehouse': (k) => { const h = 20 * FT, r = k.r; k.walls('corr', h, '#c9b78e'); k.gable('metalroof', r[0], r[1], r[2], r[3], h, h + 5 * FT, '#7d7f7a');
+      const ap = k.lotSide(/FF warehouse truck apron/); k.doors(ap == null ? 0 : ap, 3, 12 * FT, 14 * FT, '#6c6a62', 'truck door'); },
+    'FF bulk fertilizer bin': (k) => { /* realism: 3 standard 16 ft dia hopper bins (39-49 ft class [9]; 40 ft eave + 6 ft roof used) per 40 ft footprint, 2x2 grid;
+         the grid cell nearest the rail (hopper pit + auger side) holds the receiving pit shed + bucket-elevator leg (62 ft [UNVERIFIED]) with spouts to each bin roof */
+      const r = k.r, R = 8 * FT, hE = 40 * FT, cx0 = (r[0] + r[2]) / 2, cz0 = (r[1] + r[3]) / 2, ox = (r[2] - r[0]) / 4, oz = (r[3] - r[1]) / 4;
+      const ts = k.trackSide([0, 2]), sx = k.tdSide(1) < k.tdSide(3) ? 1 : -1, sz = ts === 2 ? 1 : -1; /* rail corner */
+      const cells = [[-1, -1], [1, -1], [-1, 1], [1, 1]]; const tops = []; let leg;
+      for (const [i, j] of cells) { const cx = cx0 + i * ox, cz = cz0 + j * oz;
+        if (i === sx && j === sz) { const pw = 0.6; k.B('metal', cx - pw, cz - pw, cx + pw, cz + pw, 0, 11 * FT, '#9fa3a2', 'receiving pit shed'); k.B('metal', cx - 0.17, cz - 0.12, cx + 0.17, cz + 0.12, 11 * FT, 62 * FT, '#a9adac', 'bucket elevator leg'); k.B('metal', cx - 0.22, cz - 0.17, cx + 0.22, cz + 0.17, 62 * FT, 66 * FT, '#9a9e9d', 'leg head + distributor'); leg = [cx, cz]; continue; }
+        k.cyl('conc', cx, cz, R * 0.8, 0, 8 * FT, '#bcb9b0', 'hopper skirt'); k.cyl('corr', cx, cz, R, 8 * FT, hE, '#c9cdce', 'bin shell'); k.cone('metal', cx, cz, R, hE, 6 * FT, '#bfc3c4', 'bin roof'); tops.push([cx, cz]); }
+      for (const [ex, ez] of tops) { const y0 = 63 * FT, y1 = hE + 5 * FT, v = new THREE.Vector3(ex - leg[0], y1 - y0, ez - leg[1]), L = v.length(); const g = new THREE.CylinderGeometry(0.025, 0.025, L, 8).applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), v.clone().normalize())).translate((ex + leg[0]) / 2, 0, (ez + leg[1]) / 2);
+        k.G('metal', g, 0, 0, (y0 + y1) / 2, '#8a8e8d', 'spout leg -> bin roof', [Math.min(ex, leg[0]) - 0.03, Math.min(ez, leg[1]) - 0.03, Math.max(ex, leg[0]) + 0.03, Math.max(ez, leg[1]) + 0.03, y1, y0]); } },
+    'Marsden yard office': (k) => { const h = 12 * FT, r = k.r; k.walls('plain', h, '#b9a07e'); k.gable('shingle', r[0], r[1], r[2], r[3], h, h + 6 * FT, '#5a4a3e'); k.doors(2, 1, 3.5 * FT, 7 * FT, '#3d2f26', 'crew door (path 21 side)', 0.4, 0.4); k.doors(2, 4, 4 * FT, 4 * FT, '#cfe0ea', 'window', 0.12, 0.88); },
+    'TL office': (k) => { const h = 13 * FT, r = k.r; k.walls('plain', h, '#d6cfc0'); k.B('roofgravel', r[0], r[1], r[2], r[3], h, h + 0.01, '#8a8a84', 'roof'); k.doors(k.lotSide(/TL staff/) ?? 0, 3, 4 * FT, 4 * FT, '#bcd0dc', 'window'); },
+    'PSR scale house': (k) => { const h = 13 * FT, r = k.r; k.walls('corr', h, '#8d8f8a'); k.B('roofgravel', r[0], r[1], r[2], r[3], h, h + 0.01, '#6e706c', 'roof'); k.doors(k.trackSide() === 0 ? 2 : 0, 2, 6 * FT, 4 * FT, '#bcd0dc', 'scale window'); },
+    'Chocowinity Quick Mart': (k) => { const h = 14 * FT, r = k.r; k.walls('plain', h, '#9c5a44'); k.B('conc', r[0], r[1], r[2], r[3], h, h + 2.5 * FT, '#e8e2d4', 'parapet/fascia'); const f = k.lotSide(/Quick Mart pump apron/) ?? 0; k.doors(f, 1, 22 * FT, 8 * FT, '#9fb8c8', 'storefront glass', 0.5, 0.5); },
+    'Quick Mart fuel canopy': (k) => { const r = k.r, yc = 16 * FT, yt = yc + 3.5 * FT; /* 16 ft clear + 42 in fascia [7] */ for (const fx of [0.25, 0.75]) for (const fz of [0.3, 0.7]) { const x = r[0] + (r[2] - r[0]) * fx, z = r[1] + (r[3] - r[1]) * fz; k.B('metal', x - 0.04, z - 0.04, x + 0.04, z + 0.04, 0, yc, '#d8d8d8', 'column'); }
+      k.B('plain', r[0], r[1], r[2], r[3], yc, yt, '#f4f4f2', 'canopy deck + fascia'); k.B('emis', r[0] + 0.1, r[1] + 0.1, r[2] - 0.1, r[3] - 0.1, yc - 0.01, yc, '#fffbe8', 'canopy lights'); },
+
+    /* ===== L2 ===== */
+    'Nutrien sulfur/acid tank': (k) => { const r = k.r, cx = (r[0] + r[2]) / 2, cz = (r[1] + r[3]) / 2, R = 2.1, h = 55 * FT; /* 59 ft dia x 55 ft [8] */
+      k.cyl('conc', cx, cz, R + 0.06, 0, 0.05, '#b5b2a8', 'ring wall'); k.cyl('glossy', cx, cz, R, 0.05, h, '#e9e7df', 'shell'); k.cyl('glossy', cx, cz, R, h, h + 0.02, '#d6d4cc', 'flat roof');
+      for (let a = 0; a < 24; a++) { const t = a / 24 * Math.PI * 2; k.B('metal', cx + Math.cos(t) * (R - 0.04) - 0.012, cz + Math.sin(t) * (R - 0.04) - 0.012, cx + Math.cos(t) * (R - 0.04) + 0.012, cz + Math.sin(t) * (R - 0.04) + 0.012, h, h + 3.5 * FT, '#d8c040', 'roof handrail post'); }
+      /* stair tower hugging the shell on the pipe-bridge (N, low z) side, inside the footprint */ k.B('metal', cx - 0.12, r[1] + 0.02, cx + 0.12, cz - R + 0.0, 0.05, h + 3.5 * FT, '#c9b13a', 'stair tower (inside footprint)'); },
+    'Nutrien hopper unloading shed': (k) => { /* NX-2 runs along x at y 5.596. Clear envelope: 23 ft over rail for 8'6" (0.6375 in) each side of CL [NCRR 5.1.2; NSRC Plan 7-1] */
+      const r = k.r, cl = 5.596, env = 0.6375, hc = 23 * FT, hE = 25 * FT, hR = 30 * FT, t = 0.04, c = '#c4c7c2';
+      k.B('corr', r[0], r[1], r[2], r[1] + t, 0, hE, c, 'N long wall'); k.B('corr', r[0], r[3] - t, r[2], r[3], 0, hE, c, 'S long wall');
+      for (const x of [r[0], r[2] - t]) { k.B('corr', x, r[1] + t, x + t, cl - env, 0, hE, c, 'end wall N of portal'); k.B('corr', x, cl + env, x + t, r[3] - t, 0, hE, c, 'end wall S of portal'); k.B('corr', x, cl - env, x + t, cl + env, hc, hE, c, 'portal header (23 ft clear)'); }
+      for (let f = 0.125; f < 1; f += 0.25) { const x = r[0] + (r[2] - r[0]) * f; k.B('metal', x - 0.02, r[1] + t, x + 0.02, r[3] - t, hc, hc + 0.06, '#7e827e', 'roof truss bottom chord (23 ft)'); }
+      k.gable('metalroof', r[0], r[1], r[2], r[3], hE, hR, '#9aa0a0', 'roof');
+      k.B('metal', r[0] + 0.3, cl - 0.5, r[2] - 0.3, cl + 0.5, -0.001, 0.002, '#3a3c3c', 'pit grating (deck level)');
+      /* transfer tower in the gap to the dome, attached flush to the S wall (outside the shed, short of the dome footprint at y 7.4) */
+      k.B('metal', 31.85, r[3], 32.15, r[3] + 0.30, 0, 42 * FT, '#a0a4a2', 'conveyor transfer tower (outside, attached S wall)');
+      k.B('metal', 31.92, r[3] - 0.0, 32.08, r[3] + 0.0001, 0, 0.0001, '#a0a4a2', 'n/a'); k.rec.parts.pop();
+      k.B('corr', 31.88, r[3], 32.12, r[3] + 0.30, 18 * FT, 22 * FT, '#b8bcba', 'enclosed belt from pit (outside, attached S wall)'); },
+    'Nutrien storage dome': (k) => { const r = k.r, cx = (r[0] + r[2]) / 2, cz = (r[1] + r[3]) / 2, a = Math.min(r[2] - r[0], r[3] - r[1]) / 2 - 0.02, H = 45 * FT; /* monolithic dome [10], 45 ft crown [UNVERIFIED] */
+      const Rs = (a * a + H * H) / (2 * H), th = Math.acos((Rs - H) / Rs); k.cyl('conc', cx, cz, a, 0, 0.12, '#bdbab2', 'stem wall');
+      const g = new THREE.SphereGeometry(Rs, 40, 16, 0, Math.PI * 2, 0, th).translate(0, -(Rs - H) + 0.12, 0); k.G('glossy', g, cx, cz, 0, '#efeee8', 'dome shell', [cx - a, cz - a, cx + a, cz + a, 0, H + 0.12]);
+      const dh = d => d >= a ? 0.12 : Math.sqrt(Rs * Rs - d * d) - (Rs - H) + 0.12; /* shell height */
+      /* conveyor gallery: from the transfer tower top at the dome footprint edge (y 7.4, 42 ft) up to the crown headhouse; checked to stay above the shell */
+      const z0 = r[1], y0 = 42 * FT - 0.02, z1 = cz, y1 = H + 0.12 + 0.2, gw = 0.14, gh = 0.16, v = new THREE.Vector3(0, y1 - y0, z1 - z0), L = v.length();
+      const gg = new THREE.BoxGeometry(gw * 2, gh, L).applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), v.clone().normalize())).translate(32 - cx, 0, (z0 + z1) / 2 - cz);
+      k.G('corr', gg, cx, cz, (y0 + y1) / 2 + gh / 2, '#b8bcba', 'conveyor gallery (inside dome footprint, over shell)', [32 - gw, z0, 32 + gw, z1, y0, y1 + gh]);
+      let mc = 9; for (let f = 0; f <= 1.0001; f += 0.02) { const z = z0 + (z1 - z0) * f, yb = y0 + (y1 - y0) * f - 0.03; mc = Math.min(mc, yb - dh(Math.hypot(32 - cx, z - cz))); } k.rec.shellClear = +mc.toFixed(3);
+      k.B('corr', 32 - 0.25, cz - 0.25, 32 + 0.25, cz + 0.25, H + 0.1, H + 0.12 + 0.4, '#b0b4b2', 'crown headhouse'); },
+    'Nutrien control room': (k) => { const h = 13 * FT, r = k.r; k.walls('plain', h, '#d4d2c8'); k.B('roofgravel', r[0], r[1], r[2], r[3], h, h + 0.01, '#8a8a84', 'roof'); k.doors(k.lotSide(/Nutrien staff/) ?? 2, 3, 5 * FT, 4 * FT, '#bcd0dc', 'window'); },
+    'GCF pulp warehouse': (k) => { const h = 36 * FT, r = k.r; k.walls('corr', h, '#d9d6cc'); k.B('roofgravel', r[0], r[1], r[2], r[3], h, h + 0.01, '#9c9a94', 'roof');
+      k.doors(2, 6, 10 * FT, 12 * FT, '#34454f', 'rail dock door (spur side)'); k.doors(3, 6, 9 * FT, 10 * FT, '#34454f', 'truck dock door (W face)'); k.doors(0, 1, 4 * FT, 7 * FT, '#3a4048', 'man door', 0.95, 0.95); },
+    'GCF chemical tank': (k) => { /* [CHOCO-BLDG C] dedicated chemical-truck lane (Owner 12:31): 19-ft gated lane from Weyerhaeuser Rd (edge z 106.25) straight to the fill pad (x 57-60, z 108.6-109.9), drawn over the W end of GCF staff parking (plan note: staff lot loses ~3 W stalls). A 45-ft tanker (3.4 in) fits lane + pad, pulls in nose-first, backs out [UNVERIFIED maneuver]. No free route around the lot (free_space.py). */
+      { const P = ' (GCF truck lane, outside footprint)', xa = 57.2, xb = 58.6; k.B('plain', xa, 106.25, xb, 108.6, 0.013, 0.016, '#2f2f2e', 'lane asphalt' + P); for (const x of [xa, xb - 0.02]) k.B('plain', x, 106.3, x + 0.02, 108.6, 0.016, 0.018, '#e0c020', 'lane edge stripe' + P);
+        for (const x of [xa - 0.03, xb + 0.01]) k.B('metal', x, 106.4, x + 0.03, 106.43, 0, 4 * FT, '#7a7e80', 'gate post' + P); k.B('metal', xa - 0.03, 106.4, xa + 0.02, 107.75, 3.2 * FT, 3.5 * FT, '#c8c8c0', 'swing gate (open)' + P);
+        k.B('plain', xa + 0.1, 106.6, xb - 0.1, 106.66, 0.016, 0.018, '#f0f0ea', 'TRUCKS ONLY bar' + P); } const r = k.r, cx = (r[0] + r[2]) / 2, cz = (r[1] + r[3]) / 2, R = 1.55, h = 40 * FT; k.cyl('conc', cx, cz, R + 0.03, 0, 0.05, '#b5b2a8', 'ring wall'); k.cyl('glossy', cx, cz, R, 0.05, h, '#dfe3e0', 'shell'); k.cone('glossy', cx, cz, R, h, 4 * FT, '#d0d4d1', 'cone roof'); },
+    'WL planer + shipping shed': (k) => { const h = 24 * FT, r = k.r, t = 0.04, c = '#9c8c70'; /* open W (rail) side as roof on posts [spec] */
+      k.B('corr', r[0], r[1], r[2], r[1] + t, 0, h, c, 'N end wall'); k.B('corr', r[0], r[3] - t, r[2], r[3], 0, h, c, 'S end wall'); k.B('corr', r[2] - t, r[1], r[2], r[3], 0, h, c, 'E wall');
+      for (let z = r[1] + 0.03; z <= r[3] - 0.02; z += 1.6) k.B('metal', r[0] + 0.01, z - 0.0, r[0] + 0.05, z + 0.04, 0, h, '#6c6250', 'post (W open side)');
+      k.gable('metalroof', r[0], r[1], r[2], r[3], h, h + 5 * FT, '#8f9590', 'roof');
+      for (let z = r[1] + 1.2; z < r[3] - 2; z += 2.4) k.B('lumber', r[0] + 0.8, z, r[0] + 2.4, z + 1.2, 0, 0.35, '#d9b980', 'lumber bundles (inside)');
+      k.B('metal', r[0] + 1.0, r[3] - 3.2, r[2] - 0.5, r[3] - 1.4, 0, 0.5, '#4d6a58', 'planer line (inside)');
+      k.doors(1, 3, 14 * FT, 16 * FT, '#6c6250', 'yard-side door'); },
+    'WL dry kilns': (k) => { const h = 22 * FT, r = k.r, n = 3, w = (r[2] - r[0]) / n; /* 3 track kilns 19.5-22.5 ft [4][5], gabled, end doors only */
+      for (let i = 0; i < n; i++) { const x0 = r[0] + w * i, x1 = x0 + w; k.B('plain', x0 + (i ? 0.01 : 0), r[1], x1 - (i < n - 1 ? 0.01 : 0), r[3], 0, h - 2 * FT, '#a49c8c', 'kiln chamber ' + (i + 1)); k.gable('metalroof', x0, r[1], x1, r[3], h - 2 * FT, h + 2 * FT, '#8a8e8a', 'kiln roof ' + (i + 1)); }
+      k.doors(0, 3, 0.9 * w, 18 * FT, '#7a8288', 'kiln end door', 1 / 6, 5 / 6); },
+    'PR 30,000 gal bulk tank': (k) => { const r = k.r, cx = (r[0] + r[2]) / 2, R = 0.4125, yC = 3 * FT + R, z0 = r[1] + R, z1 = r[3] - R; /* 132 in x 47 ft bullet [6] on 3 ft saddles */
+      const g = new THREE.CylinderGeometry(R, R, z1 - z0, 24).rotateX(Math.PI / 2).translate(0, 0, (z0 + z1) / 2 - cx * 0); k.G('glossy', g, cx, 0, yC, '#f2f2ee', 'bullet shell', [cx - R, z0, cx + R, z1, yC - R, yC + R]);
+      for (const [z, s] of [[z0, -1], [z1, 1]]) { const hg = new THREE.SphereGeometry(R, 20, 10, 0, Math.PI * 2, 0, Math.PI / 2).rotateX(s * Math.PI / 2); k.G('glossy', hg, cx, z, yC, '#f2f2ee', 'hemi head', [cx - R, Math.min(z, z + s * R), cx + R, Math.max(z, z + s * R), yC - R, yC + R]); }
+      for (const f of [0.25, 0.75]) { const z = z0 + (z1 - z0) * f; k.B('conc', cx - R * 0.8, z - 0.08, cx + R * 0.8, z + 0.08, 0, yC - R * 0.7, '#bdbab2', 'saddle'); } },
+    'WL mill office': (k) => { /* [CHOCO-BLDG B] WL overflow lot (Owner 12:31): free board space found by tools/free_space.py (clear of tracks +8.5 ft, roads, structures, lots, water) at x 7.1-13.85, z 95.6-98.75; joined to WL staff parking (z 95.5). 25-ft aisle + 10 stalls 9 x 18 ft -> 15 + 10 = 25 = plan staff */
+      { const F = FT, P = ' (WL overflow lot, outside footprint)', x0 = 7.1; for (let i = 0; i < 10; i++) { const x = x0 + 0.06 + (i + 0.5) * 9 * F; k.B('plain', x - 0.03, 98.62, x + 0.03, 98.7, 0.012, 0.035, '#9a9890', 'wheel stop' + P); } } /* surface + stripes = viewer [CHOCO-LOTS-BC] parking lot */ const h = 13 * FT, r = k.r; k.walls('plain', h, '#cfc6b4'); k.B('roofgravel', r[0], r[1], r[2], r[3], h, h + 0.01, '#8a8a84', 'roof'); k.doors(k.lotSide(/WL staff/) ?? 2, 3, 5 * FT, 4 * FT, '#bcd0dc', 'window'); },
+    'PR office': (k) => { const h = 12 * FT, r = k.r; k.walls('plain', h, '#d8d2c2'); k.gable('metalroof', r[0], r[1], r[2], r[3], h, h + 3 * FT, '#6d7a84'); k.doors(k.lotSide(/PR bobtail/) ?? 0, 2, 4 * FT, 4 * FT, '#bcd0dc', 'window'); },
+    'Pamlico Tire & Auto': (k) => { const h = 16 * FT, r = k.r; k.walls('corr', h, '#d2d0c8'); k.B('roofgravel', r[0], r[1], r[2], r[3], h, h + 0.01, '#8a8a84', 'roof'); k.doors(2, 2, 12 * FT, 12 * FT, '#7a8894', 'bay door', 0.3, 0.7); },
+    'Aurora Rd Gas & Grocery': (k) => { const h = 14 * FT, r = k.r; k.walls('plain', h, '#c8b49a'); k.B('conc', r[0], r[1], r[2], r[3], h, h + 2 * FT, '#e6e0d2', 'parapet/fascia'); k.doors(2, 1, 18 * FT, 8 * FT, '#9fb8c8', 'storefront glass', 0.5, 0.5); },
+    'Pamlico Hardware': (k) => { /* [CHOCO-BLDG item7] Coastal Tractor display lot props (lot 22), all <= 3.6 ft (0.5 in) so the lot stays low for the L2-09 reach/sightline: sub-compact tractors (ROPS folded), zero-turn mowers, rotary cutters. Colours [UNVERIFIED dealer brand]. */
+      const lt = (k.ctx.L.lots || []).find(l => /^Coastal Tractor display lot/.test(l.name || '')); if (lt) { const q = lt.r, FTi = FT, wheel = (x, z, d, w, c, t) => k.G('plain', new THREE.CylinderGeometry(d / 2, d / 2, w, 14).rotateX(Math.PI / 2), x, z, d / 2, c, t, [x - d / 2, z - w / 2, x + d / 2, z + w / 2, 0, d]);
+        const F = FTi, P = ' (lot prop, outside footprint)';
+        const trac = (x, z, c) => { const L = 9 * F, Wd = 4.2 * F; k.B('glossy', x - L / 2 + 2.6 * F, z - 1.2 * F, x + L / 2, z + 1.2 * F, 1.2 * F, 3.4 * F, c, 'tractor hood/body' + P); k.B('glossy', x - L / 2 + 0.3 * F, z - Wd / 2 + 0.6 * F, x - L / 2 + 2.9 * F, z + Wd / 2 - 0.6 * F, 1.5 * F, 3.6 * F, c, 'tractor fenders/seat' + P);
+          for (const sz of [-1, 1]) { wheel(x - L / 2 + 1.5 * F, z + sz * (Wd / 2 - 0.5 * F), 2.7 * F, 1.0 * F, '#1d1d1d', 'rear tyre' + P); wheel(x + L / 2 - 1.2 * F, z + sz * (Wd / 2 - 0.6 * F), 1.7 * F, 0.7 * F, '#1d1d1d', 'front tyre' + P); } };
+        const ztr = (x, z, c) => { k.B('glossy', x - 1.6 * F, z - 2.6 * F, x + 2.4 * F, z + 2.6 * F, 0.5 * F, 1.2 * F, '#3a3a38', 'zero-turn deck' + P); k.B('glossy', x - 3.2 * F, z - 1.8 * F, x + 0.6 * F, z + 1.8 * F, 1.0 * F, 3.4 * F, c, 'zero-turn body/seat' + P); };
+        const cut = (x, z) => { k.B('metal', x - 2.6 * F, z - 3 * F, x + 2.6 * F, z + 3 * F, 0.4 * F, 1.6 * F, '#2f5a2c', 'rotary cutter deck' + P); k.B('metal', x + 2.6 * F, z - 0.4 * F, x + 5 * F, z + 0.4 * F, 1.0 * F, 2.6 * F, '#2f5a2c', 'cutter A-frame hitch' + P); };
+        const z1 = q[1] + 0.6; for (let i = 0; i < 6; i++) trac(q[0] + 0.6 + i * 1.0, z1, '#e8731c');
+        const z2 = q[1] + 1.8; for (let i = 0; i < 3; i++) ztr(q[0] + 0.7 + i * 0.85, z2, '#e8731c'); cut(q[0] + 3.6, z2); cut(q[0] + 4.7, z2); } const h = 18 * FT, r = k.r; k.walls('plain', h, '#a86a50'); k.B('conc', r[0], r[1], r[2], r[3], h, h + 2.5 * FT, '#e6e0d2', 'parapet/fascia'); k.doors(k.lotSide(/Hardware parking/) ?? 0, 1, 30 * FT, 9 * FT, '#9fb8c8', 'storefront glass', 0.5, 0.5); },
+    'Ranch house': (k) => { const r = k.r, hE = 9 * FT, hR = 16 * FT; k.walls('plain', hE, '#e4dccb'); k.gable('shingle', r[0], r[1], r[2], r[3], hE, hR, '#5c5650'); const bh = /behind hardware/.test(k.s.name || ''), fs = bh ? 0 : 2; /* [CHOCO-BLDG item8] the behind-hardware house faces its driveway (lot 35, x 120.5, ends at its low-z face) */ k.doors(fs, 1, 3 * FT, 7 * FT, '#5a3e2e', 'front door', bh ? 0.7 : 0.4, bh ? 0.7 : 0.4); k.doors(fs, 2, 5 * FT, 4 * FT, '#cfe0ea', 'window', 0.15, bh ? 0.45 : 0.75); if (bh) k.doors(1, 1, 3 * FT, 7 * FT, '#5a3e2e', 'side door (driveway)', 0.3, 0.3); },
+    'Mill house': (k) => { const r = k.r, hE = 10 * FT, hR = 20 * FT, pd = 6 * FT; /* front porch inside footprint, street (low z) side */
+      k.B('plain', r[0], r[1] + pd, r[2], r[3], 0, hE, '#ece6d6', 'walls'); k.gable('shingle', r[0], r[1] + pd, r[2], r[3], hE, hR, '#4e4a46', 'roof');
+      k.B('wood', r[0] + 0.08, r[1], r[2] - 0.08, r[1] + pd, 0, 0.05, '#8a7a66', 'porch deck'); for (const fx of [0.1, 0.9]) { const x = r[0] + (r[2] - r[0]) * fx; k.B('plain', x - 0.02, r[1] + 0.02, x + 0.02, r[1] + 0.06, 0.05, hE - 0.08, '#f4f2ec', 'porch post'); }
+      k.B('shingle', r[0] + 0.05, r[1], r[2] - 0.05, r[1] + pd, hE - 0.08, hE - 0.03, '#4e4a46', 'porch roof');
+      k.B('plain', (r[0] + r[2]) / 2 - 0.12, r[1] + pd - 0.012, (r[0] + r[2]) / 2 + 0.12, r[1] + pd, 0.05, 0.05 + 7 * FT, '#5a3e2e', 'front door (in porch)'); },
+  };
+  const STAGE = {}; /* L2 keys get STAGE[k]=2 when added */
+  const keyOf = s => Object.keys(W).find(k => (s.name || '').startsWith(k));
+  const lvOf = s => s._lv;
+  L3D.chocoB = { has: s => !!keyOf(s) && LEVELS[STAGE[keyOf(s)] || 1], build: (bt, s, Y, ctx) => { window.__CB_BT = bt; window.__CB_Y = Y; const k = mk(bt, s, Y, ctx); W[keyOf(s)](k); k.rec.h = Math.max(...k.rec.parts.map(p => p.bb[5])); return k.rec.h; } };
+})();

@@ -1,0 +1,169 @@
+<!DOCTYPE html><html><head><meta name="robots" content="noindex, nofollow"><link rel="icon" href="data:,"><meta charset="utf-8"><title>Layout 3D</title>
+<link rel="stylesheet" href="style.css"><link rel="stylesheet" href="ui.css"></head><body>
+<div id="l3d-overlay" style="position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:#2b3a45;color:#eef;font:16px/1.45 Segoe UI,Arial,sans-serif;text-align:left">
+ <div style="max-width:720px;padding:24px 28px;background:#0007;border-radius:10px"><b style="font-size:20px">Layout 3D</b><div id="l3d-msg">Loading the 3D layout&hellip; (first load can take 10&ndash;60 s)</div><div id="l3d-det" style="font-size:13px;opacity:.85;margin-top:8px;white-space:pre-wrap"></div></div></div>
+<div id="l3d-note" style="display:none;position:fixed;right:10px;top:10px;z-index:9998;max-width:420px;background:#5a4300e0;color:#fff;font:13px Segoe UI,Arial,sans-serif;padding:8px 12px;border-radius:6px;cursor:pointer" title="click to hide"></div>
+<script>/* boot overlay: a failure shows a message instead of a blank page */
+window.L3DBOOT = (function () { var ov = document.getElementById('l3d-overlay'), msg = document.getElementById('l3d-msg'), det = document.getElementById('l3d-det'), B = { failed: false, errs: [] };
+ B.step = function (t) { if (!B.failed) msg.textContent = t; };
+ B.fail = function (t, d) { B.failed = true; ov.style.display = 'flex'; ov.style.background = '#3a2020'; msg.innerHTML = '<b>The 3D viewer could not start.</b><br>' + t; det.textContent = (d || '') + (B.errs.length ? '\n\nDetails:\n' + B.errs.slice(0, 6).join('\n') : ''); };
+ B.note = function (t) { var n = document.getElementById('l3d-note'); n.innerHTML = (n.innerHTML ? n.innerHTML + '<br>' : '') + t; n.style.display = 'block'; n.onclick = function () { n.style.display = 'none'; }; };
+ /* [VFIX 2026-10-18] which zip holds a file (parts-manifest.js, written by split_viewer_parts.py) + a hint when the zips went into separate/nested folders */
+ B.where = function (rel) { var P = window.L3D_PARTS; if (!P) return ''; var n = P.where && P.where[rel] || (/^(assets\/ext|ops\/audio\/voice\/pack)\//.test(rel) ? 0 : P.app); return n ? P.parts[n - 1] + '.zip' : ''; };
+ B.nestHint = function () { var u = decodeURIComponent(location.pathname), P = window.L3D_PARTS, m = /\/([^\/]*part\d+of\d+)\/(?:\1\/)?viewer3d-v3\/index\.html$/i.exec(u);
+  return m ? '\n\nThis page is in a folder named after one zip (' + m[1] + '). Windows "Extract All..." suggests a NEW folder for every zip, so the other parts are probably in their own folders next to it. Extract every part again and type the SAME destination folder each time (for example Downloads\\rev4-3D), then open viewer3d-v3\\index.html in that folder.' : ''; };
+ B.need = function (ok, what) { if (!ok && !B.failed) { var z = B.where(what); B.fail('A required file is missing: <b>' + what + '</b>' + (z ? '<br>It is in <b>' + z + '</b>.' : ''), 'Unzip ALL the zips for this plan into the SAME folder (choose "Extract All..." and type the same destination for each; when Windows asks, replace/merge the viewer3d-v3 folder). Then double-click viewer3d-v3\\index.html. See README-FIRST.txt.' + B.nestHint()); } return ok; };
+ B.missing = []; window.addEventListener('error', function (e) { var t = e.target; if (!t || t === window || !(t.tagName === 'SCRIPT' || t.tagName === 'LINK')) return; var u = decodeURIComponent(t.src || t.href || ''), rel = u.indexOf('/viewer3d-v3/') >= 0 ? u.split('/viewer3d-v3/').pop() : u.split('/').pop();
+  if (/^(assets\/ext|ops\/audio\/voice\/pack)\//.test(rel) || u.indexOf('/viewer3d-v3/') !== u.lastIndexOf('/viewer3d-v3/') || /parts-manifest\.js$|logistics-data\.js$|skinned-data\.js$/.test(rel) || (window.__layout3d && window.__layout3d.ready)) return; B.missing.push(rel); B.need(false, rel); }, true);
+ /* alternative locations of a viewer3d-v3-relative file when the parts were extracted into sibling or nested folders (file:// script tags can load from any folder) */
+ window.L3DALT = function (rel) { var P = window.L3D_PARTS, h = location.href.split('?')[0].split('#')[0], i = h.lastIndexOf('/viewer3d-v3/'); if (!P || i < 0) return []; var par = h.slice(0, i + 1), gp = par.replace(/[^\/]*\/$/, ''), ggp = gp.replace(/[^\/]*\/$/, ''), out = [], n = P.where && P.where[rel], ps = n ? [P.parts[n - 1]] : P.parts;
+  ps.forEach(function (p) { [par + p + '/', par + p + '/' + p + '/', gp + p + '/', gp + p + '/' + p + '/', ggp + p + '/' + p + '/'].forEach(function (b) { var c = b + 'viewer3d-v3/' + rel; if (out.indexOf(c) < 0 && c !== par + 'viewer3d-v3/' + rel) out.push(c); }); }); return out; };
+ window.addEventListener('error', function (e) { if (e && e.message) { B.errs.push(e.message + (e.filename ? ' (' + e.filename.split('/').pop() + ':' + e.lineno + ')' : '')); if (!(window.__layout3d && window.__layout3d.ready) && !B.failed) B.fail('A script error stopped loading.', (e.message === 'Script error.' ? 'Chrome hides the details of errors in files opened from disk. The usual cause is a missing or partly extracted file: unzip ALL parts into the same folder again. ' : '') + 'Otherwise try a current Chrome or Edge with hardware acceleration on.' + B.nestHint()); } });
+ window.addEventListener('unhandledrejection', function (e) { B.errs.push('promise: ' + (e.reason && e.reason.message || e.reason)); });
+ try { var c = document.createElement('canvas'); if (!(c.getContext('webgl2') || c.getContext('webgl'))) B.fail('WebGL is not available in this browser.', 'Use a current Chrome or Edge, and turn on Settings > System > "Use graphics acceleration when available", then restart the browser.'); } catch (e) {}
+ var t0 = Date.now(), iv = setInterval(function () { var S = window.__layout3d; if (S && S.ready) { clearInterval(iv); if (!B.failed) ov.style.display = 'none'; return; }
+  if (!B.failed && Date.now() - t0 > 90000) det.textContent = 'Still working... a slow or integrated GPU can take a while. Try Quality Low: add ?q=low to the address.'; }, 250);
+ return B; })();</script>
+<div id="topbar">
+ <div class="tb-brand" title="Layout 3D viewer">&#128642; <span id="tb-plan">Layout 3D</span></div>
+ <div class="tb-modes" role="group" aria-label="Camera mode">
+  <button data-mode="orbit" title="Look at the whole layout from above: drag to rotate, right-drag to pan, wheel to zoom [1]"><span class="ic">&#127760;</span><span class="lb">Overview</span><kbd>1</kbd></button>
+  <button data-mode="walk" title="Walk the operator aisle at eye height: W A S D, click to look, Shift sprint [2]"><span class="ic">&#128694;</span><span class="lb">Walk</span><kbd>2</kbd></button>
+  <button data-mode="cab" title="Ride in the cab of the selected train [3]"><span class="ic">&#128647;</span><span class="lb">Cab ride</span><kbd>3</kbd></button>
+  <button data-mode="chase" title="Follow the selected train from behind [4]"><span class="ic">&#127909;</span><span class="lb">Follow train</span><kbd>4</kbd></button>
+  <button data-mode="fly" title="Fly anywhere, right down to the models: W A S D along the view, Space/E up, C/Q down, wheel = speed, Shift boost, hold Z precision, X = pass through decks [5]"><span class="ic">&#9992;&#65039;</span><span class="lb">Fly</span><kbd>5</kbd></button>
+  <button data-mode="ped" title="Walk ON the layout as a 1:160 person (eye 5.5 scale ft): W A S D, Shift run, Space jump. Starts where you are looking; the Map puts you anywhere [6]"><span class="ic">&#129485;</span><span class="lb">Pedestrian</span><kbd>6</kbd></button>
+ </div>
+ <div class="tb-now" title="Current camera mode"><span class="dot"></span><span id="modename">Walk</span><span id="modehint"></span></div>
+ <div class="tb-right">
+  <button class="tb-btn" id="mapb" title="Layout map: click a spot to go there [M]">&#128506;<span class="lb"> Map</span><kbd>M</kbd></button>
+  <button class="tb-btn" data-panel-open="jump" title="Search and jump to an industry, the yard or town (Walk) [J]">&#128269;<span class="lb"> Jump to&hellip;</span><kbd>J</kbd></button>
+  <button class="tb-btn" id="homeb" title="Back to the aisle spawn [Home]">&#127968;<span class="lb"> Home</span></button>
+  <button class="tb-btn" id="pause" title="Pause / run all trains [P]">&#9208;<span class="lb"> Pause</span><kbd>P</kbd></button>
+  <button class="tb-btn" id="setb" title="Settings: trains, eye height, display &amp; quality, fly speed (show / hide the panel)">&#9881;&#65039;<span class="lb"> Settings</span></button>
+  <button class="tb-btn" id="helpb" title="Controls and quick start [H]">?<span class="lb"> Help</span><kbd>H</kbd></button>
+ </div>
+</div>
+<div id="ui" class="panel">
+ <div class="ph" id="ttl" title="Click to minimise / restore">Settings</div>
+ <div class="pbody">
+ <div class="plan-sub" id="plansub"></div>
+ <details class="sec" data-sec="trains" open><summary>Trains</summary>
+  <ul id="trainlist" class="trainlist"></ul>
+  <select id="train" class="hidden-sel" aria-hidden="true" tabindex="-1"></select>
+  <div class="frow"><label for="speed" title="Scale speed of all trains [+ / - in Orbit and Chase]">Speed</label><input id="speed" type="range" min="0" max="60" step="5" value="40"><span class="val"><span id="spd">40</span> mph</span></div>
+  <div class="hintline">N next train &middot; +/&minus; speed (Orbit, Chase) &middot; P pause</div>
+ </details>
+ <details class="sec" data-sec="person"><summary>Person &amp; eye height</summary>
+  <div id="hrow">
+  <div class="frow"><label for="hpre">Preset</label><select id="hpre"><option value="48|stand">Child 4'0"</option><option value="60|stand">5'0"</option><option value="66|stand">5'6"</option><option value="71|stand">Owner 5'11" standing (eye 67 in)</option><option value="76|stand">6'4"</option><option value="71|office">Owner in office chair</option><option value="71|stool">Owner on drafting stool</option><option value="71|dining">Owner on dining chair</option><option value="66|wheel">Wheelchair user 5'6"</option></select></div>
+  <div class="frow"><label for="hsl">Height</label><input id="hsl" type="range" min="36" max="84" step="0.5" value="71"></div>
+  <div class="frow"><label for="pose">Pose</label><select id="pose"><option value="stand">standing</option><option value="office">office chair</option><option value="stool">bar/drafting stool</option><option value="dining">dining chair</option><option value="wheel">wheelchair</option></select></div>
+  <div class="frow"><label for="seat">Seat</label><input id="seat" type="range" min="16" max="30" step="0.5" value="18"></div>
+  <div class="readout" id="hread"></div>
+  <div class="hintline">Space / C raise / lower eye while walking</div></div>
+ </details>
+ <details class="sec" data-sec="reach"><summary>Reach</summary><div id="reachslot"></div></details>
+ <details class="sec" data-sec="display"><summary>Display &amp; quality</summary>
+  <div class="frow checks"><label title="Lower deck"><input type="checkbox" id="lv1" checked>L1 deck</label><label title="Upper deck"><input type="checkbox" id="lv2" checked>L2 deck</label><label title="Scene labels [L]"><input type="checkbox" id="labels">Labels <kbd>L</kbd></label><label title="Frame-rate readout [F]"><input type="checkbox" id="fps">Stats <kbd>F</kbd></label><label title="Sun shadows [G]"><input type="checkbox" id="shadows">Shadows <kbd>G</kbd></label></div>
+  <div class="frow btns"><label>Quality <kbd>Q</kbd></label><button data-q="low" title="Fastest">Low</button><button data-q="med" title="Balanced (default)">Med</button><button data-q="high" title="Best looking">High</button></div>
+  <div class="frow"><label for="tod" title="Room lighting: Day, Evening (low warm sun, streetlights and headlights on) or Night">Time of day <kbd>T</kbd></label><select id="tod"><option value="day">Day</option><option value="evening">Evening</option><option value="night">Night</option></select></div>
+  <div class="hintline">Slow graphics card? Pick Low, or open the viewer with <code>?q=low</code> added to the address. Pedestrian view turns shadows on (close-range, cheap) unless Low.</div>
+ </details>
+ <details class="sec" data-sec="flyped"><summary>Fly &amp; Pedestrian</summary>
+  <div class="frow"><label for="flyspd" title="Fly speed (wheel or + / - while flying)">Fly speed</label><input id="flyspd" type="range" min="0" max="100" step="1" value="50"><span class="val"><span id="flyspdv">6</span> in/s</span></div>
+  <div class="frow checks"><label title="Let Fly pass through the decks into the underside [X]"><input type="checkbox" id="flypass">Fly through decks <kbd>X</kbd></label><label title="Headlights and ditch lights on the lead unit (ditch lights flash at crossings)"><input type="checkbox" id="tlights" checked>Train lights</label></div>
+  <div class="hintline">Pedestrian: 1:160 person, walks 3 mph (Shift runs 8 mph), steps up curbs, crosses tracks, can&rsquo;t walk through buildings, trees, fences or trains. Map click = walk there.</div>
+ </details>
+ </div>
+</div>
+<div id="map" class="panel"><div class="ph" id="map-h">Layout map <span class="map-tabs" id="map-tabs"></span></div>
+ <div class="pbody"><canvas id="map-cv" width="250" height="231" title="Click to go there"></canvas>
+  <div class="map-leg"><span><i class="me"></i>you</span><span><i class="tr"></i>train</span><span><i class="ar"></i>area</span><span class="map-tip" id="map-tip">click the map to go there</span></div>
+  <div class="frow btns map-areas" id="views"><button data-v="overview" title="Whole layout from above">Whole layout</button><button data-v="town" title="Town close-up">Town</button><button data-v="l1" title="Lower deck from above">L1 deck</button><button data-v="l2" title="Upper deck from above">L2 deck</button><button data-v="elev" title="Train elevator">Elevator</button><button data-go="aisle" title="Back to the aisle spawn [Home]">Aisle</button></div></div></div>
+<div id="jump" class="panel hidden">
+ <div class="ph">Jump to location <button class="px" data-close="jump" title="Close [Esc]">&times;</button></div>
+ <div class="pbody"><input id="jump-q" type="search" placeholder="Search industries, yard, town&hellip;" autocomplete="off"><ul id="jump-list"></ul><div class="hintline">&uarr;/&darr; choose &middot; Enter jump (Fly / Pedestrian stay in their mode, otherwise Walk)</div></div>
+</div>
+<div id="stats"></div><div id="zoomind"></div>
+<div id="lockhint" class="pill hidden"></div>
+<div id="help" class="hidden modal"><div class="card"><h2>&#128642; Welcome to the layout</h2>
+ <p class="lead">Pick a way to start. You can switch any time with the buttons at the top (keys <kbd>1</kbd>&ndash;<kbd>6</kbd>), and the <b>Map</b> (bottom right) takes you anywhere in one click.</p>
+ <div class="qs-choose">
+  <button data-start="overview"><span class="ic">&#127760;</span><b>See the whole layout</b><small>Overview from above. Drag to turn, wheel to zoom.</small></button>
+  <button data-start="walk"><span class="ic">&#128694;</span><b>Walk the aisle</b><small>Stand where the operators stand (67 in eye height). W A S D to walk, click to look.</small></button>
+  <button data-start="cab"><span class="ic">&#128647;</span><b>Ride a train</b><small>Sit in the cab of a running train. N picks the next train.</small></button>
+  <button data-start="fly"><span class="ic">&#9992;&#65039;</span><b>Fly around</b><small>Free flight down to an inch from the models. Wheel sets the speed.</small></button>
+  <button data-start="ped"><span class="ic">&#129485;</span><b>Be a 1:160 person</b><small>Stand on a street at 5.5 scale ft and watch the trains go by.</small></button>
+ </div>
+ <details class="qs-more"><summary>All controls</summary>
+ <div class="qs-grid">
+  <div><h3>Move &amp; look</h3><table>
+   <tr><td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></td><td>walk (Shift sprint)</td></tr>
+   <tr><td>Click view</td><td>capture mouse to look (<kbd>Esc</kbd> releases); or drag to look</td></tr>
+   <tr><td><kbd>Space</kbd> <kbd>C</kbd></td><td>raise / lower eye</td></tr>
+   <tr><td>Wheel <kbd>+</kbd><kbd>&minus;</kbd></td><td>zoom (Walk, Cab); <kbd>0</kbd> / middle-click resets</td></tr>
+   <tr><td><kbd>Home</kbd></td><td>back to the aisle spawn</td></tr>
+   <tr><td><kbd>M</kbd> / <kbd>J</kbd></td><td>layout map / search for an industry, yard or town</td></tr></table></div>
+  <div><h3>Fly <kbd>5</kbd> &amp; Pedestrian <kbd>6</kbd></h3><table>
+   <tr><td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></td><td>fly along the view / walk</td></tr>
+   <tr><td><kbd>Space</kbd>/<kbd>E</kbd> <kbd>C</kbd>/<kbd>Q</kbd></td><td>Fly: up / down (also PgUp / PgDn)</td></tr>
+   <tr><td>Wheel <kbd>+</kbd><kbd>&minus;</kbd></td><td>Fly: speed &middot; Pedestrian: zoom</td></tr>
+   <tr><td><kbd>Shift</kbd> / hold <kbd>Z</kbd></td><td>Fly: boost / precision &middot; Pedestrian: run</td></tr>
+   <tr><td><kbd>X</kbd></td><td>Fly: pass through the decks (off = decks are solid)</td></tr>
+   <tr><td><kbd>Space</kbd> <kbd>C</kbd></td><td>Pedestrian: jump, crouch</td></tr>
+   <tr><td>Map click</td><td>fly over / walk to that spot</td></tr></table></div>
+  <div><h3>Modes &amp; trains</h3><table>
+   <tr><td><kbd>1</kbd>&ndash;<kbd>6</kbd></td><td>Overview / Walk / Cab ride / Follow train / Fly / Pedestrian</td></tr>
+   <tr><td>Overview</td><td>drag rotate, right-drag pan, wheel zoom</td></tr>
+   <tr><td><kbd>N</kbd></td><td>next train (Cab / Follow)</td></tr>
+   <tr><td><kbd>P</kbd> <kbd>+</kbd><kbd>&minus;</kbd></td><td>pause; speed</td></tr>
+   <tr><td><kbd>L</kbd> <kbd>F</kbd> <kbd>G</kbd> <kbd>Q</kbd></td><td>labels, stats, shadows, quality</td></tr>
+   <tr><td><kbd>T</kbd></td><td>time of day: Day / Evening / Night</td></tr>
+   <tr><td><kbd>Tab</kbd> / &#128065;</td><td>hide all UI; &ndash; on a panel minimises it</td></tr></table></div>
+ </div>
+ <p class="small">Trains run by train number: odd numbers counter-clockwise, even numbers clockwise. Units are real inches; models are N scale 1:160. Settings are remembered in this browser.</p></details>
+ <div class="qs-foot"><label><input type="checkbox" id="qs-never"> Don't show this again</label><span><button id="helpx" class="ghost">Close</button></span></div></div></div>
+<div id="cross"></div><div id="hbadge" class="hidden pill"></div>
+<script src="parts-manifest.js"></script><script src="vendor/three.min.js"></script><script src="vendor/OrbitControls.js"></script><script src="vendor/PointerLockControls.js"></script><script src="vendor/BufferGeometryUtils.js"></script>
+<script src="layout-data.js"></script><script src="logistics-data.js"></script><script src="skinned-data.js"></script>
+<script src="assets/easement.js"></script><script src="assets/core.js"></script><script src="assets/track.js"></script><script src="assets/structures.js"></script><script src="assets/choco-bldg.js"></script><script src="assets/scenery.js"></script><script src="assets/props.js"></script><script src="assets/terrain.js"></script><script src="assets/water.js"></script><script src="assets/nature.js"></script><script src="assets/reach.js"></script><script src="assets/rollingstock.js"></script><script src="assets/likeness.js"></script><script src="vendor/GLTFLoader.js"></script><script src="assets/external-index.js"></script><script src="assets/external.js"></script><script src="assets/choco-rsmap.js"></script><script src="assets/autoramp.js"></script><script src="assets/crossings.js"></script><script src="assets/overpass.js"></script><script src="assets/physics.js"></script><script src="assets/flyped.js"></script><script src="assets/ambience.js"></script><script src="assets/logistics-core.js"></script><script src="assets/logistics.js"></script><script src="assets/life.js"></script><script src="assets/life2.js"></script><script src="life-data.js"></script><script src="assets/lifewire.js"></script>
+<script src="ops/audio/samples.js"></script><script src="ops/audio/audio.js"></script><script src="ops/audio/voice/voices.js"></script><script src="ops/audio/voice/radio-voice.js"></script><script src="ops/ops-data.js"></script><script src="ops/engine/engine.js"></script><script src="ops/control/control.js"></script><script src="ops/viewer/ops3d.js"></script><script src="assets/choco-life3d.js"></script><script src="assets/choco-l3stage3d.js"></script>
+<script>(function () { var B = L3DBOOT; if (B.failed) return;
+ if (!B.need(!!window.THREE, 'vendor/three.min.js') || !B.need(!!window.LAYOUT, 'layout-data.js') || !B.need(!!(window.L3D && L3D.ext), 'assets/*.js')) return;
+ if (!window.L3D.EXT_INDEX) B.note('3D model pack index missing (assets/external-index.js): using simple built-in models.');
+ B.step('Loading 3D models...');
+ L3D.ext.load(function (i, n, id) { B.step(n ? 'Loading 3D models ' + Math.min(i + 1, n) + ' / ' + n + (id ? ' (' + id + ')' : '') : 'Building the scene...'); })
+  .catch(function (e) { B.errs.push('models: ' + e); })
+  .then(function () { var st = L3D.ext.status || {}; if (st.missing && st.missing.length) { var zs = []; st.missing.forEach(function (id) { var z = B.where('assets/ext/' + id + '.js'); if (z && zs.indexOf(z) < 0) zs.push(z); });
+    zs.sort(); B.note('Detailed 3D models not found (' + st.missing.length + ' of ' + st.want + '), using simple built-in models. To get them, unzip ' + (zs.length ? '<b>' + zs.join(', ') + '</b>' : 'the <b>models</b> zip') + ' into the same folder as the app zip (see README-FIRST.txt).' + B.nestHint().replace(/\n/g, '<br>')); }
+   if (st.alt && st.alt.length) B.note(st.alt.length + ' detailed model file(s) were found in a separate folder next to this one and loaded from there. It works, but extracting every zip into ONE folder is cleaner.');
+   B.step('Building the scene...'); var s = document.createElement('script'); s.src = 'viewer.js'; s.onerror = function () { B.need(false, 'viewer.js'); }; document.body.appendChild(s); });
+})();</script>
+<style>
+body.l3d-hideui > *:not(canvas):not(#l3d-eye):not(#l3d-overlay):not(script):not(style){display:none!important}
+#l3d-eye{position:fixed;right:10px;top:9px;z-index:10000;width:30px;height:30px;padding:0;border-radius:15px;border:1px solid #fff8;background:#0006;color:#fff;font:16px sans-serif;cursor:pointer;opacity:.55}
+#l3d-eye:hover{opacity:1}
+.l3d-minb{position:absolute;top:3px;right:4px;width:20px;height:18px;padding:0;margin:0;font:bold 12px sans-serif;line-height:16px;border-radius:4px;opacity:.8;z-index:2}
+.l3d-collapsed{max-height:26px!important;overflow:hidden!important;padding-right:30px!important}
+</style>
+<button id="l3d-eye" title="Hide / show all panels [Tab]">&#128065;</button>
+<script>/* [HIDE-UI] Tab or the eye button hides every panel/menu/HUD; each main panel also collapses on its own (header click or the - button). State in localStorage. */
+(function () { var KEY = 'layout3d.ui', st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) {}
+ var save = function () { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }, eye = document.getElementById('l3d-eye');
+ function setHidden(h) { st.hidden = !!h; document.body.classList.toggle('l3d-hideui', st.hidden); eye.innerHTML = st.hidden ? '&#128065;' : '&#128065;'; eye.title = (st.hidden ? 'Show' : 'Hide') + ' all panels [Tab]'; eye.style.opacity = st.hidden ? '.45' : '.7'; save(); }
+ window.L3DUI = { setHidden: setHidden, toggle: function () { setHidden(!st.hidden); }, state: st };
+ eye.onclick = function (e) { e.stopPropagation(); setHidden(!st.hidden); eye.blur(); };
+ addEventListener('keydown', function (e) { if (e.code !== 'Tab' || /input|select|textarea/i.test((e.target.tagName || ''))) return; e.preventDefault(); setHidden(!st.hidden); }, true);
+ var PANELS = [['ui', 'ttl'], ['ops3d', null], ['stats', null], ['jump', null], ['map', 'map-h']]; st.min = st.min || {}; if (!('ops3d' in st.min)) st.min.ops3d = true; /* [UX 2026-10-18] fewer panels on first run: the AI runs the session, so the ops throttle panel starts minimised (+ restores it) */
+ function hook() { PANELS.forEach(function (pp) { var el = document.getElementById(pp[0]); if (!el || el.dataset.l3dmin) return; el.dataset.l3dmin = 1;
+   if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
+   var b = document.createElement('button'); b.className = 'l3d-minb'; b.title = 'Minimise / restore this panel'; el.insertBefore(b, el.firstChild);
+   var set = function (m) { st.min[pp[0]] = m; el.classList.toggle('l3d-collapsed', m); b.textContent = m ? '+' : '\u2013'; save(); };
+   b.onclick = function (e) { e.stopPropagation(); set(!st.min[pp[0]]); b.blur(); };
+   var hdr = pp[1] ? document.getElementById(pp[1]) : null; if (hdr) { hdr.style.cursor = 'pointer'; hdr.title = 'Click to minimise / restore'; hdr.onclick = function () { set(!st.min[pp[0]]); }; }
+   set(!!st.min[pp[0]]); }); }
+ hook(); var n = 0, iv = setInterval(function () { hook(); if (++n > 240) clearInterval(iv); }, 500);
+ setHidden(!!st.hidden); })();</script>
+<script src="ui.js"></script><script src="cab.js"></script><script src="ux.js"></script>
+</body></html>
