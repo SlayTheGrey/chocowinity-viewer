@@ -71,7 +71,7 @@ button.primary{background:var(--acc)!important;border-color:var(--acc2)!importan
 /* ops-in-3D panel (ops3d.js) in the same style, kept off the centre */
 #ops3d{background:var(--bg)!important;border:1px solid var(--bd)!important;border-radius:var(--r)!important;font-size:13px!important;color:var(--fg)!important}
 #l3d-eye{background:var(--bg)!important;border-color:var(--bd)!important;opacity:1!important}
-#stats{bottom:10px}#ui.panel{max-height:calc(100vh - 110px)}
+#stats{bottom:10px;right:296px;z-index:21}#stats.l3d-collapsed .stats-txt{display:none}#stats.l3d-collapsed{min-width:34px;min-height:26px;box-sizing:border-box}/* [CHOCO-STATS] left of the map, never under it */#ui.panel{max-height:calc(100vh - 110px)}
 /* cab control stand (cab.js): bottom strip, clear of the centre */
 #cabstand{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);display:flex;align-items:center;gap:16px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:8px 14px;z-index:17;color:var(--fg);box-shadow:0 6px 24px #0008}
 #cabstand.hidden{display:none!important}.cs-spd{display:flex;flex-direction:column;align-items:center;min-width:64px}.cs-spd b{font:700 26px/1 ui-monospace,Consolas,monospace;color:var(--warn)}.cs-spd small,.cs-spd span{font-size:11px;color:var(--mut)}
