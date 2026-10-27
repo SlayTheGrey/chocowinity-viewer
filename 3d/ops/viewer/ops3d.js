@@ -17,7 +17,7 @@ function mkRadio() { if (!window.OpsRadio || !eng) return; const old = radio; if
 let api, scene, camera, eng, ai, audio = null, thr = null, seed = +(QS.get('seed') || (D.session && D.session.seed) || 1);
 let mode = null, sel = null, look = { yaw: 0, pitch: -0.05, drag: null, flip: 0 }, follow = null, fp = false, rate = +(QS.get('rate') || 1), acc = 0, uiT = 0;
 const inst = {}; let trucks = null; const T3 = THREE; const _m = new T3.Matrix4(), _q = new T3.Quaternion(), _p = new T3.Vector3(), _s = new T3.Vector3(1, 1, 1), _e = new T3.Euler(), _c = new T3.Color(), ZERO = new T3.Vector3(0, 0, 0);
-H.state = () => ({ mode, sel, follow: follow && { kind: follow.kind, i: follow.i }, t: eng && eng.t, jobs: eng && eng.session.jobs.map(j => ({ id: j.id, at: j.exec ? j.exec.i : null, steps: j.plan ? j.plan.steps.length : 0, done: j.exec ? j.exec.done : null, fail: j.exec ? j.exec.fail : null })), violations: eng && eng.violations.slice(-10) });
+H.state = () => ({ lost: H._lost, mode, sel, follow: follow && { kind: follow.kind, i: follow.i }, t: eng && eng.t, jobs: eng && eng.session.jobs.map(j => ({ id: j.id, at: j.exec ? j.exec.i : null, steps: j.plan ? j.plan.steps.length : 0, done: j.exec ? j.exec.done : null, fail: j.exec ? j.exec.fail : null })), violations: eng && eng.violations.slice(-10) });
 
 /* [R30] L3: the engine only models the lift edge, so a train longer than the lift was drawn on the lift's straight line extended across S1-S5 (the
    'diagonal train'). Cars at level 3 are mapped onto the real L3 loop polyline (it runs through the lift): arc = loop arc at the lift centre + the car's
@@ -311,6 +311,17 @@ function refreshUI() { const $ = id => document.getElementById(id); if (!$('o3cl
 function setOpsMode(m) { mode = m; look.yaw = 0; look.pitch = m === 'cab' ? -0.05 : 0; look.flip = 0; if (cab) cab.visible = false;
   if (m) { if (api.getMode() === 'walk' && api.plc.isLocked) api.plc.unlock(); api.setMode('cab'); api.orbit.enabled = false; }
   if (m === 'follow' && !follow) follow = nearestAgent(); if (!m) { camera.near = 0.1; camera.fov = 60; camera.updateProjectionMatrix(); } }
+function lostNotice(f) {   /* [CHOCO-FOLNOTICE] */
+  let el = document.getElementById('o3lost');
+  if (!f) { H._lost = null; if (el) el.style.display = 'none'; return; }
+  if (!el) { el = document.createElement('div'); el.id = 'o3lost'; el.setAttribute('role', 'status'); el.style.cssText = 'position:fixed;top:64px;left:50%;transform:translateX(-50%);z-index:10000;pointer-events:auto;background:rgba(20,24,30,.92);color:#fff;font:14px/1.4 system-ui,sans-serif;padding:10px 14px;border-radius:8px;border:1px solid #f5b942;max-width:90vw;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.4)';
+    el.innerHTML = '<div id="o3lostTxt"></div><div style="margin-top:6px"><button id="o3lostNext">Follow another train</button> <button id="o3lostRel">Release camera</button></div>'; document.body.appendChild(el);
+    el.querySelector('#o3lostNext').onclick = () => { const L = locos().filter(l => l.addr != null && l.car._pose); if (L.length) { const c = camera.position; L.sort((p, q) => Math.hypot(p.car._pose.x - c.x, p.car._pose.y - c.z) - Math.hypot(q.car._pose.x - c.x, q.car._pose.y - c.z)); sel = L[0].addr; H._lastFol = null; fillLocos(); thr && thr.select && thr.select(sel); lostNotice(null); } };
+    el.querySelector('#o3lostRel').onclick = () => { H._lastFol = null; lostNotice(null); setOpsMode(null); }; }
+  const inStage = ai && ai.stage3 && ai.stage3.some(q => q.tr && q.tr.sym === f.train);
+  const txt = inStage ? `Followed train ${f.train} went up the lift into L3 staging (off the layout). The camera is holding here; if it comes back down this session, the camera picks it up again.` : `Followed train ${f.train} left the layout. The camera is holding here.`;
+  if (!H._lost || H._lost.txt !== txt) { H._lost = { train: f.train, inStage, txt, t: eng && eng.t }; el.querySelector('#o3lostTxt').textContent = txt; }
+  el.style.display = 'block'; }
 function nearestAgent() { let b = null, bd = 1e9; for (const a of AG) { if (a.x === undefined) continue; const d = Math.hypot(a.x - camera.position.x, a.y - camera.position.z); if (d < bd) { bd = d; b = a; } } return b || AG[0]; }
 function bindInput() {
   const dom = api.renderer.domElement; let down = null;
@@ -358,6 +369,7 @@ H.camera = function (dt, viewerMode) {
   if (H.fixedCam) { const f = H.fixedCam; camera.position.set(f.x, f.y, f.z); camera.lookAt(f.tx, f.ty, f.tz); return true; }
   if (!mode) { if (cab) cab.visible = false; return false; }
   if (viewerMode !== 'cab') { setOpsMode(null); return false; }
+  if ((mode === 'cab' || mode === 'chase') && sel != null) { const L = locoByAddr(sel); if (L && L.car._pose) { if (H._lost) lostNotice(null); H._lastFol = { addr: sel, label: L.label, train: L.car.train || L.label, x: L.car._pose.x, y: L.car._y || 0, z: L.car._pose.y, a: L.car._ang || 0 }; } else if (H._lastFol && H._lastFol.addr === sel) { if (cab) cab.visible = false; const F = H._lastFol; if (F.x !== undefined) { _p.set(F.x - Math.cos(F.a) * 22, F.y + 16, F.z - Math.sin(F.a) * 22); camera.position.lerp(_p, Math.min(1, dt * 2)); camera.lookAt(F.x, F.y, F.z); } lostNotice(F); return true; } }   /* [CHOCO-FOLNOTICE] followed train gone: hold the camera, say so, re-acquire when it is back */
   if (mode === 'cab') return cabCamera(dt) || (setOpsMode(null), false);
   if (cab) cab.visible = false;
   if (mode === 'chase') return chaseCamera(dt);
