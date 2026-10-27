@@ -8,7 +8,7 @@
   const mk = (bt, s, Y, ctx) => { const rec = { name: s.name, r: s.r.slice(), parts: [] }; LOG.push(rec);
     const part = (tag, bb, out) => rec.parts.push({ tag, bb: bb.map(v => +v.toFixed(4)), out: !!out });
     const B = (key, x0, z0, x1, z1, y0, y1, c, tag, uv) => { bt.box(key, x0, Y + y0, z0, x1, Y + y1, z1, C(c), uv || 1); part(tag || key, [x0, z0, x1, z1, y0, y1]); };
-    const G = (key, g, cx, cz, y0, c, tag, bb) => { bt.geom(key, g, new THREE.Matrix4().makeTranslation(cx, Y + y0, cz), C(c)); g.dispose(); part(tag, bb); };
+    const G = (key, g, cx, cz, y0, c, tag, bb, out) => { bt.geom(key, g, new THREE.Matrix4().makeTranslation(cx, Y + y0, cz), C(c)); g.dispose(); part(tag, bb, out); };
     const cyl = (key, cx, cz, rr, y0, y1, c, tag, seg) => G(key, new THREE.CylinderGeometry(rr, rr, y1 - y0, seg || 28).translate(0, (y1 - y0) / 2, 0), cx, cz, y0, c, tag, [cx - rr, cz - rr, cx + rr, cz + rr, y0, y1]);
     const cone = (key, cx, cz, rr, y0, hh, c, tag) => G(key, new THREE.ConeGeometry(rr, hh, 28).translate(0, hh / 2, 0), cx, cz, y0, c, tag, [cx - rr, cz - rr, cx + rr, cz + rr, y0, y0 + hh]);
     const gable = (key, x0, z0, x1, z1, yE, yR, c, tag) => { const ax = x1 - x0 >= z1 - z0, cl = C(c), y0 = Y + yE, y1 = Y + yR; /* ridge on the long axis, no overhang past the footprint */
@@ -29,6 +29,12 @@
     const walls = (key, h, c, tag) => B(key, r[0], r[1], r[2], r[3], 0, h, c, tag || 'walls', 0.8);
     return { B, G, cyl, cone, gable, plate, doors, walls, tdSide, trackSide, lotSide, part, r, rec, s, ctx };
   };
+  /* [CHOCO-NUTRIEN] shared track-straddling shed shell (see W['Nutrien inbound pit shed']) */
+  const nutShed = (k, cl, env, hc, hE, hR, t, c) => { const r = k.r, zn = Math.max(r[1] + t, cl - env), zs = Math.min(r[3] - t, cl + env);
+    k.B('corr', r[0], r[1], r[2], r[1] + t, 0, hE, c, 'N long wall'); k.B('corr', r[0], r[3] - t, r[2], r[3], 0, hE, c, 'S long wall');
+    for (const x of [r[0], r[2] - t]) { if (zn > r[1] + t + 0.01) k.B('corr', x, r[1] + t, x + t, zn, 0, hE, c, 'end wall N of portal'); if (zs < r[3] - t - 0.01) k.B('corr', x, zs, x + t, r[3] - t, 0, hE, c, 'end wall S of portal'); k.B('corr', x, zn, x + t, zs, hc, hE, c, 'portal header (23 ft clear)'); }
+    for (let f = 0.125; f < 1; f += 0.25) { const x = r[0] + (r[2] - r[0]) * f; k.B('metal', x - 0.02, r[1] + t, x + 0.02, r[3] - t, hc, hc + 0.06, '#7e827e', 'roof truss bottom chord (23 ft)'); }
+    k.gable('metalroof', r[0], r[1], r[2], r[3], hE, hR, '#9aa0a0', 'roof'); };
   const W = { /* builders keyed by structure name; heights in ft from the spec */
     'CCF plant': (k) => { const h = 32 * FT, r = k.r; k.walls('corr', h, '#e4e2da');
       k.B('conc', r[0], r[1], r[2], r[3], h, h + 3 * FT, '#9a9890', 'roof + parapet', 0.6); /* parapet drawn as a ring: inner roof plane sits just above */
@@ -82,16 +88,31 @@
       k.B('metal', 31.85, r[3], 32.15, r[3] + 0.30, 0, 42 * FT, '#a0a4a2', 'conveyor transfer tower (outside, attached S wall)');
       k.B('metal', 31.92, r[3] - 0.0, 32.08, r[3] + 0.0001, 0, 0.0001, '#a0a4a2', 'n/a'); k.rec.parts.pop();
       k.B('corr', 31.88, r[3], 32.12, r[3] + 0.30, 18 * FT, 22 * FT, '#b8bcba', 'enclosed belt from pit (outside, attached S wall)'); },
+    /* [CHOCO-NUTRIEN 2026-10-27] rev6i sheds (rev6i renamed/moved them, so the old 'hopper unloading shed' key no longer matched and they fell back to thin generic boxes).
+       Track-straddling shed: walls on the footprint faces, end portals 8'6" (0.6375 in) each side of CL clipped to the footprint, 23 ft clear under trusses. */
+    'Nutrien inbound pit shed': (k) => { const r = k.r, cl = 7.508, env = 0.6375, hc = 23 * FT, hE = 25 * FT, hR = 30 * FT, t = 0.04, c = '#c4c7c2';
+      nutShed(k, cl, env, hc, hE, hR, t, c);
+      k.B('metal', r[0] + 0.3, cl - 0.42, r[2] - 0.3, cl + 0.42, -0.001, 0.002, '#3a3c3c', 'bottom-dump pit grating (deck level)'); },
+    'Nutrien outbound spout shed': (k) => { const r = k.r, cl = 9.4237, env = 0.6375, hc = 23 * FT, hE = 30 * FT, hR = 34 * FT, t = 0.04, c = '#bfc3be';
+      nutShed(k, cl, env, hc, hE, hR, t, c);
+      /* spout house: 55-ft headhouse riding the shed over the middle spots, walls inside the footprint */
+      const x0 = r[0] + (r[2] - r[0]) * 0.34, x1 = r[0] + (r[2] - r[0]) * 0.66, H = 55 * FT;
+      k.B('corr', x0, r[1] + t, x1, r[3] - t, hE, H, '#b4b9b4', 'spout house (55 ft)'); k.B('roofgravel', x0, r[1] + t, x1, r[3] - t, H, H + 0.01, '#8e928e', 'spout house roof');
+      for (const f of [0.3, 0.7]) { const x = x0 + (x1 - x0) * f; k.B('metal', x - 0.05, cl - 0.05, x + 0.05, cl + 0.05, 17 * FT, hc, '#6e7270', 'loading spout (retracted, 17 ft)'); }
+      /* [CHOCO-NUTRIEN back] belt to the dome leaves the S wall as a low covered conveyor (layout line, h 0.45 in), no tall tower in the aisle reach strip */ },
     'Nutrien storage dome': (k) => { const r = k.r, cx = (r[0] + r[2]) / 2, cz = (r[1] + r[3]) / 2, a = Math.min(r[2] - r[0], r[3] - r[1]) / 2 - 0.02, H = 45 * FT; /* monolithic dome [10], 45 ft crown [UNVERIFIED] */
       const Rs = (a * a + H * H) / (2 * H), th = Math.acos((Rs - H) / Rs); k.cyl('conc', cx, cz, a, 0, 0.12, '#bdbab2', 'stem wall');
       const g = new THREE.SphereGeometry(Rs, 40, 16, 0, Math.PI * 2, 0, th).translate(0, -(Rs - H) + 0.12, 0); k.G('glossy', g, cx, cz, 0, '#efeee8', 'dome shell', [cx - a, cz - a, cx + a, cz + a, 0, H + 0.12]);
-      const dh = d => d >= a ? 0.12 : Math.sqrt(Rs * Rs - d * d) - (Rs - H) + 0.12; /* shell height */
-      /* conveyor gallery: from the transfer tower top at the dome footprint edge (y 7.4, 42 ft) up to the crown headhouse; checked to stay above the shell */
-      const z0 = r[1], y0 = 42 * FT - 0.02, z1 = cz, y1 = H + 0.12 + 0.2, gw = 0.14, gh = 0.16, v = new THREE.Vector3(0, y1 - y0, z1 - z0), L = v.length();
-      const gg = new THREE.BoxGeometry(gw * 2, gh, L).applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), v.clone().normalize())).translate(32 - cx, 0, (z0 + z1) / 2 - cz);
-      k.G('corr', gg, cx, cz, (y0 + y1) / 2 + gh / 2, '#b8bcba', 'conveyor gallery (inside dome footprint, over shell)', [32 - gw, z0, 32 + gw, z1, y0, y1 + gh]);
-      let mc = 9; for (let f = 0; f <= 1.0001; f += 0.02) { const z = z0 + (z1 - z0) * f, yb = y0 + (y1 - y0) * f - 0.03; mc = Math.min(mc, yb - dh(Math.hypot(32 - cx, z - cz))); } k.rec.shellClear = +mc.toFixed(3);
-      k.B('corr', 32 - 0.25, cz - 0.25, 32 + 0.25, cz + 0.25, H + 0.1, H + 0.12 + 0.4, '#b0b4b2', 'crown headhouse'); },
+      const dh = d => d >= a ? 0.12 : Math.sqrt(Rs * Rs - d * d) - (Rs - H) + 0.12;
+      /* [CHOCO-NUTRIEN] conveyor gallery: spout-shed transfer tower top (35.5, 10.41, 50 ft) -> crown headhouse; checked to stay above the shell */
+      const p0 = [r[0] + 0.15, r[3] - 0.15], y0 = 2.75, /* [CHOCO-NUTRIEN back] low belt (layout line z 13.0) arrives at W edge, runs at grade to a 36 ft transfer tower in the footprint corner (outside the shell), then inclines to the crown */ p1 = [cx, cz], y1 = H + 0.12 + 0.2, gw = 0.12, gh = 0.16;
+      k.B('metal', r[0] + 0.02, 12.94, r[0] + 0.14, r[3] - 0.15, 0, 0.45, '#9a9e9c', 'grade belt to transfer tower (inside footprint)'); k.B('corr', p0[0] - 0.12, p0[1] - 0.12, p0[0] + 0.12, p0[1] + 0.12, 0, y0 + 0.16, '#a8aca9', 'transfer tower (36 ft, inside footprint)');
+      const v = new THREE.Vector3(p1[0] - p0[0], y1 - y0, p1[1] - p0[1]), Lg = v.length();
+      const gg = new THREE.BoxGeometry(gw * 2, gh, Lg).applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), v.clone().normalize())).translate((p0[0] + p1[0]) / 2 - cx, 0, (p0[1] + p1[1]) / 2 - cz);
+      k.G('corr', gg, cx, cz, (y0 + y1) / 2 + gh / 2, '#b8bcba', 'conveyor incline (transfer tower -> dome crown, inside footprint)', [Math.min(p0[0], p1[0]), Math.min(p0[1], p1[1]) - gw, Math.max(p0[0], p1[0]), Math.max(p0[1], p1[1]) + gw, y0, y1 + gh]);
+      let mc = 9; for (let f = 0; f <= 1.0001; f += 0.02) { const x = p0[0] + (p1[0] - p0[0]) * f, z = p0[1] + (p1[1] - p0[1]) * f, yb = y0 + (y1 - y0) * f - 0.03; mc = Math.min(mc, yb - dh(Math.hypot(x - cx, z - cz))); } k.rec.shellClear = +mc.toFixed(3);
+      for (const f of [0.35, 0.7]) { const x = p0[0] + (p1[0] - p0[0]) * f, z = p0[1] + (p1[1] - p0[1]) * f, yt = y0 + (y1 - y0) * f; if (Math.hypot(x - cx, z - cz) > a + 0.05) k.B('metal', x - 0.04, z - 0.04, x + 0.04, z + 0.04, 0, yt, '#8a8e8c', 'gallery bent (outside)'); }
+      k.B('corr', cx - 0.25, cz - 0.25, cx + 0.25, cz + 0.25, H + 0.1, H + 0.12 + 0.4, '#b0b4b2', 'crown headhouse'); },
     'Nutrien control room': (k) => { const h = 13 * FT, r = k.r; k.walls('plain', h, '#d4d2c8'); k.B('roofgravel', r[0], r[1], r[2], r[3], h, h + 0.01, '#8a8a84', 'roof'); k.doors(k.lotSide(/Nutrien staff/) ?? 2, 3, 5 * FT, 4 * FT, '#bcd0dc', 'window'); },
     'GCF pulp warehouse': (k) => { const h = 36 * FT, r = k.r; k.walls('corr', h, '#d9d6cc'); k.B('roofgravel', r[0], r[1], r[2], r[3], h, h + 0.01, '#9c9a94', 'roof');
       k.doors(2, 6, 10 * FT, 12 * FT, '#34454f', 'rail dock door (spur side)'); k.doors(3, 6, 9 * FT, 10 * FT, '#34454f', 'truck dock door (W face)'); k.doors(0, 1, 4 * FT, 7 * FT, '#3a4048', 'man door', 0.95, 0.95); },
