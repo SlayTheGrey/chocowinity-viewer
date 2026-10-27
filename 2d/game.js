@@ -705,7 +705,7 @@ function setup() {
     else if (k === 'p') $('pause').click(); else if (k === 'h' || k === '?') $('helpb').click(); else if (k === 'm' && audio) { audio.start(); $('sound').textContent = audio.toggleMute() ? '🔇' : '🔊'; } });
   addEventListener('pointerdown', () => audio && audio.start(), { once: true });
 }
-function restart() { const seed = +$('seed').value || 1; newSession(seed, $('mode').value); thr.refreshList(); if (myJob) thr.select(myJob.addr); initAgents(); }
+function restart() { const seed = 1; $('seed').value = 1;   /* [CHOCO-SEED1] only seed 1 has local-job plans */ newSession(seed, $('mode').value); thr.refreshList(); if (myJob) thr.select(myJob.addr); initAgents(); }
 window.addEventListener('error', e => errs.push(String(e.message)));
 newSession(+(Q.get('seed') || 1), Q.get('mode') || (TEST ? 'auto' : 'mixed')); $('seed').value = +(Q.get('seed') || 1); if (Q.get('mode') || TEST) $('mode').value = Q.get('mode') || 'auto';
 setup(); setupCTC(); thr.refreshList(); if (myJob) thr.select(myJob.addr); initAgents();

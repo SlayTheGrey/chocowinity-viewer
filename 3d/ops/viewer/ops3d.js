@@ -275,7 +275,7 @@ function ui() {
   document.head.appendChild(css);
   const el = document.createElement('div'); el.id = 'ops3d'; el.innerHTML = `<b>Ops session</b> <span id="o3clock"></span><br>
    <select id="o3mode" title="Auto: AI runs every train incl. the locals. Mixed: AI runs through trains, you run the locals with the throttle."><option value="auto">AI runs the session</option><option value="mixed">Mixed (you run locals)</option></select>
-   <select id="o3rate" title="sim speed"><option>1</option><option>2</option><option>4</option><option>8</option></select>× <button id="o3new">New session</button><br>
+   <select id="o3rate" title="sim speed"><option>1</option><option>2</option><option>4</option><option>8</option></select>× <button id="o3new" title="Restart the planned session from the start">New session</button><br>
    <select id="o3loco" style="width:150px"></select><br>
    <button id="o3cab" title="3: engineer's seat, drag to look, B = look back">🚂 Cab [3]</button><button id="o3chase" title="4">Chase [4]</button><button id="o3fol" title="7: follow the nearest person/car (7 again = next); or click one">👤 Follow [7]</button><button id="o3walk" title="2">Walk [2]</button>
    <button id="o3cred" title="Sound credits / licenses">Credits</button>
@@ -286,7 +286,7 @@ function ui() {
   document.body.appendChild(el); const tag = document.createElement('div'); tag.id = 'ops3dtag'; document.body.appendChild(tag);
   const $ = id => document.getElementById(id);
   $('o3mode').value = QS.get('opsmode') || 'auto'; $('o3rate').value = String(rate);
-  $('o3rate').onchange = e => rate = +e.target.value; $('o3new').onclick = () => { seed = seed % 3 + 1; newSession(seed, $('o3mode').value); fillLocos(); };
+  $('o3rate').onchange = e => rate = +e.target.value; $('o3new').onclick = () => { seed = 1; newSession(seed, $('o3mode').value); fillLocos(); };   /* [CHOCO-SEED1] always restart the planned session; seeds 2/3 have no local-job plans (locals stand by) */
   $('o3mode').onchange = e => newSession(seed, e.target.value);
   $('o3loco').onchange = e => { sel = +e.target.value; thr && thr.select(sel); };
   $('o3cred').onclick = () => { const b = $('o3credbox'); b.style.display = b.style.display === 'none' ? 'block' : 'none';
