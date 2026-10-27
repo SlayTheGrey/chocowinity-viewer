@@ -510,8 +510,9 @@ class AI {
     for (const ex of this.execs) { if (ex.done || ex.fail) continue; const c = ex.cut(); if (!c) continue;
       const blocker = ex.blockedBy; if (!blocker || (ex.blockT || 0) < 45) continue;
       const tr = this.trains.find(t => this.cutOf(t) === blocker); if (!tr || this.onLift(tr)) continue;
+      { const o = this.trains.find(q => q !== tr && tr.lastWhy && (String(tr.lastWhy).includes(q.sym) || (this.cutOf(q) && String(tr.lastWhy).includes(eng.cutName(this.cutOf(q)))))); if (o && this._yield(o, tr)) { ex.blockT = 0; continue; } }   /* [CHOCO-YIELD] dir2 4237-4303: P90B back blocked P90C because it was itself head-on with Coal unit empties at L2-03 -> the unit train backs away, P90B back clears */
       const home = blocker.path[0].e; eng.cuts.splice(eng.cuts.indexOf(blocker), 1); this.trains.splice(this.trains.indexOf(tr), 1);
-      this.staged.push({ tr, cut: blocker, home }); for (const k in eng.reserve) if (eng.reserve[k] === tr.sym) delete eng.reserve[k]; ex.blockT = 0; ex.blockedBy = null; this.say(`Dispatcher: ${tr.sym}, take it to staging — ${ex.job.id} is working there`); }
+      this.staged.push({ tr, cut: blocker, home }); for (const k in eng.reserve) if (eng.reserve[k] === tr.sym) delete eng.reserve[k]; ex.blockT = 0; ex.blockedBy = null; this.say(`⚑ Dispatcher: ${tr.sym}, take it to staging — ${ex.job.id} is working there`); }
     // a local that holds on the main line works under a main-line window: the through trains on its level go to staging until it is done
     for (const ex of this.execs) { if (ex.done || ex.fail) continue; const hold = ex.job.stops && ex.job.stops[0] && eng.trk[ex.job.stops[0].tid];
       if (!hold || hold.type !== 'main') continue; ex.windowed = true; if (!(this.mainTime && this.mainTime[hold.level] === ex.job.id)) continue; /* [CHOCO-DETOUR3] */
@@ -647,7 +648,9 @@ class AI {
     const rv = eng.reserve[k]; if (rv && rv !== tr.sym) return `${tr.loopIn} reserved for ${rv}`;
     for (const M of [this.res, this.prevRes]) if (M && M[k] && M[k] !== tr.sym && this.trains.some(o => o.sym === M[k])) return `${tr.loopIn} claimed by ${M[k]}`;
     const fc = eng.cuts.find(c => c !== cut && eng.fouls(tr.loopIn, c)); if (fc) return `${tr.loopIn} fouled by ${eng.cutName(fc)}`;
-    for (const o of this.trains) { if (o === tr) continue; const oc = this.cutOf(o); if (oc && this.onLift(o) && (eng.lift.moving ? (o.nextLv === lv || o.downTo === lv) : Math.round(eng.lift.level) === lv)) return `${o.sym} coming off the lift onto L${lv}`; }
+    for (const o of this.trains) { if (o === tr) continue; const oc = this.cutOf(o); if (oc && this.onLift(o) && (eng.lift.moving ? (o.nextLv === lv || o.downTo === lv) : Math.round(eng.lift.level) === lv)) return `${o.sym} coming off the lift onto L${lv}`;
+      if (oc && o.wantLift && !o._hoWho && o.nextLv === lv && !this.onLift(o) && Math.round(eng.edgeLevel(oc.path[0].e)) !== lv) return `${o.sym} has the lift for L${lv}`;   /* [CHOCO-DIR3] lap dir2: coal loads backed out at L1-LS while P90C back was granted the lift L2->L1 */
+      if (oc && o.backOut && Math.round(eng.edgeLevel(oc.path[0].e)) !== lv && o.nextLv === lv) return `${o.sym} backing out for the lift to L${lv}`; }
     if (eng.lift && eng.lift.moving && eng.lift.to === lv) return `lift moving to L${lv}`;
     return null; }
   _landClaim(me, dl) { const eng = this.eng, ks = ['T:L' + dl + '-LN', 'T:L' + dl + '-LS'];
@@ -668,29 +671,48 @@ class AI {
       if (cur === 2 && eng.levels >= 3) { nxt = 3; tr.forceStage = true; if (!tr.dirHeld) { tr.dirHeld = true; this.say(`Dispatcher: ${tr.sym}, opposing traffic on L1 — go up to L3 staging and hold for the meet`); } }
       else { tr.wantLift = false; this._lapHold(tr); tr.nextLv = undefined; tr.meets = (tr.meets || 0) + 1; if (!tr.dirHeld) { tr.dirHeld = true; this.say(this._contRun() ? `Dispatcher: ${tr.sym}, hold the L${cur} main (another lap) — opposing traffic on L${nxt}` : `Dispatcher: ${tr.sym}, hold at the L${cur} lift landing — opposing traffic on L${nxt}`); } if (!this._contRun()) tr.lastWhy = `holding at the L${cur} lift landing: opposing traffic on L${nxt}`; return true; } }
     else tr.dirHeld = false;
-    if (tr.backTo) nxt = tr.backTo; /* [CHOCO-BACK] */ tr.nextLv = nxt; return false; }
+    if (tr.backTo) nxt = tr.backTo; /* [CHOCO-BACK] */
+    if (tr._wLv !== cur) { tr._wLv = cur; tr._wT = eng.t; }   /* [CHOCO-DIR] head-on at the landing: a train already on the lift, or asked first, bound for this level comes out through the throat this train would stand in -> this one holds clear (loop / lap) */
+    for (const o of this.trains) { if (o === tr || !(o.wantLift || o.backOut || o.backup > 0 && o.backOut) || o.nextLv !== cur) continue; const oc = this.cutOf(o); if (!oc) continue; const ol = this.onLift(o), olv = Math.round(eng.edgeLevel(oc.path[0].e));   /* [CHOCO-DIR3] a train backing out of its loop to the lift counts as a lift claimant */
+      if (ol || o.backOut || (olv === nxt && (o._wLv === olv) && (o._wT || 0) < tr._wT)) { tr.wantLift = false; this._lapHold(tr); tr.nextLv = undefined; if (tr._hoWho !== o.sym) { tr._hoWho = o.sym; this.say(`Dispatcher: ${tr.sym}, hold clear of the L${cur} landing — ${o.sym} is coming off the lift onto L${cur}`); } if (!this._contRun()) tr.lastWhy = `holding at the L${cur} lift landing: ${o.sym} coming off the lift`; return true; } }
+    tr._hoWho = null; tr.nextLv = nxt; return false; }
   /* fallback for a meet the window did not prevent (two through trains each held by the other > 15 s): no reversing on the main — the
      inferior train by rule is cleared off the layout to staging (as the dispatcher's 'take it to staging') and comes back when its level is clear. */
+  /* [CHOCO-YIELD] deadlock resolver: the train 'lo' backs away along its own route until it is clear of the block(s) 'hi' is waiting for; those blocks are reserved for hi so lo cannot re-enter; staging removal stays only as the last resort */
+  _yield(lo, hi) { const eng = this.eng; if (!lo || !hi || this.onLift(lo) || lo.backup > 0 || lo.backOut) return false; const lc = this.cutOf(lo); if (!lc) return false;
+    const loco = lc.cars.find(c => c.loco); if (!loco) return false; const dir = -(loco.fwd || 1);
+    const blks = [...new Set((String(hi.lastWhy || '').match(/\b[BT]:[\w-]+/g) || []))].filter(b => (this.occ[b] && this.occ[b].has(lc)) || (b.startsWith('T:') && eng.T[b.slice(2)] && eng.fouls(b.slice(2), lc)));
+    if (!blks.length) return false;
+    const ob = eng.obstacle(lc, dir, 150); const room = Math.min(150, (ob.what ? ob.dist : 150) - 4); if (room < 12) return false;
+    const A = eng.ahead(lc, dir, Math.min(room, 60)); for (const a of A) { const b = this.blockOf(a.e); if (blks.includes(b)) continue; const r = eng.reserve[b]; if (r && r !== lo.sym) return false; const u = this.occ[b]; if (u && [...u].some(c => c !== lc)) return false; }
+    if (this.trains.some(o => o !== lo && o !== hi && o.backOut && o.backup > 0)) return false;
+    for (const M of [this.res, this.prevRes]) if (M) for (const k in M) if (M[k] === lo.sym) delete M[k];
+    for (const b of blks) { if (eng.reserve[b] === lo.sym) delete eng.reserve[b]; if (!eng.reserve[b]) eng.reserve[b] = hi.sym; }
+    lo.yieldBlk = blks; lo._yClr = 0; lo.backup = room; lo.held = 0; lo.lastWhy = null; hi.held = 0; lo.wantLift = false; lo.loopHeld = false; this.yields = (this.yields || 0) + 1;
+    this.say(`Dispatcher: ${lo.sym}, back away clear of ${blks.join(', ').replace(/[BT]:/g, '')} for ${hi.sym}`); return true; }
+  _resolve(a, b) { const lo = this.superior(a, b) ? b : a, hi = lo === a ? b : a; return this._yield(lo, hi) || this._yield(hi, lo); }
   checkMeet(tr, cut) { if (tr.held < 15 || !tr.lastWhy) return;
     for (const o of this.trains) { if (o === tr) continue; const oc = this.cutOf(o); if (!oc) continue;
       const mineBlk = String(o.lastWhy || '').includes(this.eng.cutName(cut)) || String(o.lastWhy || '').includes(tr.sym);
       const hisBlk = String(tr.lastWhy).includes(this.eng.cutName(oc)) || String(tr.lastWhy).includes(o.sym);
       if (hisBlk && mineBlk && o.held > 15) { let lo = this.superior(tr, o) ? o : tr; if (this.onLift(lo)) lo = lo === tr ? o : tr; if (this.onLift(lo)) return;
+        if (this._resolve(tr, o)) return;
         const hi = lo === tr ? o : tr, lc = this.cutOf(lo), eng = this.eng; eng.cuts.splice(eng.cuts.indexOf(lc), 1); this.trains.splice(this.trains.indexOf(lo), 1);
         (this.staged = this.staged || []).push({ tr: lo, cut: lc, home: lc.path[0].e, level: Math.round(eng.edgeLevel(lc.path[0].e)), meetWith: hi.sym }); for (const k in eng.reserve) if (eng.reserve[k] === lo.sym) delete eng.reserve[k];
         lo.held = 0; lo.lastWhy = null; hi.held = 0; this.meetStaged = (this.meetStaged || 0) + 1;
-        this.say(`Dispatcher: ${lo.sym}, take it to staging for the meet with ${hi.sym}`); return; } }
+        this.say(`⚑ Dispatcher: ${lo.sym}, take it to staging for the meet with ${hi.sym} (no room to back away)`); return; } }
     /* [R36] circular wait of 3+ trains (NS 165 -> CSX Y191 -> BNSF ethanol -> NS 165 around the L1/L2 loops, sim min 238-254): follow who-waits-for-whom;
        if the chain closes and everyone has been held 2+ min, the lowest-priority train not on the lift goes to staging, same as a meet */
     if (tr.held > 120) { const eng = this.eng, waitsFor = t => this.trains.find(o => o !== t && t.lastWhy && (String(t.lastWhy).includes(o.sym) || (this.cutOf(o) && String(t.lastWhy).includes(eng.cutName(this.cutOf(o))))));
       const ring = [tr]; let x = waitsFor(tr);
       while (x && x.held > 120 && !ring.includes(x) && ring.length < 8) { ring.push(x); x = waitsFor(x); }
       if (x === tr && ring.length >= 3) { const cand = ring.filter(t => !this.onLift(t)); if (!cand.length) return; let lo = cand[0]; for (const t of cand) if (this.superior(lo, t)) lo = t;
+        { const w = ring.find(t => waitsFor(t) === lo); if (w && this._yield(lo, w)) { for (const t of ring) t.held = 0; return; } for (const t of ring) { const v = ring.find(q => waitsFor(q) === t); if (v && t !== lo && this._yield(t, v)) { for (const q of ring) q.held = 0; return; } } }
         const lc = this.cutOf(lo); eng.cuts.splice(eng.cuts.indexOf(lc), 1); this.trains.splice(this.trains.indexOf(lo), 1);
         (this.staged = this.staged || []).push({ tr: lo, cut: lc, home: lc.path[0].e, level: Math.round(eng.edgeLevel(lc.path[0].e)), meetWith: ring.filter(t => t !== lo)[0].sym }); for (const k in eng.reserve) if (eng.reserve[k] === lo.sym) delete eng.reserve[k];
         for (const k in this.res) if (this.res[k] === lo.sym) delete this.res[k];
         for (const t of ring) { t.held = 0; } lo.lastWhy = null; this.cycleBreaks = (this.cycleBreaks || 0) + 1;
-        this.say(`Dispatcher: ${lo.sym}, clear to staging; ${ring.length} trains were waiting on each other (${ring.map(t => t.sym).join(' -> ')})`); return; } }
+        this.say(`⚑ Dispatcher: ${lo.sym}, clear to staging; ${ring.length} trains were waiting on each other (${ring.map(t => t.sym).join(' -> ')})`); return; } }
     // single train blocked by a standing local for a long time: no deadlock, keep waiting
   }
   _backup(tr, th, cut, loco, dt) { const eng = this.eng; const dir = -(loco.fwd || 1); const ob = eng.obstacle(cut, dir, 20);
@@ -698,7 +720,8 @@ class AI {
     { const A = eng.ahead(cut, dir, 10);   /* [R38] a train backing into the clear for a meet lines (or stops for) the trailing points behind it: CSX phosphate backed through L1-15 lined for P22's warrant (runthrough min 115) */
       for (let i = 1; i < A.length; i++) { const lg = eng.legOf[A[i].e]; if (!lg || A[i - 1].e === lg[0].stem || lg[0].state === lg[1]) continue; const rv = eng.reserve['T:' + lg[0].id];
         eng._thCtx = tr.sym + ':backup'; if ((rv && rv !== tr.sym) || !eng.throwTurnout(lg[0].id, lg[1], 'ai')) { tr.backup = 0; tr.meetWait = 25; this._boAbort(tr); th.speed = 0; this.say(`${tr.sym}: holding short of ${lg[0].id} (lined for ${rv || 'a standing cut'})`); return; } } }
-    th.dir = -1; th.speed = 6; tr.backup -= Math.abs(cut.v) * dt; if (tr.backup <= 0) { th.speed = 0; if (tr.backOut) { tr.backOut = false; tr.meetWait = 5; th.dir = 1; this.say(`${tr.sym}: clear of ${tr.loopIn}, reversing direction — ahead onto the lift`); } else { tr.meetWait = 25; this.say(`${tr.sym}: in the clear, holding for the meet`); } } }
+    if (tr.yieldBlk && !tr._yClr && tr.yieldBlk.every(b => !(this.occ[b] && this.occ[b].has(cut)) && !(b.startsWith('T:') && eng.T[b.slice(2)] && eng.fouls(b.slice(2), cut)))) { tr._yClr = 1; tr.backup = Math.min(tr.backup, 3); }
+    th.dir = -1; th.speed = 6; tr.backup -= Math.abs(cut.v) * dt; if (tr.backup <= 0) { th.speed = 0; if (tr.backOut) { tr.backOut = false; tr.meetWait = 5; th.dir = 1; this.say(`${tr.sym}: clear of ${tr.loopIn}, reversing direction — ahead onto the lift`); } else { tr.meetWait = 25; tr.yieldBlk = null; this.say(`${tr.sym}: in the clear, holding for the meet`); } } }
   /* [R38] the lift's landing on level lv is free for tr: no other cut on, and no foreign reservation of, the blocks within 2 edges of the
      lift ends on that level. Used before boarding so a train is never delivered onto a level where it must stand on the deck (NS 211 stood
      10 min on the lift at L2 behind local R60 on B:T28). */
@@ -1028,7 +1051,7 @@ function startSession(eng, ai, seed, mode, opt = {}) {
       if (/grain/i.test(e.sym)) cars = cars.map(c => c.type === 'loco' ? c : Object.assign({}, c, { type: 'h51' }));
       if (/intermodal/i.test(e.sym)) intermodalPair(cars);
       const max = eng.lift.len - 0.6; const _tl = cars.reduce((a, c) => a + c.len, 0); if (_tl > max) { /* [CHOCO-OVERLIFT] */ (eng.overLift = eng.overLift || []).push({ sym, len: +_tl.toFixed(1), max: +max.toFixed(1), cars: cars.length }); eng.say(`⚠ ${sym}: ${_tl.toFixed(1)} in > lift ${max.toFixed(1)} in - HELD in L3 staging, not run (pending: double over the lift in two cuts, or shorten to <= 73 in)`, 'warn'); continue; }   // ride the lift: trim to the lift length
-      cars.reverse(); const tr = ai.addThrough(cars, sym, eng.lift.edge, 0.3, 1, { lift: true, vmax: PRIO(sym) === 1 ? 40 : 35 }); tr.tt = true; tr.cw = t.dir === 'CW';
+      cars.reverse(); const _cw = t.dir === 'CW', _d = _cw ? -1 : 1; const tr = ai.addThrough(cars, sym, eng.lift.edge, _d > 0 ? 0.3 : eng.E[eng.lift.edge].len - 0.3, _d, { lift: true, vmax: PRIO(sym) === 1 ? 40 : 35 }); tr.tt = true; tr.cw = _cw;   /* [CHOCO-DIR 2026-10-27] staging trains leave the lift by their ops-data dir: CCW (W) by the a end -> Lx-LN, CW (E) by the b end -> Lx-LS (same sense as NS 350 E off the A/D); the stage3 queue keeps the entry direction, so the sense is the same on every level */
       const c = ai.cutOf(tr); ai.toStaging3(tr, c); const q = ai.stage3[ai.stage3.length - 1]; q.until = (e.legs[0][3] || e.start || 0) * 60 * (opt.ttScale || 0.6); q.lv = /L1/.test(e.legs[0][2] || '') ? 1 : 2; tr.ttUntil0 = q.until; tr.ttLv = q.lv; st.push(sym); }   /* [R34] timetable minutes compressed x0.6 so the 20-train session keeps a train on the main every few minutes; each train keeps its timetable destination level */
     if (ai.stage3) ai.stage3.sort((a, b) => a.until - b.until); eng._ttP = Math.max(45 * 60, ...(ai.stage3 || []).map(q => q.until)) + 12 * 60;   /* [R36] timetable lap length (last train's minute + 12 min) */
     if (st.length) eng.say(`Timetable: ${st.length} through trains wait in L3 staging (${st.join(', ')})`); }
