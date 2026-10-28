@@ -105,4 +105,8 @@ button.primary{background:var(--acc)!important;border-color:var(--acc2)!importan
 @media (max-width:1560px){.tb-right kbd{display:none}.tb-brand{max-width:150px}}
 @media (max-width:1400px){.tb-modes kbd{display:none}.tb-modes button{padding:5px 9px!important}}
 @media (max-width:1300px){.tb-right .lb{display:none}.tb-right .tb-btn{padding:4px 8px}#setb .lb{display:inline}}
-@media (max-width:1120px){.tb-modes button:not(.on) .lb{display:none}.tb-brand{max-width:90px}}
+@media (max-width:1400px){.tb-modes .lx{display:none}}.tb-modes .ls{display:none}@media (max-width:1400px){.tb-modes .ls{display:inline}}
+/* [CHOCO-UI R2] small windows keep every mode named with its hotkey: drop the emoji instead of the words */
+@media (max-width:1400px){.tb-modes kbd{display:inline-block!important;font-size:11px;padding:0 3px}.tb-modes button{padding:4px 7px!important;gap:4px!important;font-size:12.5px}}
+@media (max-width:1120px){.tb-modes .ic{display:none}.tb-brand{max-width:34px;min-width:0}#tb-plan{display:none}#topbar{gap:8px}.tb-right .tb-btn{padding:4px 7px}}
+@media (max-height:700px){#ui.panel{max-height:calc(100vh - 480px)!important;min-height:0}#ui .pbody{max-height:calc(100vh - 520px)!important}}

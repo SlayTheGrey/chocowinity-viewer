@@ -13,10 +13,11 @@
     ped: [['W A S D', 'walk'], ['Drag', 'look'], ['Shift', 'run'], ['Space', 'jump'], ['C', 'crouch'], ['M', 'map: click to go']]
   };
   var css = '#ux-badge{position:fixed;left:50%;top:56px;transform:translateX(-50%);z-index:30;background:rgba(20,27,38,.9);color:#e8eef6;border:1px solid #3b4a60;border-radius:16px;padding:3px 12px;font:600 13px system-ui,sans-serif;pointer-events:none;transition:opacity .4s}' +
-    '#ux-keys{position:fixed;left:12px;bottom:56px;z-index:30;background:rgba(20,27,38,.92);color:#e8eef6;border:1px solid #3b4a60;border-radius:10px;padding:8px 12px;font:12.5px system-ui,sans-serif;min-width:190px}' +
+    '#ux-keys{position:fixed;left:50%;transform:translateX(-50%);bottom:44px;z-index:30;background:rgba(20,27,38,.92);color:#e8eef6;border:1px solid #3b4a60;border-radius:10px;padding:8px 12px;font:12.5px system-ui,sans-serif;min-width:190px}' +
     '#ux-keys h5{margin:0 0 5px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#9db0c6;display:flex;justify-content:space-between}#ux-keys h5 span{cursor:pointer}' +
     '#ux-keys kbd{display:inline-block;min-width:22px;background:#2a3648;border:1px solid #4a5a72;border-bottom-width:2px;border-radius:4px;padding:0 5px;margin-right:6px;font:11.5px ui-monospace,monospace;text-align:center}#ux-keys div{margin:2px 0}#ux-keys .ux-lk{margin:0 0 5px;padding:3px 6px;background:#24324a;border-radius:5px}' +
-    '#ux-kchip{position:fixed;left:12px;bottom:56px;z-index:30;background:rgba(20,27,38,.92);color:#e8eef6;border:1px solid #3b4a60;border-radius:14px;padding:3px 10px;font:12px system-ui,sans-serif;cursor:pointer}' +
+    '#ux-kchip{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;z-index:30;background:rgba(20,27,38,.92);color:#e8eef6;border:1px solid #3b4a60;border-radius:14px;padding:3px 10px;font:12px system-ui,sans-serif;cursor:pointer}' +
+    '#ux-help{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:40;background:rgba(16,22,32,.96);color:#e8eef6;border:1px solid #3b4a60;border-radius:12px;padding:12px 16px;font:13px system-ui,sans-serif;max-width:92vw;max-height:84vh;overflow:auto;box-shadow:0 6px 30px #000a}#ux-help[hidden]{display:none}#ux-help h4{margin:0 0 8px;font-size:14px;display:flex;justify-content:space-between}#ux-help h4 span{cursor:pointer;color:#9db0c6}#ux-help .g{display:grid;grid-template-columns:repeat(2,minmax(210px,1fr));gap:3px 18px}#ux-help kbd{display:inline-block;min-width:20px;background:#2a3648;border:1px solid #4a5a72;border-bottom-width:2px;border-radius:4px;padding:0 5px;margin-right:6px;font:11.5px ui-monospace,monospace;text-align:center}' +
     '#ux-fade{position:fixed;inset:0;background:#0b0f15;opacity:0;pointer-events:none;z-index:25;transition:opacity .18s}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
   function boot() {
@@ -27,7 +28,10 @@
     var open = localStorage.getItem('ux-keys') !== '0';
     function show(v) { open = v; localStorage.setItem('ux-keys', v ? '1' : '0'); draw(true); }
     chip.onclick = function () { show(true); };
-    addEventListener('keydown', function (e) { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if (e.code === 'KeyK') show(!open); setTimeout(function () { try { draw(false); } catch (x) { } }, 60); });
+    /* [CHOCO-UI R2] ? toggles a compact list of every key */
+    var help = el('div', 'ux-help'); help.hidden = true; var HK = [['1','Overview'],['2','Walk the aisle'],['3','Cab ride (in the cab)'],['4','Follow train (behind it)'],['5','Fly'],['6','Pedestrian'],['7','Follow person / vehicle (ops)'],['N','next train'],['+ / −','train speed'],['P','pause / run trains'],['M','layout map'],['J','jump to a place'],['Home','back to aisle start'],['K','mode controls box'],['L','labels on / off'],['F','stats / fps'],['G','shadows'],['Q','quality'],['U or Tab','hide / show interface'],['H','welcome help'],['?','this key list'],['Esc','close / release mouse']];
+    help.innerHTML = '<h4>Keyboard <span title="Close (? or Esc)">✕</span></h4><div class="g">' + HK.map(function (r) { return '<div><kbd>' + r[0] + '</kbd>' + r[1] + '</div>'; }).join('') + '</div>'; help.querySelector('h4 span').onclick = function () { help.hidden = true; };
+    addEventListener('keydown', function (e) { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if (e.key === '?') { help.hidden = !help.hidden; e.preventDefault(); } else if (e.code === 'Escape') help.hidden = true; if (e.code === 'KeyK') show(!open); setTimeout(function () { try { draw(false); } catch (x) { } }, 60); });
     try { if (A.orbit) { A.orbit.dampingFactor = 0.08; A.orbit.rotateSpeed = 0.6; A.orbit.zoomSpeed = 0.8; A.orbit.panSpeed = 0.7; } } catch (e) { }
     // smooth tweens: setView and map jumps in overview move the camera over ~0.7 s instead of cutting
     if (!bot && A.setView && A.camera && A.orbit) {
@@ -54,7 +58,7 @@
       badge.textContent = n[0] + '  ' + n[1] + ' mode'; badge.style.opacity = 1; clearTimeout(hideT); hideT = setTimeout(function () { badge.style.opacity = .55; }, 2500);
       keys.hidden = !open; chip.hidden = open;
       keys.innerHTML = '<h5>' + n[1] + ' controls <span title="Hide (K)">✕</span></h5>' + (/^(walk|fly|ped)$/.test(m) ? '<div class="ux-lk">' + (lk ? '🔒 Mouse captured · <kbd>Esc</kbd> to release' : '👆 <b>Click</b> the view to look around (or drag)') + '</div>' : '') + (KEYS[m] || []).map(function (r) { return '<div><kbd>' + r[0] + '</kbd>' + r[1] + '</div>'; }).join('') +
-        '<div style="margin-top:5px;color:#9db0c6">Mode buttons are at the top · <b>K</b> hide this · <b>H</b> help</div>';
+        '<div style="margin-top:5px;color:#9db0c6"><b>?</b> all keys · <b>K</b> hide this · <b>U</b> hide interface</div>';
       keys.querySelector('h5 span').onclick = function () { show(false); };
     }
     setInterval(function () { try { draw(false); } catch (e) { } }, 250); draw(true);

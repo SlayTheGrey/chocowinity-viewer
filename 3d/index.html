@@ -29,10 +29,10 @@ window.L3DBOOT = (function () { var ov = document.getElementById('l3d-overlay'),
  <div class="tb-modes" role="group" aria-label="Camera mode">
   <button data-mode="orbit" title="Look at the whole layout from above: drag to rotate, right-drag to pan, wheel to zoom [1]"><span class="ic">&#127760;</span><span class="lb">Overview</span><kbd>1</kbd></button>
   <button data-mode="walk" title="Walk the operator aisle at eye height: W A S D, click to look, Shift sprint [2]"><span class="ic">&#128694;</span><span class="lb">Walk</span><kbd>2</kbd></button>
-  <button data-mode="cab" title="Ride in the cab of the selected train [3]"><span class="ic">&#128647;</span><span class="lb">Cab ride</span><kbd>3</kbd></button>
-  <button data-mode="chase" title="Follow the selected train from behind [4]"><span class="ic">&#127909;</span><span class="lb">Follow train</span><kbd>4</kbd></button>
+  <button data-mode="cab" title="Ride in the cab of the selected train [3]"><span class="ic">&#128647;</span><span class="lb">Cab<span class="lx"> ride</span></span><kbd>3</kbd></button>
+  <button data-mode="chase" title="Follow the selected train from behind [4]"><span class="ic">&#127909;</span><span class="lb">Follow<span class="lx"> train</span></span><kbd>4</kbd></button>
   <button data-mode="fly" title="Fly anywhere, right down to the models: W A S D along the view, Space/E up, C/Q down, wheel = speed, Shift boost, hold Z precision, X = pass through decks [5]"><span class="ic">&#9992;&#65039;</span><span class="lb">Fly</span><kbd>5</kbd></button>
-  <button data-mode="ped" title="Walk ON the layout as a 1:160 person (eye 5.5 scale ft): W A S D, Shift run, Space jump. Starts where you are looking; the Map puts you anywhere [6]"><span class="ic">&#129485;</span><span class="lb">Pedestrian</span><kbd>6</kbd></button>
+  <button data-mode="ped" title="Walk ON the layout as a 1:160 person (eye 5.5 scale ft): W A S D, Shift run, Space jump. Starts where you are looking; the Map puts you anywhere [6]"><span class="ic">&#129485;</span><span class="lb"><span class="lx">Pedestrian</span><span class="ls">Person</span></span><kbd>6</kbd></button>
  </div>
  <div class="tb-now" title="Current camera mode"><span class="dot"></span><span id="modename">Walk</span><span id="modehint"></span></div>
  <div class="tb-right">
@@ -141,21 +141,22 @@ window.L3DBOOT = (function () { var ov = document.getElementById('l3d-overlay'),
    B.step('Building the scene...'); var s = document.createElement('script'); s.src = 'viewer.js'; s.onerror = function () { B.need(false, 'viewer.js'); }; document.body.appendChild(s); });
 })();</script>
 <style>
-body.l3d-hideui > *:not(canvas):not(#l3d-eye):not(#l3d-overlay):not(#o3lost):not(#o3edge):not(#o3edgeT):not(script):not(style){display:none!important}
+body.l3d-hideui > *:not(canvas):not(#l3d-eye):not(#l3d-showhint):not(#l3d-overlay):not(#o3lost):not(#o3edge):not(#o3edgeT):not(script):not(style){display:none!important}
 #l3d-eye{position:fixed;right:10px;top:9px;z-index:10000;width:30px;height:30px;padding:0;border-radius:15px;border:1px solid #fff8;background:#0006;color:#fff;font:16px sans-serif;cursor:pointer;opacity:.55}
 #l3d-eye:hover{opacity:1}
+#l3d-showhint{position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:10000;background:#000a;color:#fff;border:1px solid #fff5;border-radius:14px;padding:4px 12px;font:13px system-ui,sans-serif;pointer-events:none;transition:opacity .6s}#l3d-showhint[hidden]{display:none}
 .l3d-minb{position:absolute;top:3px;right:4px;width:20px;height:18px;padding:0;margin:0;font:bold 12px sans-serif;line-height:16px;border-radius:4px;opacity:.8;z-index:2}
 .l3d-collapsed{max-height:26px!important;overflow:hidden!important;padding-right:30px!important}
 </style>
-<button id="l3d-eye" title="Hide / show all panels [Tab]">&#128065;</button>
+<button id="l3d-eye" title="Hide / show the interface [U]">&#128065;</button><div id="l3d-showhint" hidden>Press <b>U</b> (or click &#128065;) to show the interface</div>
 <script>/* [HIDE-UI] Tab or the eye button hides every panel/menu/HUD; each main panel also collapses on its own (header click or the - button). State in localStorage. */
 (function () { var KEY = 'layout3d.ui', st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) {}
  var save = function () { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} }, eye = document.getElementById('l3d-eye');
- function setHidden(h) { st.hidden = !!h; document.body.classList.toggle('l3d-hideui', st.hidden); eye.innerHTML = st.hidden ? '&#128065;' : '&#128065;'; eye.title = (st.hidden ? 'Show' : 'Hide') + ' all panels [Tab]'; eye.style.opacity = st.hidden ? '.45' : '.7'; save(); }
+ function setHidden(h) { st.hidden = !!h; document.body.classList.toggle('l3d-hideui', st.hidden); eye.innerHTML = st.hidden ? '&#128065;' : '&#128065;'; eye.title = (st.hidden ? 'Show' : 'Hide') + ' the interface [U]'; var sh = document.getElementById('l3d-showhint'); if (sh) { sh.hidden = !st.hidden; sh.style.opacity = 1; clearTimeout(sh._t); if (st.hidden) sh._t = setTimeout(function () { sh.style.opacity = .5; }, 4000); } eye.style.opacity = st.hidden ? '.45' : '.7'; save(); }
  window.L3DUI = { setHidden: setHidden, toggle: function () { setHidden(!st.hidden); }, state: st };
  eye.onclick = function (e) { e.stopPropagation(); setHidden(!st.hidden); eye.blur(); };
- addEventListener('keydown', function (e) { if (e.code !== 'Tab' || /input|select|textarea/i.test((e.target.tagName || ''))) return; e.preventDefault(); setHidden(!st.hidden); }, true);
- var PANELS = [['ui', 'ttl'], ['ops3d', null], ['stats', null], ['jump', null], ['map', 'map-h']]; st.min = st.min || {}; if (!('ops3d' in st.min)) st.min.ops3d = true; /* [UX 2026-10-18] fewer panels on first run: the AI runs the session, so the ops throttle panel starts minimised (+ restores it) */
+ addEventListener('keydown', function (e) { if ((e.code !== 'Tab' && e.code !== 'KeyU') || e.ctrlKey || e.metaKey || e.altKey || /input|select|textarea/i.test((e.target.tagName || ''))) return; e.preventDefault(); setHidden(!st.hidden); }, true);
+ var PANELS = [['ui', 'ttl'], ['ops3d', null], ['stats', null], ['jump', null], ['map', 'map-h']]; st.min = st.min || {}; if (!('ops3d' in st.min)) st.min.ops3d = true; if (!('ui' in st.min)) st.min.ui = true; /* [CHOCO-UI R2] Settings also starts minimised on first visit (top-bar Settings or its + restores it); each panel's state is remembered */ /* [UX 2026-10-18] fewer panels on first run: the AI runs the session, so the ops throttle panel starts minimised (+ restores it) */
  function hook() { PANELS.forEach(function (pp) { var el = document.getElementById(pp[0]); if (!el || el.dataset.l3dmin) return; el.dataset.l3dmin = 1;
    if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
    var b = document.createElement('button'); b.className = 'l3d-minb'; b.title = 'Minimise / restore this panel'; el.insertBefore(b, el.firstChild);
