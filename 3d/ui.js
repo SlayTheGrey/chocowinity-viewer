@@ -5,7 +5,7 @@ const $ = id => document.getElementById(id), KEY = 'layout3d.ui2', QS = new URLS
 let st = {}; try { st = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch (e) {} };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-const MODES = { walk: ['Walk', 'W A S D move · click to look · M map'], orbit: ['Overview', 'drag rotate · right-drag pan · wheel zoom · M map'], chase: ['Follow train', 'N next train · +/− speed'], cab: ['Cab ride', 'N next train · wheel zoom'],
+const MODES = { walk: ['Walk', 'W A S D move · click to look · M map'], orbit: ['Overview', 'drag rotate · right-drag pan · wheel zoom · M map'], chase: ['Follow train', 'N next train · +/− speed'], cab: ['Cab ride', 'N next train · wheel zoom'], follow: ['Follow person / vehicle', '7 next · V eye view'],
   fly: ['Fly', 'W A S D · Space/E up · C/Q down · wheel speed · Shift boost · Z precise · X decks'], ped: ['Pedestrian', 'W A S D walk · Shift run · Space jump · M map: click to go'] };   /* [FLYPED] */
 function wait() { const S = window.__layout3d; if (!S || !S.ready || !S.api) return setTimeout(wait, 200); init(S, S.api); } wait();
 function init(S, A) {
@@ -41,7 +41,7 @@ function init(S, A) {
   function rows() { const O = OU(); if (O && !A.trains.length) return O.locos().map(l => { const sym = Object.keys(DIRS).find(k => l.train && (k === l.train || k.replace(/\s*\(.*\)/, '') === l.train)) || l.train;   // [UX] readable: train name, then loco and direction
       return { key: l.addr, name: sym || l.label, sub: `${l.road ? l.road + ' · ' : ''}DCC ${l.addr} · ${l.mph.toFixed(0)} mph${DIRS[sym] ? ' · runs ' + DIRS[sym] : ''}` }; });
     return A.trains.map((t, i) => ({ key: i, name: t.sym, sub: `${t.cars.length} units · ${t.len.toFixed(0)} in · runs ${t.dir}${/^lift/.test(t.route) ? ' · via elevator' : ''}` })); }
-  function curMode() { const O = OU(), om = O && O.getMode(); return om ? (om === 'follow' ? 'chase' : om) : A.getMode(); }
+  function curMode() { const O = OU(), om = O && O.getMode(); return om || A.getMode(); } /* [CHOCO-UI R1] ops 'follow' (key 7) is its own mode, not Follow train */
   function trains() { const R = rows(), O = OU(), ops = O && !A.trains.length, sel = ops ? O.getSel() : A.getSel(), m = curMode(), ul = $('trainlist');
     const sig = R.map(r => r.key + r.name).join('|'); if (ul.dataset.sig !== sig) { ul.dataset.sig = sig; ul.innerHTML = R.map(r => `<li data-k="${esc(r.key)}"><div class="tn"><b>${esc(r.name)}</b><small></small></div><button class="tr-follow" title="Follow this train (Chase) [4]">&#127909; Follow</button><button class="tr-cab" title="Ride in the cab [3]">&#128647; Cab</button></li>`).join('') || ((window.OPS_DATA || {}).trains || []).length ? '<li><small>Planned through trains (' + window.OPS_DATA.trains.length + '): ' + window.OPS_DATA.trains.map(t => esc(t.sym)).join(', ') + '; plus the locals and yard jobs. Each appears here when the ops session runs it.</small></li>' : '<li><small>No trains on this plan</small></li>'; } /* [CHOCO-PLANNED] */
     [...ul.querySelectorAll('li[data-k]')].forEach((li, i) => { const on = String(R[i].key) === String(sel); li.querySelector('small').textContent = R[i].sub; li.classList.toggle('sel', on); li.querySelector('.tr-follow').classList.toggle('on', on && m === 'chase'); li.querySelector('.tr-cab').classList.toggle('on', on && m === 'cab'); }); }

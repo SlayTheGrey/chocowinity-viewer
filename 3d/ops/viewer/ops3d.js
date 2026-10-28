@@ -350,7 +350,7 @@ function bindInput() {
 }
 function pick(e) {
   const r = new T3.Raycaster(), v = new T3.Vector2(e.clientX / innerWidth * 2 - 1, -(e.clientY / innerHeight) * 2 + 1); r.setFromCamera(v, camera);
-  const objs = [...Object.values(agMesh), ...Object.values(inst).map(x => x.mesh)].filter(Boolean); const hit = r.intersectObjects(objs, false)[0]; if (!hit) return;
+  const objs = [...Object.values(agMesh), ...Object.values(inst).map(x => x.mesh)].filter(o => o && o.isObject3D && o.layers) /* [CHOCO-UI] ext rs wrappers lack .layers -> three TypeError on click */; const hit = r.intersectObjects(objs, false)[0]; if (!hit) return;
   if (hit.object.userData.mk) { const mkk = hit.object.userData.mk; follow = AG.find(a => (a.mk || a.kind) === mkk && a.slot === hit.instanceId); setOpsMode('follow'); return; }
   for (const L of locos()) if (L.car._slot && L.car._slot[0].mesh === hit.object && L.car._slot[1] === hit.instanceId) { sel = L.addr; fillLocos(); return; }
 }

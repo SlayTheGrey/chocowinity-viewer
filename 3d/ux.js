@@ -2,19 +2,20 @@
    smooth camera tweens for views and map jumps, a short fade on mode switches, gentler orbit defaults. */
 (function () {
   if (window.__viewerUX) return; window.__viewerUX = 1;
-  var NAMES = { orbit: ['🌐', 'Overview'], walk: ['🚶', 'Walk the aisle'], cab: ['🚂', 'Cab ride'], chase: ['🎥', 'Follow train'], fly: ['✈️', 'Fly'], ped: ['🧍', '1:160 person'] };
+  var NAMES = { orbit: ['🌐', 'Overview'], walk: ['🚶', 'Walk the aisle'], cab: ['🚇', 'Cab ride'], chase: ['🎥', 'Follow train'], follow: ['👣', 'Follow person / vehicle'], fly: ['✈️', 'Fly'], ped: ['🧍', 'Pedestrian (1:160 person)'] };
   var KEYS = {
     orbit: [['Drag', 'turn'], ['Right-drag', 'pan'], ['Wheel', 'zoom'], ['Map click', 'go there'], ['1–6', 'switch mode']],
-    walk: [['W A S D', 'walk'], ['Drag / click', 'look'], ['Shift', 'faster'], ['Home', 'back to start'], ['Esc', 'release mouse']],
+    walk: [['W A S D', 'walk'], ['Shift', 'faster'], ['Home', 'back to start']],
     cab: [['N', 'next train'], ['+ / −', 'train speed'], ['P', 'pause trains'], ['Drag', 'look around']],
+    follow: [['7', 'next person / vehicle'], ['V', 'eye view / behind'], ['Drag', 'look around']],
     chase: [['N', 'next train'], ['Drag', 'orbit train'], ['Wheel', 'distance'], ['+ / −', 'train speed']],
     fly: [['W A S D', 'fly'], ['E / Space', 'up'], ['Q / C', 'down'], ['Wheel / + −', 'fly speed'], ['Shift', 'boost'], ['Z', 'precision'], ['X', 'pass through decks']],
     ped: [['W A S D', 'walk'], ['Drag', 'look'], ['Shift', 'run'], ['Space', 'jump'], ['C', 'crouch'], ['M', 'map: click to go']]
   };
-  var css = '#ux-badge{position:fixed;left:50%;top:44px;transform:translateX(-50%);z-index:30;background:rgba(20,27,38,.9);color:#e8eef6;border:1px solid #3b4a60;border-radius:16px;padding:3px 12px;font:600 13px system-ui,sans-serif;pointer-events:none;transition:opacity .4s}' +
+  var css = '#ux-badge{position:fixed;left:50%;top:56px;transform:translateX(-50%);z-index:30;background:rgba(20,27,38,.9);color:#e8eef6;border:1px solid #3b4a60;border-radius:16px;padding:3px 12px;font:600 13px system-ui,sans-serif;pointer-events:none;transition:opacity .4s}' +
     '#ux-keys{position:fixed;left:12px;bottom:56px;z-index:30;background:rgba(20,27,38,.92);color:#e8eef6;border:1px solid #3b4a60;border-radius:10px;padding:8px 12px;font:12.5px system-ui,sans-serif;min-width:190px}' +
     '#ux-keys h5{margin:0 0 5px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#9db0c6;display:flex;justify-content:space-between}#ux-keys h5 span{cursor:pointer}' +
-    '#ux-keys kbd{display:inline-block;min-width:22px;background:#2a3648;border:1px solid #4a5a72;border-bottom-width:2px;border-radius:4px;padding:0 5px;margin-right:6px;font:11.5px ui-monospace,monospace;text-align:center}#ux-keys div{margin:2px 0}' +
+    '#ux-keys kbd{display:inline-block;min-width:22px;background:#2a3648;border:1px solid #4a5a72;border-bottom-width:2px;border-radius:4px;padding:0 5px;margin-right:6px;font:11.5px ui-monospace,monospace;text-align:center}#ux-keys div{margin:2px 0}#ux-keys .ux-lk{margin:0 0 5px;padding:3px 6px;background:#24324a;border-radius:5px}' +
     '#ux-kchip{position:fixed;left:12px;bottom:56px;z-index:30;background:rgba(20,27,38,.92);color:#e8eef6;border:1px solid #3b4a60;border-radius:14px;padding:3px 10px;font:12px system-ui,sans-serif;cursor:pointer}' +
     '#ux-fade{position:fixed;inset:0;background:#0b0f15;opacity:0;pointer-events:none;z-index:25;transition:opacity .18s}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
@@ -26,7 +27,7 @@
     var open = localStorage.getItem('ux-keys') !== '0';
     function show(v) { open = v; localStorage.setItem('ux-keys', v ? '1' : '0'); draw(true); }
     chip.onclick = function () { show(true); };
-    addEventListener('keydown', function (e) { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if (e.code === 'KeyK') show(!open); });
+    addEventListener('keydown', function (e) { if (/INPUT|SELECT|TEXTAREA/.test(e.target.tagName)) return; if (e.code === 'KeyK') show(!open); setTimeout(function () { try { draw(false); } catch (x) { } }, 60); });
     try { if (A.orbit) { A.orbit.dampingFactor = 0.08; A.orbit.rotateSpeed = 0.6; A.orbit.zoomSpeed = 0.8; A.orbit.panSpeed = 0.7; } } catch (e) { }
     // smooth tweens: setView and map jumps in overview move the camera over ~0.7 s instead of cutting
     if (!bot && A.setView && A.camera && A.orbit) {
@@ -41,15 +42,19 @@
       if (mapc) mapc.addEventListener('pointerdown', function () { if (A.getMode() !== 'orbit') return; var p0 = cam.position.clone(), t0 = O.target.clone();
         setTimeout(function () { if (A.getMode() === 'orbit') tween(p0, t0); }, 0); }, true);
     }
-    var last = A.getMode(), hideT = 0;
+    /* [CHOCO-UI R1] ops cameras run in viewer 'cab' mode: name the real ops mode; merge the pointer-lock hint into this box */
+    var OM = function () { var O = window.__ops3d && window.__ops3d.uiApi, om = O && O.getMode && O.getMode(); return om || A.getMode() || 'orbit'; };
+    var LK = function () { return !!(A.plc && A.plc.isLocked); }, lockEl = document.getElementById('lockhint');
+    var last = OM(), lastL = LK(), hideT = 0;
     function draw(force) {
-      var m = A.getMode() || 'orbit', n = NAMES[m] || ['', m];
+      var m = OM(), n = NAMES[m] || ['', m], lk = LK(); if (lk !== lastL) { lastL = lk; force = true; }
+      if (lockEl) lockEl.style.display = open ? 'none' : '';
       if (m !== last) { if (!bot) { fade.style.opacity = .55; setTimeout(function () { fade.style.opacity = 0; }, 180); } last = m; force = true; }
       if (!force) return;
       badge.textContent = n[0] + '  ' + n[1] + ' mode'; badge.style.opacity = 1; clearTimeout(hideT); hideT = setTimeout(function () { badge.style.opacity = .55; }, 2500);
       keys.hidden = !open; chip.hidden = open;
-      keys.innerHTML = '<h5>' + n[1] + ' controls <span title="Hide (K)">✕</span></h5>' + (KEYS[m] || []).map(function (r) { return '<div><kbd>' + r[0] + '</kbd>' + r[1] + '</div>'; }).join('') +
-        '<div style="margin-top:5px;color:#9db0c6">Mode buttons are at the top · ? = full help</div>';
+      keys.innerHTML = '<h5>' + n[1] + ' controls <span title="Hide (K)">✕</span></h5>' + (/^(walk|fly|ped)$/.test(m) ? '<div class="ux-lk">' + (lk ? '🔒 Mouse captured · <kbd>Esc</kbd> to release' : '👆 <b>Click</b> the view to look around (or drag)') + '</div>' : '') + (KEYS[m] || []).map(function (r) { return '<div><kbd>' + r[0] + '</kbd>' + r[1] + '</div>'; }).join('') +
+        '<div style="margin-top:5px;color:#9db0c6">Mode buttons are at the top · <b>K</b> hide this · <b>H</b> help</div>';
       keys.querySelector('h5 span').onclick = function () { show(false); };
     }
     setInterval(function () { try { draw(false); } catch (e) { } }, 250); draw(true);
