@@ -69,3 +69,9 @@ details.sec>summary small{margin-left:auto;font-weight:400;color:var(--mut)}deta
 table.sl tr[data-car]{cursor:pointer}table.sl tr[data-car]:hover{background:#ffffff10}table.sl tr.focus{outline:2px solid #ffe14d;outline-offset:-2px}
 .ss-steps{margin:6px 0 10px 18px;padding:0;font-size:13px;line-height:1.5}.ss-steps li{margin:2px 0}
 table.sl td.cc{padding:3px 4px}table.sl td.cc .dest{font-size:11.5px;color:#cbd5e1;margin-top:1px}table.sl tr.done td.cc .dest{color:#86efac}table.sl td.cc small.ty{color:var(--mut)}
+
+/* [CHOCO-UI R3] readable small text (>= 11px) and a top bar that fits at 1024 */
+small.ty,.ty{font-size:11px}.dcc-f button{font-size:11px!important}#log em{font-size:11px!important}
+.ss-more{display:inline}.ss-more summary{display:inline;cursor:pointer;color:var(--acc,#60a5fa)}
+@media (max-width:1300px){#top kbd{display:none}#top{gap:8px!important}#top button{padding-left:6px!important;padding-right:6px!important}#top .tb-brand #title{display:none}}
+@media (max-width:1100px){#top .tb-view{font-size:0}#top .tb-view select{font-size:13px}#top [data-rate]{padding-left:4px!important;padding-right:4px!important}}

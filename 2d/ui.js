@@ -15,7 +15,8 @@ window.OpsUI = { sync };
 $('pause').addEventListener('click', () => { if (!started) { started = true; $('ss').classList.add('hidden'); } sync(); });
 $('rates').onclick = e => { const b = e.target.closest('[data-rate]'); if (!b) return; $('rate').value = b.dataset.rate; $('rate').dispatchEvent(new Event('change')); b.blur(); sync(); };
 // start card
-function jobsSummary() { const E = G.engine; $('ss-jobs').innerHTML = 'Jobs this session: ' + E.session.jobs.map(j => `<b>${esc(j.name)}</b> (${E.session.cards.filter(c => c.job === j.id).length} cars)`).join(' · '); }
+function jobsSummary() { const E = G.engine, J = E.session.jobs.map(j => `<b title="${esc(j.name)}">${esc(String(j.name).split(/:| \(/)[0].slice(0, 44))}</b> (${E.session.cards.filter(c => c.job === j.id).length})`); /* [CHOCO-UI R3] short list: first 4 jobs, the rest behind a click */
+  $('ss-jobs').innerHTML = `Jobs this session: ${J.length} jobs · ${E.session.cards.length} car cards. ` + J.slice(0, 4).join(' · ') + (J.length > 4 ? ` <details class="ss-more"><summary>+ ${J.length - 4} more jobs</summary>${J.slice(4).join(' · ')}</details>` : ''); }
 function openCard() { $('ss-title').textContent = 'Operating session — ' + G.D.name; jobsSummary(); $('ss').classList.remove('hidden'); $('ss-start').innerHTML = started ? '&#10003; Done' : '&#9654; Start session'; }
 $('sessb').onclick = () => { $('sessb').blur(); openCard(); };
 let base = { mode: $('mode').value, seed: $('seed').value };
@@ -24,7 +25,8 @@ $('mode').addEventListener('change', () => { base = { mode: $('mode').value, see
 $('ss-start').onclick = () => { if ($('seed').value !== base.seed || $('mode').value !== base.mode) { G.restart(); base = { mode: $('mode').value, seed: $('seed').value }; }
   if (!started) { started = true; G.engine.paused = false; } $('ss').classList.add('hidden'); sync(); };
 $('ss-help').onclick = () => { $('help').classList.remove('hidden'); };
-$('ss').addEventListener('click', e => { if (e.target === $('ss') && started) $('ss').classList.add('hidden'); });
+$('ss').addEventListener('click', e => { if (e.target === $('ss') || e.target.id === 'ss-x') $('ss').classList.add('hidden'); }); /* [CHOCO-UI R3] dismissible before start too (session stays paused; Run or Session reopens) */
+addEventListener('keydown', e => { if (e.code === 'Escape' && !$('ss').classList.contains('hidden')) $('ss').classList.add('hidden'); });
 if (!started) openCard();
 // train cards: every loco consist; Drive selects it on the throttle, Ride follows it on the map
 function trainCards() { const E = G.engine, sc = G.scoreState(), sel = G.sel.addr;
