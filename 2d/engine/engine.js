@@ -697,11 +697,27 @@ class AI {
     const ob = eng.obstacle(lc, dir, 400); const room = Math.min(400, (ob.what ? ob.dist : 400) - 4); if (room < 12) return false;
     const A = eng.ahead(lc, dir, Math.min(room, 60)); for (const a of A) { const b = this.blockOf(a.e); if (blks.includes(b)) continue; const r = eng.reserve[b]; if (r && r !== lo.sym) return false; const u = this.occ[b]; if (u && [...u].some(c => c !== lc)) return false; }
     if (this.trains.some(o => o !== lo && o !== hi && o.backOut && o.backup > 0)) return false;
-    { const free = A0 => { let rs = null; for (let i = 0; i < A0.length; i++) { const a = A0[i], end = i + 1 < A0.length ? A0[i + 1].d : room; if (blks.includes(this.blockOf(a.e))) { rs = null; continue; } if (rs === null) rs = a.d; if (end - rs >= lc.len + 3) return rs; } return Infinity; }; const fr = free(eng.ahead(lc, dir, room)); if (!(fr + lc.len + 3 <= room)) { lo._yNoRoom = 1; return false; } }   /* [CHOCO-YIELDCOMMIT] no room to get clear of hi's full route -> caller sends lo to staging */
+    { const pl = this._yieldPath(lo, lc, dir, room, blks); if (!pl) { lo._yNoRoom = 1; return false; }
+      for (const [id, leg] of pl.sets) { eng._thCtx = lo.sym + ':yield'; if (!eng.throwTurnout(id, leg, 'ai')) { lo._yNoRoom = 1; return false; } eng.reserve['T:' + id] = lo.sym; }
+      lo._yRoom = pl.stop; lo._ySets = pl.sets; }   /* [CHOCO-YIELDCOMMIT] no room to get clear of hi's full route -> caller sends lo to staging */
     for (const M of [this.res, this.prevRes]) if (M) for (const k in M) if (M[k] === lo.sym) delete M[k];
     for (const b of blks) { if (eng.reserve[b] === lo.sym) delete eng.reserve[b]; if (!eng.reserve[b]) eng.reserve[b] = hi.sym; }
-    lo.yieldBlk = blks; lo.yieldTo = hi.sym; lo._yT = eng.t; lo._yLv = Math.round(eng.edgeLevel(lc.path[0].e)); lo._yHiLift = this.onLift(hi) ? 1 : 0; this._pairT[[lo.sym, hi.sym].sort().join('|')] = { t: eng.t, lo: lo.sym }; lo._yClr = 0; lo.backup = room; lo.held = 0; lo.lastWhy = null; hi.held = 0; lo.wantLift = false; lo.loopHeld = false; this.yields = (this.yields || 0) + 1;
+    lo.yieldBlk = blks; lo.yieldTo = hi.sym; lo._yT = eng.t; lo._yLv = Math.round(eng.edgeLevel(lc.path[0].e)); lo._yHiLift = this.onLift(hi) ? 1 : 0; this._pairT[[lo.sym, hi.sym].sort().join('|')] = { t: eng.t, lo: lo.sym }; lo._yClr = 0; lo.backup = Math.min(room, (lo._yRoom || room) + 1); lo.held = 0; lo.lastWhy = null; hi.held = 0; lo.wantLift = false; lo.loopHeld = false; this.yields = (this.yields || 0) + 1;
     this.say(`Dispatcher: ${lo.sym}, back away clear of ${blks.join(', ').replace(/[BT]:/g, '')} for ${hi.sym}`); return true; }
+  /* [CHOCO-YIELDB] where can lo back to? walk the backing path the way _backup will run it, trying BOTH legs at each facing turnout (skipping points on hi's route, reserved for a third train, or under a car), and return the first stop where the whole cut stands on track off hi's route (cut length + 3 in), with the points to line. null = no real siding -> stage at once. */
+  _yieldPath(lo, lc, dir, room, blks) { const eng = this.eng, need = lc.len + 3, lead = dir > 0 ? eng.locate(lc, lc.len) : eng.locate(lc, 0);
+    const busyT = t => eng.cuts.some(c => c !== lc && eng.fouls && eng.fouls(t.id, c));
+    const dfs = (el, from, rs, sets, g) => { const len = eng.E[el.e].len, to = from + (from === 0 ? (el.d > 0 ? len - lead.s : lead.s) : len);
+      const onRoute = blks.includes(this.blockOf(el.e)) || this.blockOf(el.e) === 'LIFT'; if (onRoute) rs = null; else if (rs === null) rs = from;
+      if (rs !== null && to - rs >= need) return { stop: rs + need, sets };
+      if (to >= room || g > 40) return null;
+      const r = eng.step(el, true, false); if (!r.el) return null;
+      const lg = eng.legOf[r.el.e], t = lg && lg[0];
+      if (t && t.stem === el.e) { const alt = t.state === 'N' ? 'D' : 'N', r0 = dfs(r.el, to, rs, sets, g + 1); if (r0) return r0;
+        const rv = eng.reserve['T:' + t.id]; if ((rv && rv !== lo.sym) || blks.includes('T:' + t.id) || busyT(t)) return null;
+        const sv = t.state; t.state = alt; const r2 = eng.step(el, true, false); t.state = sv; return r2.el ? dfs(r2.el, to, rs, sets.concat([[t.id, alt]]), g + 1) : null; }
+      return dfs(r.el, to, rs, sets, g + 1); };
+    return dfs({ e: lead.e, d: dir > 0 ? lead.d : -lead.d }, 0, null, [], 0); }
   _resolve(a, b) { const sup = (x, y) => this.superior(x, y) || (!this.superior(y, x) && String(x.sym) < String(y.sym)); const lo = sup(a, b) ? b : a, hi = lo === a ? b : a; lo._yNoRoom = 0; if (this._yield(lo, hi)) return true; if (lo._yNoRoom) return false; return this._yield(hi, lo); }   /* [CHOCO-YIELDCOMMIT] deterministic tiebreak (superior, then symbol); lo without room to clear hi's full route goes to staging, no role swap */
   checkMeet(tr, cut) { if (tr.held < 15 || !tr.lastWhy) return;
     for (const o of this.trains) { if (o === tr) continue; const oc = this.cutOf(o); if (!oc) continue;
@@ -710,8 +726,9 @@ class AI {
       if (tr.yieldTo || o.yieldTo) continue;   /* [CHOCO-YIELDCOMMIT] */
       if (hisBlk && mineBlk && o.held > 15) { let lo = this.superior(tr, o) ? o : tr; if (this.onLift(lo)) lo = lo === tr ? o : tr; if (this.onLift(lo)) return;
         if (this._resolve(tr, o)) return;
+        if (tr._yNoRoom || o._yNoRoom) { const nl = tr._yNoRoom ? tr : o; if (!this.onLift(nl)) lo = nl; }   /* [CHOCO-YIELDB] stage the train the tiebreak chose */
         const hi = lo === tr ? o : tr, lc = this.cutOf(lo), eng = this.eng; eng.cuts.splice(eng.cuts.indexOf(lc), 1); this.trains.splice(this.trains.indexOf(lo), 1);
-        (this.staged = this.staged || []).push({ tr: lo, cut: lc, home: lc.path[0].e, level: Math.round(eng.edgeLevel(lc.path[0].e)), meetWith: hi.sym }); for (const k in eng.reserve) if (eng.reserve[k] === lo.sym) delete eng.reserve[k];
+        (this.staged = this.staged || []).push({ tr: lo, cut: lc, home: lc.path[0].e, level: Math.round(eng.edgeLevel(lc.path[0].e)), meetWith: hi.sym, why: lo._yNoRoom ? 'yield-stage' : undefined, whyTxt: lo._yNoRoom ? 'no siding clear of its route' : undefined }); for (const k in eng.reserve) if (eng.reserve[k] === lo.sym) delete eng.reserve[k];
         lo.held = 0; lo.lastWhy = null; hi.held = 0; this.meetStaged = (this.meetStaged || 0) + 1;
         this.say(`⚑ Dispatcher: ${lo.sym}, take it to staging for the meet with ${hi.sym} (no room to back away)`); return; } }
     /* [R36] circular wait of 3+ trains (NS 165 -> CSX Y191 -> BNSF ethanol -> NS 165 around the L1/L2 loops, sim min 238-254): follow who-waits-for-whom;
@@ -745,7 +762,7 @@ class AI {
     if (!gone && !onL) { tr._yHiLift = 0; const hl = hc.cars.find(c => c.addr === hi.addr), hth = eng.throttles[hi.addr]; let need = blkY.some(b => this.occ[b] && this.occ[b].has(hc));
       if (!need && hl && hth) for (const x of eng.ahead(hc, (hl.fwd || 1) * (hth.dir || 1), 700)) { const b = this.blockOf(x.e); if (b === 'LIFT') break; if (blkY.includes(b)) { need = true; break; } }
       gone = !need; }   /* passed: hi off the lift and none of the yielded route left under or ahead of it */
-    if (gone) { const blk = tr.yieldBlk || []; for (const k in eng.reserve) if (blk.includes(k) && hi && eng.reserve[k] === hi.sym && !(this.occ[k] && hc && this.occ[k].has(hc))) delete eng.reserve[k]; tr.yieldTo = null; tr.yieldBlk = null; tr.held = 0; tr.meetWait = 3; this.say(`${tr.sym}: ${hi ? hi.sym : 'the other train'} is by — proceeding`); return false; }
+    if (gone) { const blk = tr.yieldBlk || []; for (const k in eng.reserve) if (blk.includes(k) && hi && eng.reserve[k] === hi.sym && !(this.occ[k] && hc && this.occ[k].has(hc))) delete eng.reserve[k]; for (const [id] of tr._ySets || []) if (eng.reserve['T:' + id] === tr.sym) delete eng.reserve['T:' + id]; tr._ySets = null; tr.yieldTo = null; tr.yieldBlk = null; tr.held = 0; tr.meetWait = 3; this.say(`${tr.sym}: ${hi ? hi.sym : 'the other train'} is by — proceeding`); return false; }
     if (!tr._yClr && !(tr.backup > 0)) { th.speed = 0; this._yieldStage(tr, 'could not back clear of the route'); return true; }
     if (eng.t - tr._yT > 300) { th.speed = 0; this._yieldStage(tr, 'held over 300 s'); return true; }
     th.speed = 0; tr.wantLift = false; tr.loopHeld = false; return true; }
