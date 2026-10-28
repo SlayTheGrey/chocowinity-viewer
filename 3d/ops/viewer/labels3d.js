@@ -39,7 +39,7 @@ function activity(H, eng, ai, cut, loco) { const addr = loco.addr; const v = Mat
     if (v > 0.05) return [sym, `running ${mph} mph`];
     if ((tr.held || 0) > 2) return [sym, short('holding' + (tr.lastWhy ? ': ' + String(tr.lastWhy).replace(/^.*?(reserved|granted|track time|for)/i, '$1') : ''), 24)];
     return [sym, 'stopped']; }
-  return ['#' + addr, v > 0.05 ? `running ${mph} mph` : 'stopped']; }
+  return [addr != null ? '#' + addr : (loco.road ? loco.road + ' loco' : 'Loco'), v > 0.05 ? `running ${mph} mph` : 'stopped']; } /* [CHOCO-UI R4] no '#undefined' */
 function symOfCut(eng, ai, cut) { for (const c of cut.cars) if (c.addr != null) { const tr = ai && (ai.trains || []).find(t => t.addr === c.addr); if (tr && tr.sym) return tr.sym; } return ''; }
 /* [CHOCO-COMMODITY] + [CHOCO-LOADSTATE] car chip */
 function carTag(c, sym) { const M = CM(); if (c.loco || c.type === 'loco' || (M.none || []).includes(c.type)) return null;
@@ -75,8 +75,19 @@ function update(H, dt) { const cb = document.getElementById('labels'); const on 
   for (const o of S.list) { const c = o.c, P = c._pose; if (!P) continue;
     if (o.k === 'loco') { const sp = get(); i++; const onR = now - (S.radioAt[c.addr] || -99) < RADIO_S; /* [CHOCO-RADIOICON] radio badge drawn into the loco tag (one sprite) */
       if (refresh || !sp.userData.key || sp.userData.for !== c || sp.userData.r !== onR) { const A = (o.act = refresh || !o.act ? activity(H, eng, ai, o.cut, c) : o.act); draw(sp, onR ? ['((•)) ' + A[0], A[1]] : A, onR ? 'locoR' : 'loco'); sp.userData.for = c; sp.userData.r = onR; }
-      place(sp, P.x, c._y + 1.3, P.y, cam, 0); S.stats.loco++; if (onR) S.stats.radioOn = (S.stats.radioOn || 0) + 1; }
-    else { const t = refresh || !get().userData.key || get().userData.for !== c ? carTag(c, o.sym) : null; const sp = get(); i++; if (t) { draw(sp, [t], 'car'); sp.userData.for = c; } else if (sp.userData.for !== c) { sp.visible = false; continue; } place(sp, P.x, c._y + 0.9, P.y, cam, 0); S.stats.car++; } }
-  for (let k = i; k < S.pool.length; k++) S.pool[k].visible = false; S.used = i; }
+      sp.userData.o = o; place(sp, P.x, c._y + 1.3, P.y, cam, 0); S.stats.loco++; if (onR) S.stats.radioOn = (S.stats.radioOn || 0) + 1; }
+    else { const t = refresh || !get().userData.key || get().userData.for !== c ? carTag(c, o.sym) : null; const sp = get(); i++; if (t) { draw(sp, [t], 'car'); sp.userData.for = c; } else if (sp.userData.for !== c) { sp.visible = false; continue; } sp.userData.o = o; place(sp, P.x, c._y + 0.9, P.y, cam, 0); S.stats.car++; } }
+  for (let k = i; k < S.pool.length; k++) S.pool[k].visible = false; S.used = i; declutter(cam, i); }
+/* [CHOCO-UI R4] far-label pile-up: screen-space declutter in priority order (locos nearest-first, then cars nearest-first; S.list order).
+   A tag that would cover >20% of an already shown tag is hidden; car chips also fade with distance (full to 30 in, 45% at 60 in). Loco tags always win. */
+const _q = new T3.Vector3();
+function declutter(cam, n) { const P = cam.projectionMatrix.elements, f = P[5] * innerHeight / 2, R = []; let hid = 0;
+  for (let k = 0; k < n; k++) { const sp = S.pool[k], o = sp && sp.userData.o; if (!sp || !sp.visible) continue; _q.copy(sp.position).project(cam);
+    const hp = sp.scale.y * f, wp = sp.scale.x * f, cx = (_q.x + 1) / 2 * innerWidth, by = (1 - _q.y) / 2 * innerHeight, r = [cx - wp / 2, by - hp, cx + wp / 2, by];
+    const isCar = o && o.k === 'car'; let hit = false;
+    if (isCar) for (const a of R) { const x = Math.min(a[2], r[2]) - Math.max(a[0], r[0]), y = Math.min(a[3], r[3]) - Math.max(a[1], r[1]); if (x > 0 && y > 0 && x * y > 0.2 * Math.min((a[2] - a[0]) * (a[3] - a[1]), wp * hp)) { hit = true; break; } }
+    if (hit) { sp.visible = false; hid++; continue; } R.push(r);
+    sp.material.opacity = isCar ? Math.max(0.45, Math.min(1, 1 - (o.d - 30) / 30 * 0.55)) : 1; }
+  S.stats.declut = hid; }
 window.L3D_LABELS = { update, state: S, activity, carTag };
 })();

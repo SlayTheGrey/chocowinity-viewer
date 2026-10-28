@@ -75,3 +75,7 @@ small.ty,.ty{font-size:11px}.dcc-f button{font-size:11px!important}#log em{font-
 .ss-more{display:inline}.ss-more summary{display:inline;cursor:pointer;color:var(--acc,#60a5fa)}
 @media (max-width:1300px){#top kbd{display:none}#top{gap:8px!important}#top button{padding-left:6px!important;padding-right:6px!important}#top .tb-brand #title{display:none}}
 @media (max-width:1100px){#top .tb-view{font-size:0}#top .tb-view select{font-size:13px}#top [data-rate]{padding-left:4px!important;padding-right:4px!important}}
+
+/* [CHOCO-UI R4] timeline close button; readable session number box */
+#ux-tl h4{display:flex;justify-content:space-between}.ux-tlx{cursor:pointer;color:#cbd5e1;padding:0 4px;text-transform:none}
+#seed{width:4.2em!important;padding:4px 6px!important;text-align:center;-moz-appearance:textfield;appearance:textfield;color:var(--fg)!important;background:#2a3340!important}#seed::-webkit-inner-spin-button,#seed::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}

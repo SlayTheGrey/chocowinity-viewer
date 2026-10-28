@@ -110,3 +110,6 @@ button.primary{background:var(--acc)!important;border-color:var(--acc2)!importan
 @media (max-width:1400px){.tb-modes kbd{display:inline-block!important;font-size:11px;padding:0 3px}.tb-modes button{padding:4px 7px!important;gap:4px!important;font-size:12.5px}}
 @media (max-width:1120px){.tb-modes .ic{display:none}.tb-brand{max-width:34px;min-width:0}#tb-plan{display:none}#topbar{gap:8px}.tb-right .tb-btn{padding:4px 7px}}
 @media (max-height:700px){#ui.panel{max-height:calc(100vh - 480px)!important;min-height:0}#ui .pbody{max-height:calc(100vh - 520px)!important}}
+
+/* [CHOCO-UI R4] small windows: stats/fps box moves to the top centre so it never touches the centred controls box */
+@media (max-width:1300px){#stats{top:92px!important;bottom:auto!important;right:auto!important;left:50%!important;transform:translateX(-50%)}}
