@@ -141,7 +141,7 @@ window.L3DBOOT = (function () { var ov = document.getElementById('l3d-overlay'),
    B.step('Building the scene...'); var s = document.createElement('script'); s.src = 'viewer.js'; s.onerror = function () { B.need(false, 'viewer.js'); }; document.body.appendChild(s); });
 })();</script>
 <style>
-body.l3d-hideui > *:not(canvas):not(#l3d-eye):not(#l3d-overlay):not(#o3lost):not(script):not(style){display:none!important}
+body.l3d-hideui > *:not(canvas):not(#l3d-eye):not(#l3d-overlay):not(#o3lost):not(#o3edge):not(#o3edgeT):not(script):not(style){display:none!important}
 #l3d-eye{position:fixed;right:10px;top:9px;z-index:10000;width:30px;height:30px;padding:0;border-radius:15px;border:1px solid #fff8;background:#0006;color:#fff;font:16px sans-serif;cursor:pointer;opacity:.55}
 #l3d-eye:hover{opacity:1}
 .l3d-minb{position:absolute;top:3px;right:4px;width:20px;height:18px;padding:0;margin:0;font:bold 12px sans-serif;line-height:16px;border-radius:4px;opacity:.8;z-index:2}
