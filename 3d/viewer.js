@@ -605,7 +605,7 @@ function setMode(m) {
   camera.near = m === 'cab' ? 0.03 : m === 'walk' ? 0.5 : 0.1; if (m !== 'ped' && camera.fov !== ZOOM.base && ZOOM.k === 1) camera.fov = ZOOM.base; camera.updateProjectionMatrix();
   if (m === 'fly' || m === 'ped') FPm.enter(m, prev); /* [FLYPED] */
   if (m === 'walk') { STATS.walkEnter = enterWalk(); }
-  if (m === 'orbit' && !orbit.init) { const [p, t] = VIEWS.overview(); camera.position.set(...p); orbit.target.set(...t); orbit.init = true; orbit.update(); }
+  if (m === 'orbit') { /* [CHOCO-OV] always frame the whole layout on entering Overview (was first entry only: after Walk the camera stayed at eye height looking at the floor) */ const [p, t] = VIEWS.overview(); camera.position.set(...p); orbit.target.set(...t); orbit.init = true; orbit.update(); }
   if (m === 'cab' || m === 'chase') snapCam = true;
   document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
 }
