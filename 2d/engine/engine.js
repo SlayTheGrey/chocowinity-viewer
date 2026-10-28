@@ -557,6 +557,7 @@ class AI {
     if (tr.fromAD && this.onLift(tr)) tr.fromAD = false;   /* [CHOCO-LAP3] the A/D departure route (T4 > L1-LS > T25 > L1-LN) is done once it is on the lift */
     if (eng.dispatchMode === 'manual' && tr.manualHold) { th.speed = 0; return; }
     if (tr.backup > 0) return this._backup(tr, th, cut, loco, dt);
+    if (tr.yieldTo && this._yieldHold(tr, th)) return;   /* [CHOCO-YIELDCOMMIT] */
     if (tr.meetWait > 0) { tr.meetWait -= dt; th.speed = 0; return; }
     if (tr.lift && tr.wantLift && tr.nextLv === undefined && !this.onLift(tr) && !tr.lifted) this.liftWindow(tr, cut);   /* [MEET] the first trip goes through the window too */
     // drive toward the loco's front (loco at head of cut, facing forward)
@@ -656,8 +657,8 @@ class AI {
     if (eng.lift && eng.lift.moving && eng.lift.to === lv) return `lift moving to L${lv}`;
     return null; }
   _landClaim(me, dl) { const eng = this.eng, ks = ['T:L' + dl + '-LN', 'T:L' + dl + '-LS'];
-    for (const M of [this.res, this.prevRes]) if (M) for (const k of ks) if (M[k] && M[k] !== me.sym && this.trains.some(o => o.sym === M[k])) return `claimed by ${M[k]}`;
-    for (const o of this.trains) { if (o === me || !o.lift) continue; const c = this.cutOf(o); if (!c || this.onLift(o)) continue; if (Math.round(eng.edgeLevel(c.path[0].e)) !== dl) continue; if (o.loopHeld) return `held for the lift by ${o.sym} (loop)`; if (o.wantLift || o.backOut || o.backup > 0) return `wanted by ${o.sym} for the lift`; }
+    for (const M of [this.res, this.prevRes]) if (M) for (const k of ks) if (M[k] && M[k] !== me.sym && this.trains.some(o => o.sym === M[k] && !o.yieldTo)) return `claimed by ${M[k]}`;
+    for (const o of this.trains) { if (o === me || !o.lift || o.yieldTo) continue; const c = this.cutOf(o); if (!c || this.onLift(o)) continue; if (Math.round(eng.edgeLevel(c.path[0].e)) !== dl) continue; if (o.loopHeld) return `held for the lift by ${o.sym} (loop)`; if (o.wantLift || o.backOut || o.backup > 0) return `wanted by ${o.sym} for the lift`; }
     return null; }
   _loopEntry(t) { return t.id.replace(/-L([NS])$/, (m, x) => '-L' + (x === 'N' ? 'S' : 'N')); }
   /* [CHOCO-LAP2R] distance the train must shove back so its head clears the entry turnout's points by 3 in, and the main block it backs onto */
@@ -680,28 +681,33 @@ class AI {
     else tr.dirHeld = false;
     if (tr.backTo) nxt = tr.backTo; /* [CHOCO-BACK] */
     if (tr._wLv !== cur) { tr._wLv = cur; tr._wT = eng.t; }   /* [CHOCO-DIR] head-on at the landing: a train already on the lift, or asked first, bound for this level comes out through the throat this train would stand in -> this one holds clear (loop / lap) */
-    for (const o of this.trains) { if (o === tr || !(o.wantLift || o.backOut || o.backup > 0 && o.backOut) || o.nextLv !== cur) continue; const oc = this.cutOf(o); if (!oc) continue; const ol = this.onLift(o), olv = Math.round(eng.edgeLevel(oc.path[0].e));   /* [CHOCO-DIR3] a train backing out of its loop to the lift counts as a lift claimant */
+    for (const o of this.trains) { if (o === tr || o.yieldTo || !(o.wantLift || o.backOut || o.backup > 0 && o.backOut) || o.nextLv !== cur) continue; const oc = this.cutOf(o); if (!oc) continue; const ol = this.onLift(o), olv = Math.round(eng.edgeLevel(oc.path[0].e));   /* [CHOCO-DIR3] a train backing out of its loop to the lift counts as a lift claimant */
       if (ol || o.backOut || (olv === nxt && (o._wLv === olv) && (o._wT || 0) < tr._wT)) { tr.wantLift = false; this._lapHold(tr); tr.nextLv = undefined; if (tr._hoWho !== o.sym) { tr._hoWho = o.sym; this.say(`Dispatcher: ${tr.sym}, hold clear of the L${cur} landing — ${o.sym} is coming off the lift onto L${cur}`); } if (!this._contRun()) tr.lastWhy = `holding at the L${cur} lift landing: ${o.sym} coming off the lift`; return true; } }
     tr._hoWho = null; tr.nextLv = nxt; return false; }
   /* fallback for a meet the window did not prevent (two through trains each held by the other > 15 s): no reversing on the main — the
      inferior train by rule is cleared off the layout to staging (as the dispatcher's 'take it to staging') and comes back when its level is clear. */
   /* [CHOCO-YIELD] deadlock resolver: the train 'lo' backs away along its own route until it is clear of the block(s) 'hi' is waiting for; those blocks are reserved for hi so lo cannot re-enter; staging removal stays only as the last resort */
-  _yield(lo, hi) { const eng = this.eng; if (!lo || !hi || this.onLift(lo) || lo.backup > 0 || lo.backOut) return false; const lc = this.cutOf(lo); if (!lc) return false;
+  _yield(lo, hi) { const eng = this.eng; if (!lo || !hi || this.onLift(lo) || lo.backup > 0 || lo.backOut || lo.yieldTo || hi.yieldTo) return false; const lc = this.cutOf(lo); if (!lc) return false;
+    { const pk = [lo.sym, hi.sym].sort().join('|'); const pt = (this._pairT = this._pairT || {})[pk]; if (pt && eng.t - pt.t < 300) return false; }   /* [CHOCO-YIELDCOMMIT] one back-away per pair per 300 s: no repeat, no role swap */
     const loco = lc.cars.find(c => c.loco); if (!loco) return false; const dir = -(loco.fwd || 1);
-    const blks = [...new Set((String(hi.lastWhy || '').match(/\b[BT]:[\w-]+/g) || []))].filter(b => (this.occ[b] && this.occ[b].has(lc)) || (b.startsWith('T:') && eng.T[b.slice(2)] && eng.fouls(b.slice(2), lc)));
-    if (!blks.length) return false;
-    const ob = eng.obstacle(lc, dir, 150); const room = Math.min(150, (ob.what ? ob.dist : 150) - 4); if (room < 12) return false;
+    const blks0 = [...new Set((String(hi.lastWhy || '').match(/\b[BT]:[\w-]+/g) || []))].filter(b => (this.occ[b] && this.occ[b].has(lc)) || (b.startsWith('T:') && eng.T[b.slice(2)] && eng.fouls(b.slice(2), lc)));
+    if (!blks0.length) return false;
+    /* [CHOCO-YIELDCOMMIT] lo must clear hi's WHOLE route to the lift landing on this level (not just hi's next block, which made lo leapfrog back one block per cycle) */
+    const blks = blks0.slice(); { const hc = this.cutOf(hi), hl = hc && hc.cars.find(c => c.addr === hi.addr), hth = eng.throttles[hi.addr]; if (hc && hl && hth) { const hd = (hl.fwd || 1) * (hth.dir || 1); let off = false; for (const a of eng.ahead(hc, hd, 700)) { const b = this.blockOf(a.e); if (b === 'LIFT') { if (off) break; continue; } off = true; if (!blks.includes(b)) blks.push(b); } } }
+    const ob = eng.obstacle(lc, dir, 400); const room = Math.min(400, (ob.what ? ob.dist : 400) - 4); if (room < 12) return false;
     const A = eng.ahead(lc, dir, Math.min(room, 60)); for (const a of A) { const b = this.blockOf(a.e); if (blks.includes(b)) continue; const r = eng.reserve[b]; if (r && r !== lo.sym) return false; const u = this.occ[b]; if (u && [...u].some(c => c !== lc)) return false; }
     if (this.trains.some(o => o !== lo && o !== hi && o.backOut && o.backup > 0)) return false;
+    { const free = A0 => { let rs = null; for (let i = 0; i < A0.length; i++) { const a = A0[i], end = i + 1 < A0.length ? A0[i + 1].d : room; if (blks.includes(this.blockOf(a.e))) { rs = null; continue; } if (rs === null) rs = a.d; if (end - rs >= lc.len + 3) return rs; } return Infinity; }; const fr = free(eng.ahead(lc, dir, room)); if (!(fr + lc.len + 3 <= room)) { lo._yNoRoom = 1; return false; } }   /* [CHOCO-YIELDCOMMIT] no room to get clear of hi's full route -> caller sends lo to staging */
     for (const M of [this.res, this.prevRes]) if (M) for (const k in M) if (M[k] === lo.sym) delete M[k];
     for (const b of blks) { if (eng.reserve[b] === lo.sym) delete eng.reserve[b]; if (!eng.reserve[b]) eng.reserve[b] = hi.sym; }
-    lo.yieldBlk = blks; lo._yClr = 0; lo.backup = room; lo.held = 0; lo.lastWhy = null; hi.held = 0; lo.wantLift = false; lo.loopHeld = false; this.yields = (this.yields || 0) + 1;
+    lo.yieldBlk = blks; lo.yieldTo = hi.sym; lo._yT = eng.t; lo._yLv = Math.round(eng.edgeLevel(lc.path[0].e)); lo._yHiLift = this.onLift(hi) ? 1 : 0; this._pairT[[lo.sym, hi.sym].sort().join('|')] = { t: eng.t, lo: lo.sym }; lo._yClr = 0; lo.backup = room; lo.held = 0; lo.lastWhy = null; hi.held = 0; lo.wantLift = false; lo.loopHeld = false; this.yields = (this.yields || 0) + 1;
     this.say(`Dispatcher: ${lo.sym}, back away clear of ${blks.join(', ').replace(/[BT]:/g, '')} for ${hi.sym}`); return true; }
-  _resolve(a, b) { const lo = this.superior(a, b) ? b : a, hi = lo === a ? b : a; return this._yield(lo, hi) || this._yield(hi, lo); }
+  _resolve(a, b) { const sup = (x, y) => this.superior(x, y) || (!this.superior(y, x) && String(x.sym) < String(y.sym)); const lo = sup(a, b) ? b : a, hi = lo === a ? b : a; lo._yNoRoom = 0; if (this._yield(lo, hi)) return true; if (lo._yNoRoom) return false; return this._yield(hi, lo); }   /* [CHOCO-YIELDCOMMIT] deterministic tiebreak (superior, then symbol); lo without room to clear hi's full route goes to staging, no role swap */
   checkMeet(tr, cut) { if (tr.held < 15 || !tr.lastWhy) return;
     for (const o of this.trains) { if (o === tr) continue; const oc = this.cutOf(o); if (!oc) continue;
       const mineBlk = String(o.lastWhy || '').includes(this.eng.cutName(cut)) || String(o.lastWhy || '').includes(tr.sym);
       const hisBlk = String(tr.lastWhy).includes(this.eng.cutName(oc)) || String(tr.lastWhy).includes(o.sym);
+      if (tr.yieldTo || o.yieldTo) continue;   /* [CHOCO-YIELDCOMMIT] */
       if (hisBlk && mineBlk && o.held > 15) { let lo = this.superior(tr, o) ? o : tr; if (this.onLift(lo)) lo = lo === tr ? o : tr; if (this.onLift(lo)) return;
         if (this._resolve(tr, o)) return;
         const hi = lo === tr ? o : tr, lc = this.cutOf(lo), eng = this.eng; eng.cuts.splice(eng.cuts.indexOf(lc), 1); this.trains.splice(this.trains.indexOf(lo), 1);
@@ -723,12 +729,31 @@ class AI {
     // single train blocked by a standing local for a long time: no deadlock, keep waiting
   }
   _backup(tr, th, cut, loco, dt) { const eng = this.eng; const dir = -(loco.fwd || 1); const ob = eng.obstacle(cut, dir, 20);
+    if (tr.yieldTo) { tr._yStall = Math.abs(cut.v) < 0.05 ? (tr._yStall || 0) + dt : 0; if ((tr._yStall > 30 || eng.t - tr._yT > 90) && !tr._yClr) { th.speed = 0; tr.backup = 0; return this._yieldStage(tr, 'stopped short of clearing the route'); } }
+    if (tr.yieldTo && eng.t - tr._yT > 300) { th.speed = 0; tr.backup = 0; return this._yieldStage(tr, 'yield over 300 s'); }
+    if (tr.yieldTo && !tr._yClr && ((ob.what && ob.dist < 3) || (ob.what === 'end' && ob.dist < 3))) { th.speed = 0; tr.backup = 0; return this._yieldStage(tr, 'no room to back clear'); }
     if ((ob.what && ob.dist < 3) || (ob.what === 'end' && ob.dist < 3)) { tr.backup = 0; tr.meetWait = 25; this._boAbort(tr); th.speed = 0; this.say(`${tr.sym}: in the clear, holding for the meet`); return; }
     { const A = eng.ahead(cut, dir, 10);   /* [R38] a train backing into the clear for a meet lines (or stops for) the trailing points behind it: CSX phosphate backed through L1-15 lined for P22's warrant (runthrough min 115) */
       for (let i = 1; i < A.length; i++) { const lg = eng.legOf[A[i].e]; if (!lg || A[i - 1].e === lg[0].stem || lg[0].state === lg[1]) continue; const rv = eng.reserve['T:' + lg[0].id];
         eng._thCtx = tr.sym + ':backup'; if ((rv && rv !== tr.sym) || !eng.throwTurnout(lg[0].id, lg[1], 'ai')) { tr.backup = 0; tr.meetWait = 25; this._boAbort(tr); th.speed = 0; this.say(`${tr.sym}: holding short of ${lg[0].id} (lined for ${rv || 'a standing cut'})`); return; } } }
     if (tr.yieldBlk && !tr._yClr && tr.yieldBlk.every(b => !(this.occ[b] && this.occ[b].has(cut)) && !(b.startsWith('T:') && eng.T[b.slice(2)] && eng.fouls(b.slice(2), cut)))) { tr._yClr = 1; tr.backup = Math.min(tr.backup, 3); }
-    th.dir = -1; th.speed = 6; tr.backup -= Math.abs(cut.v) * dt; if (tr.backup <= 0) { th.speed = 0; if (tr.backOut) { tr.backOut = false; tr.meetWait = 5; th.dir = 1; this.say(`${tr.sym}: clear of ${tr.loopIn}, reversing direction — ahead onto the lift`); } else { tr.meetWait = 25; tr.yieldBlk = null; this.say(`${tr.sym}: in the clear, holding for the meet`); } } }
+    th.dir = -1; th.speed = 6; tr.backup -= Math.abs(cut.v) * dt; if (tr.backup <= 0) { th.speed = 0; if (tr.backOut) { tr.backOut = false; tr.meetWait = 5; th.dir = 1; this.say(`${tr.sym}: clear of ${tr.loopIn}, reversing direction — ahead onto the lift`); } else if (tr.yieldTo) { if (!tr._yClr) return this._yieldStage(tr, 'could not back clear'); this.say(`${tr.sym}: in the clear of ${tr.yieldTo}'s route, holding until it is by`); } else { tr.meetWait = 25; tr.yieldBlk = null; this.say(`${tr.sym}: in the clear, holding for the meet`); } } }
+  /* [CHOCO-YIELDCOMMIT] committed yield: hold (no lift request, no timer) until hi has boarded the lift, left the level or the layout; > 300 s or no room -> staging */
+  _yieldHold(tr, th) { const eng = this.eng, hi = this.trains.find(o => o.sym === tr.yieldTo), hc = hi && this.cutOf(hi);
+    const blkY = tr.yieldBlk || [], onL = hi && this.onLift(hi);
+    let gone = !hi || !hc || (onL && !tr._yHiLift) || (!onL && Math.round(eng.edgeLevel(hc.path[0].e)) !== tr._yLv);
+    if (!gone && !onL) { tr._yHiLift = 0; const hl = hc.cars.find(c => c.addr === hi.addr), hth = eng.throttles[hi.addr]; let need = blkY.some(b => this.occ[b] && this.occ[b].has(hc));
+      if (!need && hl && hth) for (const x of eng.ahead(hc, (hl.fwd || 1) * (hth.dir || 1), 700)) { const b = this.blockOf(x.e); if (b === 'LIFT') break; if (blkY.includes(b)) { need = true; break; } }
+      gone = !need; }   /* passed: hi off the lift and none of the yielded route left under or ahead of it */
+    if (gone) { const blk = tr.yieldBlk || []; for (const k in eng.reserve) if (blk.includes(k) && hi && eng.reserve[k] === hi.sym && !(this.occ[k] && hc && this.occ[k].has(hc))) delete eng.reserve[k]; tr.yieldTo = null; tr.yieldBlk = null; tr.held = 0; tr.meetWait = 3; this.say(`${tr.sym}: ${hi ? hi.sym : 'the other train'} is by — proceeding`); return false; }
+    if (!tr._yClr && !(tr.backup > 0)) { th.speed = 0; this._yieldStage(tr, 'could not back clear of the route'); return true; }
+    if (eng.t - tr._yT > 300) { th.speed = 0; this._yieldStage(tr, 'held over 300 s'); return true; }
+    th.speed = 0; tr.wantLift = false; tr.loopHeld = false; return true; }
+  _yieldStage(lo, why) { const eng = this.eng, lc = this.cutOf(lo), hiSym = lo.yieldTo; lo.yieldTo = null; lo.yieldBlk = null; if (!lc) return;
+    eng.cuts.splice(eng.cuts.indexOf(lc), 1); this.trains.splice(this.trains.indexOf(lo), 1);
+    (this.staged = this.staged || []).push({ tr: lo, cut: lc, home: lc.path[0].e, level: Math.round(eng.edgeLevel(lc.path[0].e)), meetWith: hiSym, why: 'yield-stage', whyTxt: why }); for (const k in eng.reserve) if (eng.reserve[k] === lo.sym) delete eng.reserve[k];
+    for (const M of [this.res, this.prevRes]) if (M) for (const k in M) if (M[k] === lo.sym) delete M[k];
+    lo.held = 0; lo.lastWhy = null; lo.backup = 0; this.meetStaged = (this.meetStaged || 0) + 1; this.say(`⚑ Dispatcher: ${lo.sym}, take it to staging for the meet with ${hiSym} (${why})`); }
   /* [R38] the lift's landing on level lv is free for tr: no other cut on, and no foreign reservation of, the blocks within 2 edges of the
      lift ends on that level. Used before boarding so a train is never delivered onto a level where it must stand on the deck (NS 211 stood
      10 min on the lift at L2 behind local R60 on B:T28). */
