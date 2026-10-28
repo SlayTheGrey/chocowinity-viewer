@@ -823,7 +823,7 @@ class PlanExec {
           const mine = car => !(car.status === 'setout' && car.ind && (car.job !== this.job.id || at(car) === it[car.ind]));   // delivered: another job's, or ours already on its industry track
           let a = 0; while (a < li && !mine(cut.cars[a])) a++; let b = 0; while (b < cut.cars.length - 1 - li && !mine(cut.cars[cut.cars.length - 1 - b])) b++;
           if (a > 0) { eng.uncouple(cut, a, 'ai'); cut = this.cut(); this.say(`left ${a} delivered car(s) standing on their spot`); }
-          if (b > 0) { eng.uncouple(cut, cut.cars.length - b, 'ai'); cut = this.cut(); this.say(`left ${b} delivered car(s) standing on their spot`); } } const _bk = ((eng.D.session || {}).back || {})[this.job.id]; if (_bk && eng.ai) { /* [CHOCO-BACK] */ for (const k in eng.reserve) if (eng.reserve[k] === this.job.id) delete eng.reserve[k]; const lc = cut.cars.find(x => x.addr === this.job.addr); if (/^P90/.test(this.job.id) && !this._lwGo) { /* [CHOCO-LOCALWINDOW] a Nutrien local that has finished waits on its siding until the dispatcher gives it a window (see AI tick) */ lc.train = this.job.id; (eng._lw = eng._lw || []).push({ ex: this, bk: _bk, t0: eng.t, next: eng.t }); this.say(`work complete - ${_bk} waits on ${this.job.stops[0].tid} for a dispatcher window`); return; } lc.ai = true; lc.train = _bk; eng.ai.trains.push({ sym: _bk, addr: this.job.addr, prio: 4, lift: true, laps: 0, state: 'run', wantLift: true, held: 0, vmax: 25, backTo: 1, nextLv: 1, lifted: false, liftT: 0, lapDist: 0 }); this.say(`work complete - running back as ${_bk} (lift to L1 Marsden)`); } else { eng.cuts.splice(eng.cuts.indexOf(cut), 1); (eng.departed = eng.departed || []).push(cut); for (const k in eng.reserve) if (eng.reserve[k] === this.job.id) delete eng.reserve[k]; this.say('departed (lift / yard) - tracks released'); if (((eng.D.jobs.find(x => x.id === this.job.id) || {}).loco) === 'mp15') yardPark(eng, cut.cars.find(x => x.loco)); /* [CHOCO-YARDRES] */ } }   // [START] timetable departure
+          if (b > 0) { eng.uncouple(cut, cut.cars.length - b, 'ai'); cut = this.cut(); this.say(`left ${b} delivered car(s) standing on their spot`); } } const _bk = ((eng.D.session || {}).back || {})[this.job.id]; if (_bk && eng.ai) { /* [CHOCO-BACK] */ for (const k in eng.reserve) if (eng.reserve[k] === this.job.id) delete eng.reserve[k]; const lc = cut.cars.find(x => x.addr === this.job.addr); if (/^P90/.test(this.job.id) && !this._lwGo) { /* [CHOCO-LOCALWINDOW] a Nutrien local that has finished waits on its siding until the dispatcher gives it a window (see AI tick) */ lc.train = this.job.id; (eng._lw = eng._lw || []).push({ ex: this, bk: _bk, t0: eng.t, next: eng.t }); this.say(`work complete - ${_bk} waits on ${this.job.stops[0].tid} for a dispatcher window`); return; } lc.ai = true; lc.train = _bk; eng.ai.trains.push({ sym: _bk, addr: this.job.addr, prio: 4, lift: true, laps: 0, state: 'run', wantLift: true, held: 0, vmax: 25, backTo: 1, nextLv: 1, lifted: false, liftT: 0, lapDist: 0 }); this.say(`work complete - running back as ${_bk} (lift to L1 Marsden)`); } else if (this._tieUp(cut, th)) { return; } else { eng.cuts.splice(eng.cuts.indexOf(cut), 1); (eng.departed = eng.departed || []).push(cut); for (const k in eng.reserve) if (eng.reserve[k] === this.job.id) delete eng.reserve[k]; this.say('departed (lift / yard) - tracks released'); if (((eng.D.jobs.find(x => x.id === this.job.id) || {}).loco) === 'mp15') yardPark(eng, cut.cars.find(x => x.loco)); /* [CHOCO-YARDRES] */ } }   // [START] timetable departure
       return; }
     const loco = cut.cars.find(x => x.addr === this.job.addr);
     const li = cut.cars.indexOf(loco);
@@ -1024,6 +1024,30 @@ class PlanExec {
     this.i++; this.shoveD = 0; this.phase = 'start'; this.nCars = undefined; const c = this.cut(); this.nStart = c ? c.cars.length : 0; this.t = 0; this.blind = 0; this.latched = false; }
   /* [R36] a finished or failed job drops every reservation it still holds (its track warrant blocks, e.g. 'B:T28 reserved for R60' held NS 211 for
      130+ sim min after R60 was done); the cars it left are still protected by occupancy */
+  /* [CHOCO-TIEUP] a finished local / C-job / yard job no longer vanishes at job end. 1) tie up on a Marsden track no plan uses (T18 E-1 engine track,
+     then the T11 yard stub) if it has room for the whole cut and the route needs no reversal and no turnout held by anyone else; it stands there,
+     visible, for the rest of the session. 2) otherwise the crew takes it home: up the lift into L3 staging as an AI move (the normal, visible
+     way off the layout). Returns true when the job is not finished yet. */
+  _tieUp(cut, th) { const eng = this.eng, J = eng.D.jobs.find(x => x.id === this.job.id) || {}; if (!eng.ai || J.level !== 1 || /^YARD/.test(this.job.id)) return false;
+    if (this.tieup) { this.releaseAll(); cut.parked = true; cut.tied = this.job.id; for (const c of cut.cars) if (c.loco) c.train = this.job.id + ' (tied down)'; th.speed = 0; this.say(`tied down on ${this.tieup} — crew off duty`); return true; }
+    const loco = cut.cars.find(x => x.loco); const li = cut.cars.indexOf(loco); const lt = eng.e2t[eng.locate(cut, cut.cars.slice(0, li).reduce((o, x) => o + x.len, 0) + loco.len / 2).e];
+    const live = (eng.ai.execs || []).filter(x => x !== this && !x.done && !x.fail);
+    for (const pk of TIEUP_TRK) { const P = eng.trk[pk]; if (!P || !lt || lt === pk) continue; let used = 0; for (const c of eng.cuts) if (c !== cut) { const oc = eng.occupancy(c); for (const e of P.edges) if (oc[e]) used += oc[e][1] - oc[e][0]; }
+      if (pk === 'T11') used += 5;   /* room kept for the resident MP15 */
+      if (P.len - used < cut.len + 2) continue;
+      const sets = routeSets(eng, lt, pk); if (!sets || sets.some(([id, v]) => sets.some(([id2, v2]) => id2 === id && v2 !== v))) continue;
+      if (sets.some(([id]) => { const r = eng.reserve['T:' + id]; return (r && r !== this.job.id) || eng.cuts.some(c => c !== cut && eng.fouls(id, c)); })) continue;
+      if (live.some(x => { const c = x.cut && x.cut(); return c && sets.some(([id]) => eng.fouls(id, c)); })) continue;
+      const F = eng.trk[pk], L = eng.trk[lt], pa = eng.posAt(cut, cut.len / 2), A = eng.N[F.a], B = eng.N[F.b];
+      const d2 = (n1, n2) => Math.hypot(eng.N[n1].x - eng.N[n2].x, eng.N[n1].y - eng.N[n2].y); const endLt = Math.min(d2(L.a, F.a), d2(L.a, F.b)) <= Math.min(d2(L.b, F.a), d2(L.b, F.b)) ? 'a' : 'b';
+      const entry = Math.min(d2(F.a, L.a), d2(F.a, L.b)) <= Math.min(d2(F.b, L.a), d2(F.b, L.b)) ? 'a' : 'b';
+      this.steps.push({ kind: 'move', coupled: false, uncoupled: false, via: [], frm: lt, to: pk, entry: entry === 'a' ? 'b' : 'a', end: endLt, cars: Array(Math.max(0, cut.cars.length - 1)).fill('S'), turnouts: sets, dist: 60, tieup: true });
+      this.tieup = pk; this.done = false; this.phase = 'start'; this.say(`work complete - tying up on ${pk} (${pk === 'T18' ? 'E-1 engine track' : 'yard stub'})`); return true; }
+    /* no tie-up room: stand where the work ended if no unfinished plan needs that track and it is not a main; else the old release */
+    const MAINS = new Set(['T0', 'T1', 'T2', 'T25', 'T4']); const fin = new Set((eng.ai.execs || []).filter(x => x === this || x.done || x.fail).map(x => x.job.id)); const pend = new Set(eng.D.jobs.map(j => j.id).filter(id => !fin.has(id)));
+    const need = new Set(); for (const id of pend) { const J2 = eng.D.jobs.find(j => j.id === id); (J2 && J2.stops || []).forEach(z => need.add(z.tid)); for (const pk in eng.D.plans) if (pk.split(':')[0] === id) for (const x of eng.D.plans[pk].steps || []) for (const k of ['frm', 'to', 'via', 'stop']) [].concat(x[k] || []).forEach(t => need.add(t)); }
+    if (lt && !MAINS.has(lt) && !need.has(lt) && cut.cars.every(c => eng.e2t[eng.locate(cut, cut.cars.slice(0, cut.cars.indexOf(c)).reduce((o, x) => o + x.len, 0) + c.len / 2).e] === lt)) { this.tieup = lt; this.say(`work complete - no tie-up track clear, ties down where it stands on ${lt} (no later move uses it)`); return this._tieUp(cut, th); }
+    return false; }
   releaseAll() { const eng = this.eng; let n = 0; for (const k in eng.reserve) if (eng.reserve[k] === this.job.id) { delete eng.reserve[k]; n++; } if (n) this.say(`released ${n} reserved block(s)`); return n; }
   failed(why) { this.releaseAll(); this.fail = why; this.eng.throttles[this.job.addr].speed = 0; this.say('FAILED: ' + why); }
 }
@@ -1063,7 +1087,7 @@ function intermodalPair(cars) { const L = cars.filter(c => c.type === 'loco'); i
   cars.unshift(Object.assign({}, lead, { fwd: 1 }), Object.assign({}, lead, { id: lead.id + 'B', fwd: -1, rear: false })); return cars; }
 /* [CHOCO-YARDRES] resident Marsden yard switcher: the yard job's MP15 stands parked on yard stub T11 (no plan uses it) from t=0 and again after each yard job,
    instead of being off the layout; it leaves the stub when a yard job goes on duty (one MP15 on view at a time) */
-const YARD_PARK = 'T11';
+const YARD_PARK = 'T11'; const TIEUP_TRK = ['T18', 'T11'];   /* [CHOCO-TIEUP] Marsden tracks no plan uses */
 function yardPark(eng, loco) { const trk = eng.trk[YARD_PARK]; if (!trk || eng._yp || !loco) return; const busy = new Set(); for (const c of eng.cuts) if (!c.yardFill) for (const e in eng.occupancy(c)) busy.add(+e); if (trk.edges.some(e => busy.has(e))) return;
   const c = Object.assign({}, loco, { id: loco.id, fwd: 1, train: 'yard (parked)', addr: undefined, yardRes: true }); const e0 = trk.edges[0], d0 = eng.E[e0].a === trk.a ? 1 : -1; const cut = eng.cuts.some(q => q.yardFill && Object.keys(eng.occupancy(q)).some(e => trk.edges.includes(+e))) ? eng.makeCut([c], e0, d0 > 0 ? 0.6 : eng.E[e0].len - 0.6, d0) /* [CHOCO-YARDFILL] cars stand at the bumper end; the loco parks at the ladder end */ : placeOnTrack(eng, [c], trk);
   { const oc = eng.occupancy(cut); if (eng.cuts.some(q => q !== cut && Object.entries(eng.occupancy(q)).some(([e, b]) => { const a = oc[e]; return a && a[0] < b[1] && b[0] < a[1]; }))) { eng.cuts.splice(eng.cuts.indexOf(cut), 1); return; } } cut.parked = true; cut.yardRes = true; eng._yp = cut; eng.say(`${loco.id} parked on the yard stub ${YARD_PARK}`); }
@@ -1126,6 +1150,6 @@ function startJobAI(eng, ai, j) { const plan = j.plan;
   if (!plan || !plan.steps || !plan.steps.length) { eng.say(`${j.id}: no plan for this session seed — AI crew stands by (seeds with plans: ${(eng.D.sessions || []).map(s => s.seed).join(',')})`, 'warn'); return null; }
   j.exec = new PlanExec(eng, j, plan.steps, { vmax: 8 }); ai.say(`${j.id}: AI crew working ${plan.steps.length} planned moves`); return j.exec; }
 
-const API = { lineRoute, startSession, startJobAI, carKey, makePool, Engine, AI, PlanExec, genSession, setupSession, scoreSession, rng, IPS, MPH, LIMIT, PRIO, LIFT_TIME, LIFT_TRAVEL };
+const API = { lineRoute, startSession, startJobAI, carKey, makePool, Engine, AI, PlanExec, genSession, setupSession, scoreSession, rng, IPS, MPH, LIMIT, PRIO, LIFT_TIME, LIFT_TRAVEL, routeSets };
 if (typeof module !== 'undefined' && module.exports) module.exports = API; else root.OpsEngine = API;
 })(typeof window !== 'undefined' ? window : globalThis);
