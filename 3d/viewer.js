@@ -431,6 +431,13 @@ for (const o of LV) {
   for (const lb of L.labels) { const c = document.createElement('canvas'), g = c.getContext('2d'); g.font = 'bold 26px sans-serif'; const w = Math.min(900, g.measureText(lb.text).width + 14); c.width = w; c.height = 36;
     g.fillStyle = lb.kind === 'turnout' ? '#ffe9c8e8' : '#ffffffe0'; g.fillRect(0, 0, w, 36); g.fillStyle = '#111'; g.font = 'bold 26px sans-serif'; g.fillText(lb.text, 7, 27);
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false })); sp.scale.set(w / 36 * 0.55, 0.55, 1); sp.position.set(lb.x, y + (lb.kind === 'turnout' ? 1.2 : 2.6), lb.y); sp.renderOrder = 10; o.labels.add(sp); }
+  /* [CHOCO-NAMES] */ o.names = new THREE.Group(); o.names.visible = false; o.g.add(o.names); { const NG = [[/^CCF /, 'Coastal Carolina Foods (CCF)'], [/^PSR /, 'Pamlico Scrap & Recycling (PSR)'], [/^FF /, 'Beaufort Farm Supply (FF)'], [/^(Marsden|RIP )/, 'Marsden Yard'], [/^TL /, 'Chocowinity Transload (TL)'], [/Pamlico Grill/, 'Pamlico Grill'], [/Quick Mart/, 'Quick Mart'],
+      [/^GCF /, 'GCF Pulp Mill'], [/^WL /, 'WL Lumber Mill'], [/^PR /, 'Pamlico Propane (PR)'], [/^Nutrien /, 'Nutrien'], [/Tire & Auto/, 'Pamlico Tire & Auto'], [/Gas & Grocery/, 'Gas & Grocery'], [/Pamlico Hardware/, 'Pamlico Hardware'], [/Baptist Church/, 'Missionary Baptist Church']];
+    for (const [re, text] of NG) { const ss = (L.structures || []).filter(q => re.test(q.name || '') && q.r); if (!ss.length) continue; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9, h = 0, A = 0, cx = 0, cz = 0;
+      for (const q of ss) { const [a0, b0, a1, b1] = q.r, ar = Math.abs((a1 - a0) * (b1 - b0)); x0 = Math.min(x0, a0); z0 = Math.min(z0, b0); x1 = Math.max(x1, a1); z1 = Math.max(z1, b1); h = Math.max(h, q.h || 1); cx += (a0 + a1) / 2 * ar; cz += (b0 + b1) / 2 * ar; A += ar; }
+      const c = document.createElement('canvas'), gx = c.getContext('2d'); gx.font = '600 30px sans-serif'; const w = Math.ceil(gx.measureText(text).width) + 24; c.width = w; c.height = 44;
+      gx.fillStyle = 'rgba(20,28,36,0.78)'; gx.beginPath(); gx.roundRect ? gx.roundRect(0, 0, w, 44, 10) : gx.rect(0, 0, w, 44); gx.fill(); gx.fillStyle = '#fff'; gx.font = '600 30px sans-serif'; gx.fillText(text, 12, 32);
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: true, transparent: true })); sp.scale.set(w / 44 * 1.15, 1.15, 1); sp.position.set(cx / A, y + h + 2.0, cz / A); sp.renderOrder = 11; sp.userData.nm = text; o.names.add(sp); } }
   o.bt.meshes(o.g, _shadowKeys); o.bt = null;
 }
 // ------------------------------------------------------------------ rolling stock: low-poly N-scale models (1:160), vertex-coloured; instance colour tints white parts
@@ -680,7 +687,7 @@ document.querySelectorAll('[data-v]').forEach(b => b.onclick = () => setView(b.d
 $('pause').onclick = () => { SIM.paused = !SIM.paused; $('pause').classList.toggle('on', SIM.paused); };
 $('speed').oninput = e => { SIM.mph = +e.target.value; $('spd').textContent = SIM.mph; };
 $('lv1').onchange = e => LV[0].g.visible = e.target.checked; $('lv2').onchange = e => LV[1] && (LV[1].g.visible = e.target.checked);
-$('labels').onchange = e => LV.forEach(o => o.labels.visible = e.target.checked);
+$('labels').onchange = e => LV.forEach(o => o.labels.visible = e.target.checked); /* [CHOCO-NAMES] */ if ($('names')) $('names').onchange = e => LV.forEach(o => o.names && (o.names.visible = e.target.checked));
 $('fps').onchange = e => $('stats').style.display = e.target.checked ? 'block' : 'none';
 $('shadows').onchange = e => setShadows(e.target.checked);
 const toggleHelp = () => $('help').classList.toggle('hidden'); $('helpb').onclick = toggleHelp; $('helpx').onclick = toggleHelp;
@@ -706,7 +713,7 @@ addEventListener('keydown', e => { KEY[e.code] = true; if (e.target.tagName === 
   else if (ZOOM.on() && (k === 'Equal' || k === 'NumpadAdd' || k === 'Minus' || k === 'NumpadSubtract')) ZOOM.step(k === 'Equal' || k === 'NumpadAdd' ? 1 : -1);
   else if (ZOOM.on() && (k === 'Digit0' || k === 'Numpad0')) ZOOM.reset();
   else if (k === 'Equal' || k === 'NumpadAdd') { $('speed').value = SIM.mph = Math.min(60, SIM.mph + 5); $('spd').textContent = SIM.mph; } else if (k === 'Minus' || k === 'NumpadSubtract') { $('speed').value = SIM.mph = Math.max(0, SIM.mph - 5); $('spd').textContent = SIM.mph; }
-  else if (k === 'KeyL') { $('labels').checked = !$('labels').checked; $('labels').onchange({ target: $('labels') }); } else if (k === 'KeyF') { $('fps').checked = !$('fps').checked; $('fps').onchange({ target: $('fps') }); }
+  else if (k === 'KeyB' && $('names')) { $('names').checked = !$('names').checked; $('names').onchange({ target: $('names') }); } else if (k === 'KeyL') { $('labels').checked = !$('labels').checked; $('labels').onchange({ target: $('labels') }); } else if (k === 'KeyF') { $('fps').checked = !$('fps').checked; $('fps').onchange({ target: $('fps') }); }
   else if (k === 'KeyG') setShadows(!SHON); else if (k === 'KeyH') toggleHelp(); else if (k === 'KeyQ' && MODE !== 'fly') setQuality({ low: 'med', med: 'high', high: 'low' }[Q]);
   if (LOOKM(MODE) && (k === 'Space' || k === 'PageUp' || k === 'PageDown' || (MODE !== 'walk' && /^Arrow/.test(k)))) e.preventDefault(); });
 addEventListener('keyup', e => KEY[e.code] = false); addEventListener('blur', () => { for (const k in KEY) KEY[k] = false; });
@@ -714,7 +721,7 @@ function onResize() { camera.aspect = innerWidth / innerHeight; camera.updatePro
 // ------------------------------------------------------------------ boot (URL params let scripts drive views: mode, view, train, cam=x,y,z,tx,ty,tz, t=pre-roll seconds, q, shadows, labels, ui)
 window.addEventListener('error', e => STATS.errors.push(String(e.message)));
 setQuality(Q); if (QS.get('shadows') === '1' || (Q === 'high' && QS.get('shadows') !== '0')) setShadows(true); else if (SOFTSH) { setShadows(false); SHCLEAR = 3; }   /* compile the shadow variants now, during load */
-if (QS.get('labels') === '1') { $('labels').checked = true; LV.forEach(o => o.labels.visible = true); }
+if (QS.get('names') === '1' && $('names')) { $('names').checked = true; LV.forEach(o => o.names && (o.names.visible = true)); } if (QS.get('labels') === '1') { $('labels').checked = true; LV.forEach(o => o.labels.visible = true); }
 if (QS.get('ui') === '0') { $('ui').style.display = 'none'; $('stats').style.display = 'none'; document.body.classList.add('l3d-hideui'); /* [CHOCO-UI0] */ }
 SEL = Math.min(TRAINS.length - 1, Math.max(0, +(QS.get('train') || 0))); $('train').value = SEL; $('speed').value = SIM.mph; $('spd').textContent = SIM.mph;
 for (let k = 0, n = Math.round(+(QS.get('t') || 0) / 0.05); k < n; k++) stepTrains(0.05); stepTrains(0);
@@ -742,6 +749,7 @@ function loop(now) {
   const shwarm = SHCLEAR === 2; if (SHCLEAR === 3) SHCLEAR = 2; else if (shwarm) { renderer.shadowMap.needsUpdate = true; SHCLEAR = 0; }   // boot: frame 2 (lights set up) does one real shadow pass so the depth programs are compiled too, frame 3 clears
   let shp = null; if (SHCLEAR === 1) { shp = [sun.position.clone(), sun.target.position.clone()]; sun.position.y += 1e5; sun.target.position.y += 1e5; sun.target.updateMatrixWorld(); renderer.shadowMap.needsUpdate = true; SHCLEAR = 0; }
   if (L3D.ambience && L3D.ambience.update) L3D.ambience.update(dt);
+  /* [CHOCO-NAMES] fade: full within 70 in, gone past 150 in or closer than 3 in */ for (const o of LV) if (o.names && o.names.visible && o.g.visible !== false) for (const sp of o.names.children) { const d = camera.position.distanceTo(sp.position); sp.material.opacity = d < 3 ? 0 : d < 70 ? 1 : Math.max(0, 1 - (d - 70) / 80); sp.visible = sp.material.opacity > 0.02; }
   renderer.render(scene, camera); nfr++; acc += real; if (shwarm) SHCLEAR = 1; if (shp) { sun.position.copy(shp[0]); sun.target.position.copy(shp[1]); sun.target.updateMatrixWorld(); }
   if (acc >= 0.5) { STATS.fps = nfr / acc; STATS.calls = renderer.info.render.calls; STATS.tris = renderer.info.render.triangles; nfr = 0; acc = 0;
     (() => { const S = $('stats'); let t = S.querySelector('.stats-txt'); if (!t) { t = document.createElement('span'); t.className = 'stats-txt'; S.appendChild(t); } return t; })().textContent = /* [CHOCO-STATS] text in a child span so the minimise button survives */ `${STATS.fps.toFixed(0)} fps  ${STATS.calls} draw calls  ${(STATS.tris / 1000).toFixed(0)}k tris\n${MODE}${MODE === 'cab' || MODE === 'chase' ? ' · ' + (TRAINS[SEL] || {}).sym : ''} · ${SIM.paused ? 'paused' : SIM.mph + ' mph'} · quality ${Q}${renderer.shadowMap.enabled ? ' · shadows' : ''}`; }

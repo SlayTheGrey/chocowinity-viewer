@@ -65,7 +65,7 @@ window.L3DBOOT = (function () { var ov = document.getElementById('l3d-overlay'),
  </details>
  <details class="sec" data-sec="reach"><summary>Reach</summary><div id="reachslot"></div></details>
  <details class="sec" data-sec="display"><summary>Display &amp; quality</summary>
-  <div class="frow checks"><label title="Lower deck"><input type="checkbox" id="lv1" checked>L1 deck</label><label title="Upper deck"><input type="checkbox" id="lv2" checked>L2 deck</label><label title="Train and car tags: symbol + activity, load + commodity, radio icon [L]"><input type="checkbox" id="labels">Labels <kbd>L</kbd></label><label title="Frame-rate readout [F]"><input type="checkbox" id="fps">Stats <kbd>F</kbd></label><label title="Sun shadows [G]"><input type="checkbox" id="shadows">Shadows <kbd>G</kbd></label></div>
+  <div class="frow checks"><label title="Lower deck"><input type="checkbox" id="lv1" checked>L1 deck</label><label title="Upper deck"><input type="checkbox" id="lv2" checked>L2 deck</label><label title="Train and car tags: symbol + activity, load + commodity, radio icon [L]"><input type="checkbox" id="labels">Labels <kbd>L</kbd></label><label title="Building and industry names [B]"><input type="checkbox" id="names">Names <kbd>B</kbd></label><label title="Frame-rate readout [F]"><input type="checkbox" id="fps">Stats <kbd>F</kbd></label><label title="Sun shadows [G]"><input type="checkbox" id="shadows">Shadows <kbd>G</kbd></label></div>
   <div class="frow btns"><label>Quality <kbd>Q</kbd></label><button data-q="low" title="Fastest">Low</button><button data-q="med" title="Balanced (default)">Med</button><button data-q="high" title="Best looking">High</button></div>
   <div class="frow"><label for="tod" title="Room lighting: Day, Evening (low warm sun, streetlights and headlights on) or Night">Time of day <kbd>T</kbd></label><select id="tod"><option value="day">Day</option><option value="evening">Evening</option><option value="night">Night</option></select></div>
   <div class="hintline">Slow graphics card? Pick Low, or open the viewer with <code>?q=low</code> added to the address. Pedestrian view turns shadows on (close-range, cheap) unless Low.</div>
@@ -118,7 +118,7 @@ window.L3DBOOT = (function () { var ov = document.getElementById('l3d-overlay'),
    <tr><td>Overview</td><td>drag rotate, right-drag pan, wheel zoom</td></tr>
    <tr><td><kbd>N</kbd></td><td>next train (Cab / Follow)</td></tr>
    <tr><td><kbd>P</kbd> <kbd>+</kbd><kbd>&minus;</kbd></td><td>pause; speed</td></tr>
-   <tr><td><kbd>L</kbd> <kbd>F</kbd> <kbd>G</kbd> <kbd>Q</kbd></td><td>labels, stats, shadows, quality</td></tr>
+   <tr><td><kbd>L</kbd> <kbd>B</kbd> <kbd>F</kbd> <kbd>G</kbd> <kbd>Q</kbd></td><td>labels, building names, stats, shadows, quality</td></tr>
    <tr><td><kbd>T</kbd></td><td>time of day: Day / Evening / Night</td></tr>
    <tr><td><kbd>Tab</kbd> / &#128065;</td><td>hide all UI; &ndash; on a panel minimises it</td></tr></table></div>
  </div>
