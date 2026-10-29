@@ -1,4 +1,4 @@
-/* life.js - ambient life for the layout3d viewer (Owner Liles N-scale layout). Self-contained, plain script, global THREE (r14x) + THREE.GLTFLoader.
+/* life.js - ambient life for the layout3d viewer (N-scale layout). Self-contained, plain script, global THREE (r14x) + THREE.GLTFLoader.
    API:   L3D.life.init(opts) -> Promise   |   L3D.life.update(dt, camera)   |   L3D.life.setHour(h)   |   L3D.life.stats()   |   L3D.life.dispose()
    See INTEGRATION.md for opts / data formats. Units: data in SCENE units on the ground plane (x, z), y from opts.heightAt(x, z) unless a point
    carries its own y (dock decks, ramps). All behaviour speeds are real m/s converted with opts.unitsPerMeter (N scale in inches: 39.37/160).
