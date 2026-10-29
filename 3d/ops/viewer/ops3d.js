@@ -54,10 +54,22 @@ function buildCars() { _SLOTGEN++; _GHOSTSIG = _carSig();
     if (kind === 'X') { const grp = new T3.Group(); scene.add(grp); const m = L3D.ext.rsMesh(a, cnt[k] + 2, grp, +b); m.count = cnt[k] + 2; inst[k] = { mesh: m, n: 0, grp, ext: true }; continue; } const g = kind === 'L' ? L3D.rs.locoGeo(a, b, +li) : L3D.rs.carGeo(a, +b, +li || 0);
     const m = new T3.InstancedMesh(g, L3D.mat('livery'), cnt[k] + 2); m.frustumCulled = false; m.castShadow = true; m.instanceMatrix.setUsage(T3.DynamicDrawUsage); scene.add(m); inst[k] = { mesh: m, n: 0 }; }
   for (const c of cars) { c._key = geoKey(c); const e = inst[c._key]; c._slot = [e, e.n++, _SLOTGEN]; e.mesh.setColorAt(c._slot[1], grime(c)); }
-  buildLoads(cars);
+  buildLoads(cars); buildWellNums(cars);
   trucks = new T3.InstancedMesh(L3D.rs.TRUCK2, L3D.mat('plain'), cars.length * 2 + 4); trucks.frustumCulled = false; trucks.instanceMatrix.setUsage(T3.DynamicDrawUsage); scene.add(trucks);
   for (const k in inst) { const e = inst[k]; for (let i = e.n; i < e.mesh.count; i++) { _m.compose(ZERO, _q.identity(), new T3.Vector3(0, 0, 0)); e.mesh.setMatrixAt(i, _m); if (e.mesh.rig) for (const kk of [0, 1]) e.mesh.setTruckAt(i, kk, _m, 0); } if (e.mesh.instanceColor) e.mesh.instanceColor.needsUpdate = true; }
 }
+/* [CHOCO-DTTX] per-car reporting numbers on the intermodal wells: the car-well glb texture bakes one number (DTTX 784022) on every car; a thin
+   TTX-yellow plate with its own DTTX number sits over the side lettering on both sides (12 numbers, one InstancedMesh each; ?dttx=0 hides) */
+const DTTX = ['780214', '781937', '782506', '783118', '784022', '785671', '786340', '787095', '788452', '789713', '784880', '786902'];
+let WN = null; const _wm = new T3.Matrix4(), _wl = [new T3.Matrix4(), new T3.Matrix4()];
+function buildWellNums(cars) { if (WN) { for (const m of WN) scene.remove(m); WN = null; } if (QS.get('dttx') === '0') return;
+  const wells = cars.filter(c => c.type === 'well'); for (const c of wells) c._wn = null; if (!wells.length) return;
+  const geo = new T3.PlaneGeometry(1.0, 0.13); WN = DTTX.map(n => { const cv = document.createElement('canvas'); cv.width = 512; cv.height = 64; const g = cv.getContext('2d');
+    g.fillStyle = '#e0a80e'; g.fillRect(0, 0, 512, 64); g.fillStyle = '#141414'; g.font = 'bold 46px Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('DTTX ' + n, 256, 34);
+    const tx = new T3.CanvasTexture(cv); tx.anisotropy = 4; const m = new T3.InstancedMesh(geo, new T3.MeshStandardMaterial({ map: tx, roughness: 0.6, metalness: 0 }), wells.length * 2 + 2); m.frustumCulled = false; m.count = 0; m.instanceMatrix.setUsage(T3.DynamicDrawUsage); scene.add(m); return m; });
+  const used = new Map(); let k = 0; for (const c of wells) { const t = c.train || ''; const i = used.get(t) || 0; used.set(t, i + 1); const ni = (i + (t.length * 5)) % DTTX.length; const m = WN[ni]; c._wn = [m, m.count]; m.count += 2; k++; }
+  _wl[0].makeTranslation(0, 0.27, 0.397); _wl[1].makeRotationY(Math.PI).setPosition(0, 0.27, -0.397); }
+function placeWellNum(c, M) { const [m, j] = c._wn; for (const s of [0, 1]) { _wm.multiplyMatrices(M, _wl[s]); m.setMatrixAt(j + s, _wm); } m.instanceMatrix.needsUpdate = true; }
 function grime(c) {   // [WEATHER] per-car road grime: freight cars 0-30 % toward a dusty brown, locos 0-10 % (multiplies the livery texture)
   const id = String(c.id || c.num || c.addr || ''); let h = 2166136261; for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619); const r = ((h >>> 0) % 1000) / 1000;
   return _c.set('#ffffff').lerp(new T3.Color('#c8bba6'), (c.loco ? 0.1 : 0.3) * r); }
@@ -154,6 +166,7 @@ function placeCars() {
     const P = l3map(eng, eng.carPose(cut, i)), y = deckY(P.level) + api.RAILTOP; let ang = P.a; if (c._pose) c._mv = [P.x - c._pose.x, P.y - c._pose.y]; if ((c.loco || c.type === 'loco') && (c.fwd || 1) < 0) ang += Math.PI; /* [R34] trailing MU units carry type 'loco' but loco:false (only the lead is the throttle car) -> their fwd -1 flip was ignored: the NS 211 ET44s faced the same way */ if (c.rear && !c.loco) ang += Math.PI; /* [REVIEW1] rear cab unit faces out */ c._pose = P; c._ang = ang; c._y = y;
     _p.set(P.x, y, P.y); _q.setFromEuler(_e.set(0, -ang, 0)); const hid = hideAddr != null && c.loco && c.addr === hideAddr; _s.setScalar(hid ? 0 : 1); _m.compose(_p, _q, _s);
     const [e, k] = c._slot; e.mesh.setMatrixAt(k, _m); e.mesh.instanceMatrix.needsUpdate = true;
+    if (c._wn) placeWellNum(c, _m);
     if (e.ext) { const RG = e.mesh.rig ? e.mesh : null;   // glb carries its own trucks: hide the procedural ones; rigged: place truck_front/rear + spin wheelsets
       if (c._px !== undefined) { const dx = P.x - c._px, dy = P.y - c._py, sgn = (dx * Math.cos(ang) + dy * Math.sin(ang)) >= 0 ? 1 : -1; c._spin = (c._spin || 0) + sgn * Math.hypot(dx, dy) / ((RG && RG.wheelR) || 0.021); }   /* [R30] wheels roll the right way on a reversed (fwd -1) unit or when backing */ c._px = P.x; c._py = P.y;
       if (RG) { /* [RV2] each truck yaws to the track tangent at its own centre pin; couplers swing toward the mating knuckle on the track */
