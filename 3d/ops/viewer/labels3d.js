@@ -80,8 +80,11 @@ function update(H, dt) { const cb = document.getElementById('labels'); const on 
   for (let k = i; k < S.pool.length; k++) S.pool[k].visible = false; S.used = i; declutter(cam, i); }
 /* [CHOCO-UI R4] far-label pile-up: screen-space declutter in priority order (locos nearest-first, then cars nearest-first; S.list order).
    A tag that would cover >20% of an already shown tag is hidden; car chips also fade with distance (full to 30 in, 45% at 60 in). Loco tags always win. */
-const _q = new T3.Vector3();
+const _q = new T3.Vector3(), _ws = new T3.Vector3();
 function declutter(cam, n) { const P = cam.projectionMatrix.elements, f = P[5] * innerHeight / 2, R = []; let hid = 0;
+  /* [CHOCO-BL] industry name labels (Names) count as already shown: a car chip that would cover one is hidden (no load tags piled on 'Pamlico Scrap & Recycling') */
+  if (!S.nm || (S.nmT = (S.nmT || 0) + 1) % 120 === 0) { S.nm = []; if (S.g && S.g.parent) S.g.parent.traverse(g => { if (g.name === 'choco-names') S.nm.push(g); }); }
+  for (const g of S.nm) { let vis = true; for (let p = g; p; p = p.parent) if (!p.visible) { vis = false; break; } if (!vis) continue; g.traverse(sp => { if (!sp.isSprite || !sp.visible) return; sp.getWorldPosition(_q); const dz = _q.distanceTo(cam.position); _q.project(cam); if (_q.z > 1 || Math.abs(_q.x) > 1.2 || Math.abs(_q.y) > 1.2) return; sp.getWorldScale(_ws); const k = sp.material.sizeAttenuation === false ? f : f / Math.max(dz, 0.01), wp = _ws.x * k, hp = _ws.y * k, cx = (_q.x + 1) / 2 * innerWidth, cy = (1 - _q.y) / 2 * innerHeight, c = sp.center; R.push([cx - wp * c.x, cy - hp * (1 - c.y), cx + wp * (1 - c.x), cy + hp * c.y]); }); }
   for (let k = 0; k < n; k++) { const sp = S.pool[k], o = sp && sp.userData.o; if (!sp || !sp.visible) continue; _q.copy(sp.position).project(cam);
     const hp = sp.scale.y * f, wp = sp.scale.x * f, cx = (_q.x + 1) / 2 * innerWidth, by = (1 - _q.y) / 2 * innerHeight, r = [cx - wp / 2, by - hp, cx + wp / 2, by];
     const isCar = o && o.k === 'car'; let hit = false;
