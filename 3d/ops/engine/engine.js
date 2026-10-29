@@ -1029,7 +1029,7 @@ class PlanExec {
      then the T11 yard stub) if it has room for the whole cut and the route needs no reversal and no turnout held by anyone else; it stands there,
      visible, for the rest of the session. 2) otherwise the crew takes it home: up the lift into L3 staging as an AI move (the normal, visible
      way off the layout). Returns true when the job is not finished yet. */
-  _tieUp(cut, th) { const eng = this.eng, J = eng.D.jobs.find(x => x.id === this.job.id) || {}; if (!eng.ai || J.level !== 1 || /^YARD/.test(this.job.id)) return false;
+  _tieUp(cut, th) { const eng = this.eng, J = eng.D.jobs.find(x => x.id === this.job.id) || {}; if (!eng.ai || J.level !== 1) return false;   /* [CHOCO-YARDTIE] yard jobs tie up too (was: /^YARD/ excluded) */
     if (this.tieup) { this.releaseAll(); cut.parked = true; cut.tied = this.job.id; for (const c of cut.cars) if (c.loco) c.train = this.job.id + ' (tied down)'; th.speed = 0; this.say(`tied down on ${this.tieup} — crew off duty`); return true; }
     const loco = cut.cars.find(x => x.loco); const li = cut.cars.indexOf(loco); const lt = eng.e2t[eng.locate(cut, cut.cars.slice(0, li).reduce((o, x) => o + x.len, 0) + loco.len / 2).e];
     const live = (eng.ai.execs || []).filter(x => x !== this && !x.done && !x.fail);
