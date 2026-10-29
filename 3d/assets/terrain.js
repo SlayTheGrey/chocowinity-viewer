@@ -95,11 +95,11 @@ TR.mesh = (o, C) => {
   const T = o.terrain, { nx, nz, step, H, board, cat, X, Z, dT, dW, dF, field, ground } = T, L = o.L, y = o.deck + 0.003, cfg = T.cfg;
   const GK = { row: 'grass', lawn: 'grass', young: 'grass', brush: 'grass', sand: 'sand', salvage: 'gravel', gravel: 'gravel', cinder: 'gravel', marsh: 'marsh', grass: 'grass', pine: 'grass', plant: 'grass', cypress: 'marsh', apron: 'gravel', lot: 'gravel', walk: 'grass', drive: 'gravel', road: 'grass' };
   const keyOf = p => { const c = cat[p]; if (c === 1) { const cr = L.fields[field[p]].crop; return cr === 'tobacco' ? 'ft' : cr === 'cotton' ? 'fc' : cr === 'pasture' ? 'grass' : 'fp'; }
-    if (c === 2) return GK[L.ground[ground[p]].kind] || 'grass'; if (c === 3) return 'grass'; if (c === 4) return 'mud'; if (c === 5) return 'mud'; if (c === 6) return 'dirt'; if (c === 7) return 'gravel'; return 'grass'; };
+    if (c === 2) return GK[L.ground[ground[p]].kind] || 'grass'; if (c === 3) return 'grass'; if (c === 4) return 'mud'; if (c === 5) return 'mud'; if (c === 6) return 'grass' /* [CHOCO-BM2] shoulder shares grass mesh: colour-only blend, no 0.5in cell stair */; if (c === 7) return 'gravel'; return 'grass'; };
   const n3 = vnoise(17 + L.id), V = {}, colr = new THREE.Color();
   const vcolor = (p) => { const x = X(p % nx), z = Z((p - p % nx) / nx), c = cat[p], nn = fbm(n3, x / 2.5, z / 2.5);
     if (c === 1) { const cr = L.fields[field[p]].crop; colr.set(cr === 'pasture' ? '#c8d6a0' : '#ffffff'); } else if (c === 2) { const k = L.ground[ground[p]].kind; colr.set({ row: '#b0a880', lawn: '#e4f4bc', young: '#c4b880', brush: '#aeb07c', sand: '#ffffff', salvage: '#8a8274', pine: '#a0a070', cinder: '#8a847c', plant: '#b0b890', cypress: '#a0a080', marsh: '#ffffff', gravel: '#ffffff', grass: '#d8e0b0' }[k] || '#d0d8b0'); }
-    else if (c === 3) colr.set('#8fa060'); else if (c === 4 || c === 5) colr.set('#ffffff'); else if (c === 6) colr.set('#b0a898'); else if (c === 7) colr.set('#d0d0d0'); else colr.set('#d8e0b0');
+    else if (c === 3) colr.set('#8fa060'); else if (c === 4 || c === 5) colr.set('#ffffff'); else if (c === 6) colr.set('#9c8a6c'); else if (c === 7) colr.set('#d0d0d0'); else colr.set('#d8e0b0');
     colr.multiplyScalar(0.9 + 0.12 * nn);
     /* [UX1] mid-October eastern NC: open grass carries tan broomsedge / dead-grass patches, field margins a weedy straw band, ditches stay darker and wetter, yard gravel picks up cinder / oil-stain mottle */
     if (c === 0 || c === 3) { const pv = fbm(n3, x / 1.1 + 40, z / 1.1 - 17), edge = dF[p] < 0.7 ? 1 - dF[p] / 0.7 : 0; colr.lerp(new THREE.Color('#cdbb8a'), Math.min(0.55, Math.max(0, (pv - 0.05) * 1.6) + 0.35 * edge) * (c === 3 ? 0.3 : 1)); }
