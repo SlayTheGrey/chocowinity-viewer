@@ -249,7 +249,7 @@ const LIFE = (() => {
   /* ---- animals [PROPOSED in PHASE3-PLAN.md; the plan has none] */
   const ANI = [];
   const animal = (li, type, spots, label, opts = {}) => { const good = spots.filter(p => onB(li, p[0], p[1], 0.4) && trackD(li, p) >= 1.2 && !inStruct(li, p, -0.3) && !(SC[li - 1].roads || []).some(r => r.pts.some((q, i) => i && segD(p, r.pts[i - 1], q)[0] < (r.w || 1.6) / 2 + 0.4)));
-    for (let i = 0; i < (opts.n || 1) && good.length; i++) { const h = good.splice(Math.floor(rnd() * good.length), 1)[0]; const a = { id: ++idn, kind: 'animal', type, len: opts.len || 0.4, w: opts.w || 0.15, col: opts.col || '#8b5a2b', level: li, li, name: label, x: h[0], y: h[1], a: rnd() * 6.28, home: h, spots: good.slice(), fly: !!opts.fly, r: opts.r || 0, ph: rnd() * 6.28, rect: opts.rect, wpts: opts.wpts, s: 0 }; ENT.push(a); ANI.push(a); } };
+    for (let i = 0; i < (opts.n || 1) && good.length; i++) { const h = good.splice(Math.floor(rnd() * good.length), 1)[0]; const a = { id: ++idn, kind: 'animal', type, len: opts.len || 0.4, w: opts.w || 0.15, col: opts.col || '#8b5a2b', level: li, li, name: label, x: h[0], y: h[1], a: rnd() * 6.28, home: h, spots: good.slice(), fly: !!opts.fly, r: opts.r || 0, ph: rnd() * 6.28, rect: opts.rect, wpts: opts.wpts, graze: opts.graze, s: 0 }; ENT.push(a); ANI.push(a); } };
   const grid = (r, step, m = 0.2) => { const o = []; for (let x = r[0] + m; x <= r[2] - m; x += step) for (let y = r[1] + m; y <= r[3] - m; y += step) o.push([x, y]); return o; };
 
   /* ================= the plan (rev6h README element checklist + PHASE3-PLAN.md section 1) ================= */
@@ -326,6 +326,13 @@ const LIFE = (() => {
   { const w = byName(2, /Pamlico River edge/, 'water'); if (w) animal(2, 'gull', grid([99.5, 8, 103.5, 14], 1.0), 'laughing gull (Pamlico River)', { n: 3, fly: true, r: 1.2, len: 0.22, w: 0.06, col: '#f4f4f4' }); }
   { const l = byName(1, /^PSR prepared-scrap piles/); if (l) animal(1, 'vulture', [[(l.r[0] + l.r[2]) / 2, (l.r[1] + l.r[3]) / 2]], 'turkey vulture (over PSR)', { n: 1, fly: true, r: 2.0, len: 0.3, w: 0.08, col: '#222' }); }
 
+  /* [CHOCO-HFARM] BK.1 horse farm animals (L1, off Main St): paddock herd grazes and walks short legs inside the board fence; goats + chickens in the pen */
+  { const pad = [13.85, 31.25, 20.35, 37.55], pen = [13.85, 41.2, 16.95, 42.4], G = r => grid(r, 0.3, 0.3) /* body length clear of the fence */;
+    for (const [t, lb, o] of [['horse', 'bay horse (horse farm paddock)', { len: 0.6, w: 0.17, col: '#6b3e1f' }], ['horse', 'chestnut horse (horse farm paddock)', { len: 0.6, w: 0.17, col: '#8b4a22' }], ['horse', 'gray mare (horse farm paddock)', { len: 0.58, w: 0.17, col: '#a3a19b' }],
+      ['pony', 'pony (horse farm paddock)', { len: 0.42, w: 0.14, col: '#c9b48a' }], ['cow', 'Angus cow (horse farm paddock)', { len: 0.6, w: 0.22, col: '#1e1e1e' }]]) animal(1, t, G(pad), lb, Object.assign({ rect: pad, graze: 1 }, o));
+    animal(1, 'goat', G(pen), 'goat (horse farm pen)', { n: 2, len: 0.3, w: 0.1, col: '#e2ddd0', rect: pen, graze: 1 });
+    animal(1, 'chicken', grid(pen, 0.2, 0), 'chicken (horse farm pen)', { n: 3, len: 0.1, w: 0.06, col: '#b5651d', rect: pen, graze: 1 }); }
+
   /* ================= stepping ================= */
   const scanCars = () => { CARS = { 1: [], 2: [] }; for (const c of eng.cuts) for (let i = 0; i < c.cars.length; i++) { const q = eng.carPose(c, i), lv = Math.round(q.level); if (CARS[lv] && Math.abs(q.level - lv) < 0.05) CARS[lv].push({ x: q.x, y: q.y, mv: Math.abs(c.v) > 0.05, cut: c, len: c.cars[i].len }); } lastScan = T; };
   const xingClear = m => { if (T - lastScan > 0.45) scanCars(); const tk = eng.trk[m.tid]; const near = (CARS[eng.E[m.e].level] || []).filter(c => Math.hypot(c.x - m.pt[0], c.y - m.pt[1]) < 22.5);
@@ -366,6 +373,8 @@ const LIFE = (() => {
       const d = H(tgt, [a.x, a.y]), v = (a.flee ? MPH(30) : MPH(2)) * dt; if (d <= v) { a.x = tgt[0]; a.y = tgt[1]; a.flee = null; a.wTo = null; return; } a.a = Math.atan2(tgt[1] - a.y, tgt[0] - a.x); a.x += (tgt[0] - a.x) / d * v; a.y += (tgt[1] - a.y) / d * v; return; }
     if (a.type === 'heron') { if (T - lastScan > 2) scanCars(); const near = (CARS[a.li] || []).some(c => c.mv && Math.hypot(c.x - a.x, c.y - a.y) < 15); if (near && !a.gone) { a.gone = T + 600; a.level = 0; } if (a.gone && T > a.gone) { a.gone = 0; a.level = a.li; } return; }
     if (a.fly) { a.ph += dt * MPH(20) / Math.max(0.5, a.r); let x = a.home[0] + Math.cos(a.ph) * a.r, y = a.home[1] + Math.sin(a.ph) * a.r; if (!onB(a.li, x, y, 0.2)) { a.ph -= dt * MPH(20) / Math.max(0.5, a.r); return; } a.x = x; a.y = y; a.a = a.ph + Math.PI / 2; return; }
+    if (a.graze) { const ck = a.type === 'chicken'; if (!a.wTo) { if (rnd() < dt / (ck ? 8 : 50)) { const c = a.spots.filter(p => H(p, [a.x, a.y]) < (ck ? 0.8 : 2.4)); if (c.length) a.wTo = c[Math.floor(rnd() * c.length)]; } return; } /* [CHOCO-HFARM] graze in place, then a short walk to a new spot inside the fenced rect */
+      const d = H(a.wTo, [a.x, a.y]), v = MPH(ck ? 1.2 : 2.5) * dt; if (d <= v) { a.x = a.wTo[0]; a.y = a.wTo[1]; a.wTo = null; return; } a.a = Math.atan2(a.wTo[1] - a.y, a.wTo[0] - a.x); a.x += (a.wTo[0] - a.x) / d * v; a.y += (a.wTo[1] - a.y) / d * v; return; }
     if (a.type === 'dog') { if (!a.wTo || H(a.wTo, [a.x, a.y]) < 0.02) { if (rnd() < dt / 20) a.wTo = a.spots.length ? a.spots[Math.floor(rnd() * a.spots.length)] : null; if (!a.wTo) return; }
       const d = H(a.wTo, [a.x, a.y]), v = MPH(4) * dt; if (d <= v) { a.x = a.wTo[0]; a.y = a.wTo[1]; a.wTo = null; return; } a.a = Math.atan2(a.wTo[1] - a.y, a.wTo[0] - a.x); a.x += (a.wTo[0] - a.x) / d * v; a.y += (a.wTo[1] - a.y) / d * v; } };
   let acc = 0;
