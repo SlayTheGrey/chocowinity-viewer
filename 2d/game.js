@@ -322,7 +322,7 @@ const LIFE = (() => {
   machine(2, /^WL forklift lane kilns/, 'forklift', 'WL forklift (kilns -> shed)', { always: true }); machine(2, /^WL lumber storage yard/, 'forklift', 'WL yard forklift', { off: -0.6, slot: wlS });
   // animals
   { const w = byName(2, /Blounts Creek/, 'water'); if (w) { const xs = w.pts.map(p => p[0]), ys = w.pts.map(p => p[1]); animal(2, 'deer', grid([Math.min(...xs) - 1.5, Math.min(...ys) - 1.5, Math.max(...xs) + 1.5, Math.max(...ys) + 1.5], 0.5).filter(p => !inPoly(p, w.pts) && w.pts.some((q, i) => i && segD(p, w.pts[i - 1], q)[0] < 1.2)) /* [CHOCO-LIFE] on the creek bank, not in the water */, 'white-tailed deer (Blounts Creek swamp, dawn/dusk)', { wpts: w.pts, n: 3, len: 0.42, w: 0.14, col: '#9a6a3a' });
-    animal(2, 'heron', grid([Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)], 0.5), 'great blue heron (Blounts Creek)', { n: 1, len: 0.3, w: 0.08, col: '#9ab' }); } }
+    animal(2, 'heron', grid([Math.min(...xs), Math.min(...ys), Math.max(...xs), Math.max(...ys)], 0.3).filter(p => inPoly(p, w.pts) && w.pts.some((q, i) => i && segD(p, w.pts[i - 1], q)[0] < 0.6)) /* [CHOCO-BL] wades the shallows at the bank, not mid-creek */, 'great blue heron (Blounts Creek)', { n: 1, len: 0.3, w: 0.08, col: '#9ab' }); } }
   { const w = byName(2, /Pamlico River edge/, 'water'); if (w) animal(2, 'gull', grid([99.5, 8, 103.5, 14], 1.0), 'laughing gull (Pamlico River)', { n: 3, fly: true, r: 1.2, len: 0.22, w: 0.06, col: '#f4f4f4' }); }
   { const l = byName(1, /^PSR prepared-scrap piles/); if (l) animal(1, 'vulture', [[(l.r[0] + l.r[2]) / 2, (l.r[1] + l.r[3]) / 2]], 'turkey vulture (over PSR)', { n: 1, fly: true, r: 2.0, len: 0.3, w: 0.08, col: '#222' }); }
 
