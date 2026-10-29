@@ -69,14 +69,17 @@ function update(H, dt) { const cb = document.getElementById('labels'); const on 
         if (d > (isL ? RANGE.loco : RANGE.car) || !_fr.containsPoint(_v)) continue; (isL ? L : C).push({ c, cut, d, sym }); } }
     L.sort((a, b) => a.d - b.d); C.sort((a, b) => a.d - b.d); const seen = new Set(); S.list = [];
     for (const o of L) { if (seen.has(o.cut)) continue; const lead = o.cut.cars.find(x => x.addr != null && (x.loco || x.type === 'loco')); if (lead && lead !== o.c) continue; seen.add(o.cut); S.list.push({ ...o, k: 'loco' }); if (S.list.length >= CAP.loco) break; }
-    for (const o of C.slice(0, CAP.car)) S.list.push({ ...o, k: 'car' }); }
+    /* [CHOCO-BL] adjacent cars in one cut with the same chip collapse to one chip with a count ('● veg oil ×6') on the middle car: no tag columns */
+    const RUN = new Map(); for (const cut of new Set(C.map(o => o.cut))) { let run = [], pk = null; const sy = symOfCut(eng, ai, cut); const flush = () => { if (run.length > 1) { const m = run[Math.floor((run.length - 1) / 2)]; for (const x of run) RUN.set(x, { rep: m, n: run.length }); } run = []; };
+      for (const c of cut.cars) { const k = carTag(c, sy); if (k && k === pk) run.push(c); else { flush(); if (k) run.push(c); } pk = k; } flush(); }
+    const done = new Set(); let nc = 0; for (const o of C) { if (nc >= CAP.car) break; const R = RUN.get(o.c); if (R) { if (done.has(R.rep)) continue; done.add(R.rep); if (!R.rep._pose) continue; S.list.push({ ...o, c: R.rep, n: R.n, k: 'car' }); } else S.list.push({ ...o, k: 'car' }); nc++; } }
   const refresh = S.txtT <= 0; if (refresh) S.txtT = 0.5; const now = performance.now() / 1000; let i = 0; S.stats.loco = S.stats.car = 0;
   const get = () => S.pool[i] || (S.pool[i] = mkSprite());
   for (const o of S.list) { const c = o.c, P = c._pose; if (!P) continue;
     if (o.k === 'loco') { const sp = get(); i++; const onR = now - (S.radioAt[c.addr] || -99) < RADIO_S; /* [CHOCO-RADIOICON] radio badge drawn into the loco tag (one sprite) */
       if (refresh || !sp.userData.key || sp.userData.for !== c || sp.userData.r !== onR) { const A = (o.act = refresh || !o.act ? activity(H, eng, ai, o.cut, c) : o.act); draw(sp, onR ? ['((•)) ' + A[0], A[1]] : A, onR ? 'locoR' : 'loco'); sp.userData.for = c; sp.userData.r = onR; }
       sp.userData.o = o; place(sp, P.x, c._y + 1.3, P.y, cam, 0); S.stats.loco++; if (onR) S.stats.radioOn = (S.stats.radioOn || 0) + 1; }
-    else { const t = refresh || !get().userData.key || get().userData.for !== c ? carTag(c, o.sym) : null; const sp = get(); i++; if (t) { draw(sp, [t], 'car'); sp.userData.for = c; } else if (sp.userData.for !== c) { sp.visible = false; continue; } sp.userData.o = o; place(sp, P.x, c._y + 0.9, P.y, cam, 0); S.stats.car++; } }
+    else { const nn = o.n || 1, t0 = refresh || !get().userData.key || get().userData.for !== c || get().userData.n !== nn ? carTag(c, o.sym) : null, t = t0 && nn > 1 ? t0 + ' ×' + nn : t0; const sp = get(); i++; if (t) { draw(sp, [t], 'car'); sp.userData.for = c; sp.userData.n = nn; } else if (sp.userData.for !== c) { sp.visible = false; continue; } sp.userData.o = o; place(sp, P.x, c._y + 0.9, P.y, cam, 0); S.stats.car++; } }
   for (let k = i; k < S.pool.length; k++) S.pool[k].visible = false; S.used = i; declutter(cam, i); }
 /* [CHOCO-UI R4] far-label pile-up: screen-space declutter in priority order (locos nearest-first, then cars nearest-first; S.list order).
    A tag that would cover >20% of an already shown tag is hidden; car chips also fade with distance (full to 30 in, 45% at 60 in). Loco tags always win. */
