@@ -116,3 +116,5 @@ button.primary{background:var(--acc)!important;border-color:var(--acc2)!importan
 
 /* [CHOCO-UI1] fly/ped speed HUD wraps between the ops chip and the layout map on narrow screens */
 @media (max-width:1280px){#fphud{white-space:normal!important;max-width:400px;text-align:center;bottom:4px!important}}
+/* [CHOCO-EYEFIX] 1401-1760px: the right button group overflowed under the eye button (Settings ended at x1734 at 1600). Compact it earlier; mode buttons keep their key hints. */
+@media (max-width:1760px){.tb-right{gap:4px}.tb-right .tb-btn{padding:4px 8px}.tb-right kbd{display:none}.tb-modes button{padding:5px 9px!important}.tb-brand{max-width:120px}}

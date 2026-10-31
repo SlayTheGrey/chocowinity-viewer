@@ -9,7 +9,7 @@
 const QS = new URLSearchParams(location.search), D = window.OPS_DATA, OE = window.OpsEngine;
 const H = window.LAYOUT3D_OPS = { enabled: !!(D && OE && window.THREE) && QS.get('ops') !== '0' };
 if (!H.enabled) return;
-const TYPE3D = { g32: 'covered_hopper', h51: 'covered_hopper', gbrx: 'tank', tk: 'tank', c60: 'boxcar', rf: 'reefer', c89: 'flat', f68: 'flat', well: 'well', ar: 'autorack', cb: 'centerbeam', gon: 'gondola', coil: 'coil', cp: 'hopper', amfleet: 'amfleet' };
+const TYPE3D = { g32: 'covered_hopper', h51: 'covered_hopper', gbrx: 'tank', tk: 'tank', at25: 'tank', t51: 'tank' /* [CHOCO-TANKMAP] NUT1 phos acid + FF t51 tanks were falling back to boxcar */, c60: 'boxcar', rf: 'reefer', c89: 'flat', f68: 'flat', well: 'well', ar: 'autorack', cb: 'centerbeam', gon: 'gondola', coil: 'coil', cp: 'hopper', amfleet: 'amfleet' };
 const ROADCOL = { NS: '#1b1b1b', CSX: '#1d3f8a', BNSF: '#e05a1a', UP: '#f2c12e', AMTK: '#c0c4c8', Amtrak: '#c0c4c8', RJC: '#2a5d2a', CR: '#1d4f7a' };
 let radio = null;   // ROUND4 two-way radio (ops/audio/radio.js, shared with the 2D game)
 if (!window.OpsRadio) { const sc = document.createElement('script'); sc.src = 'ops/audio/radio.js'; sc.onload = () => { if (eng) mkRadio(); }; document.head.appendChild(sc); }
