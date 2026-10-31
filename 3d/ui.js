@@ -22,7 +22,7 @@ function init(S, A) {
   // current mode indicator + pointer-lock hint
   const lockHint = $('lockhint'); let lastSig = '';
   function tick() { const locked = A.plc && A.plc.isLocked; const m2 = curMode(); const sig = m2 + locked + A.SIM.paused + A.getSel();
-    if (sig !== lastSig) { lastSig = sig; const m = m2, M = MODES[m] || [m, '']; $('modename').textContent = M[0]; $('modehint').textContent = '· ' + M[1]; document.querySelectorAll('#topbar [data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
+    if (sig !== lastSig) { lastSig = sig; const m = m2, M = MODES[m] || [m, '']; $('modename').textContent = M[0]; $('modehint').textContent = '· ' + M[1]; document.querySelectorAll('#topbar [data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === m)); { const b7 = document.getElementById('m7btn'); if (b7) b7.classList.toggle('on', m === 'follow'); } /* [CHOCO-UI1] mode-7 button lights up */
       lockHint.classList.toggle('hidden', !/^(walk|fly|ped)$/.test(m)); lockHint.innerHTML = locked ? 'Mouse captured · <b>Esc</b> to release' : '<b>Click</b> the view to look around (or drag) · <b>W A S D</b> to ' + (m === 'fly' ? 'fly' : 'walk');
       $('pause').innerHTML = (A.SIM.paused ? '&#9654;<span class="lb"> Run</span>' : '&#9208;<span class="lb"> Pause</span>') + '<kbd>P</kbd>'; $('pause').classList.toggle('on', A.SIM.paused); } }
   setInterval(tick, 150); tick();

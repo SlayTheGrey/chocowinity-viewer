@@ -113,3 +113,6 @@ button.primary{background:var(--acc)!important;border-color:var(--acc2)!importan
 
 /* [CHOCO-UI R4] small windows: stats/fps box moves to the top centre so it never touches the centred controls box */
 @media (max-width:1300px){#stats{top:92px!important;bottom:auto!important;right:auto!important;left:50%!important;transform:translateX(-50%)}}
+
+/* [CHOCO-UI1] fly/ped speed HUD wraps between the ops chip and the layout map on narrow screens */
+@media (max-width:1280px){#fphud{white-space:normal!important;max-width:400px;text-align:center;bottom:4px!important}}
