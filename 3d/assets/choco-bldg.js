@@ -160,3 +160,5 @@
   const lvOf = s => s._lv;
   L3D.chocoB = { has: s => !!keyOf(s) && LEVELS[STAGE[keyOf(s)] || 1], build: (bt, s, Y, ctx) => { window.__CB_BT = bt; window.__CB_Y = Y; const k = mk(bt, s, Y, ctx); W[keyOf(s)](k); k.rec.h = Math.max(...k.rec.parts.map(p => p.bb[5])); return k.rec.h; } };
 })();
+/* [CHOCO-STALLS 2026-10-31] HF horse stalls glb (mu-n-h00041): baked texture too dark (walls/roof rendered black); brighten at parse via external.js grade hook */
+(function () { const O = (window.L3D = window.L3D || {}).EXT_OVR = L3D.EXT_OVR || {}; O['mu-n-h00041'] = Object.assign({}, O['mu-n-h00041'] || {}, { grade: [1.0, 0.85, 2.0] }); })();
