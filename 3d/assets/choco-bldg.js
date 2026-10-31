@@ -162,3 +162,13 @@
 })();
 /* [CHOCO-STALLS 2026-10-31] HF horse stalls glb (mu-n-h00041): baked texture too dark (walls/roof rendered black); brighten at parse via external.js grade hook */
 (function () { const O = (window.L3D = window.L3D || {}).EXT_OVR = L3D.EXT_OVR || {}; O['mu-n-h00041'] = Object.assign({}, O['mu-n-h00041'] || {}, { grade: [1.0, 0.85, 2.0] }); })();
+
+/* [SCEN3-TEXVEH] parked GLB work trucks (hi-rail etc.) were drawn from the flattened, untextured instancing geometry and so rendered flat white.
+   Overlay: once the scene is ready, re-issue each such InstancedMesh through the textured E.instance path at the same matrices and empty the white one. */
+(function () { const IDS = ['veh-hirail', 'veh-tanker', 'veh-bulk-trailer', 'veh-flatbed', 'veh-autohauler', 'veh-grain-truck', 'veh-grain-straight'];
+  const run = () => { const E = L3D.ext, C = window.__choco; if (!E || !C || !E._g || !E.instance) return; const todo = [], M = new THREE.Matrix4();
+    C.scene.traverse(o => { if (!o.isInstancedMesh || o.userData.texveh) return; for (const id of IDS) if (E.has(id) && E._g[id] && o.geometry === E._g[id]) todo.push([o, id]); });
+    let n = 0; for (const [o, id] of todo) { const mats = []; for (let i = 0; i < o.count; i++) { o.getMatrixAt(i, M); mats.push(M.clone()); }
+      try { const r = E.instance(o.parent, id, mats, { cast: true }); [].concat(r || []).forEach(x => x && x.userData && (x.userData.texveh = 1)); o.count = 0; o.userData.texveh = 1; n += mats.length; } catch (e) { console.warn('SCEN3-TEXVEH', id, e); } }
+    window.__SCEN3_TEXVEH = n; };
+  const t = setInterval(() => { if (window.__layout3d && window.__layout3d.ready) { clearInterval(t); run(); } }, 400); })();
