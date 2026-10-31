@@ -264,9 +264,12 @@ const LIFE = (() => {
   /* [CHOCO-HFARM] BK.1 horse farm animals (L1, off Main St): paddock herd grazes and walks short legs inside the board fence; goats + chickens in the pen */
   { const pad = [13.85, 31.25, 20.35, 37.55], pen = [13.85, 41.2, 16.95, 42.4], G = r => grid(r, 0.3, 0.3) /* body length clear of the fence */;
     for (const [t, lb, o] of [['horse', 'bay horse (horse farm paddock)', { len: 0.6, w: 0.17, col: '#6b3e1f' }], ['horse', 'chestnut horse (horse farm paddock)', { len: 0.6, w: 0.17, col: '#8b4a22' }], ['horse', 'gray mare (horse farm paddock)', { len: 0.58, w: 0.17, col: '#a3a19b' }],
-      ['pony', 'pony (horse farm paddock)', { len: 0.42, w: 0.14, col: '#c9b48a' }], ['cow', 'Angus cow (horse farm paddock)', { len: 0.6, w: 0.22, col: '#1e1e1e' }]]) animal(1, t, G(pad), lb, Object.assign({ rect: pad, graze: 1 }, o));
+      ['horse', 'black gelding (horse farm paddock)', { len: 0.6, w: 0.17, col: '#1c1814' }], ['pony', 'pony (horse farm paddock)', { len: 0.42, w: 0.14, col: '#c9b48a' }], ['cow', 'Angus cow (horse farm paddock)', { len: 0.6, w: 0.22, col: '#1e1e1e' }]]) animal(1, t, G(pad), lb, Object.assign({ rect: pad, graze: 1 }, o));
     animal(1, 'goat', G(pen), 'goat (horse farm pen)', { n: 2, len: 0.3, w: 0.1, col: '#e2ddd0', rect: pen, graze: 1 });
-    animal(1, 'chicken', grid(pen, 0.2, 0), 'chicken (horse farm pen)', { n: 3, len: 0.1, w: 0.06, col: '#b5651d', rect: pen, graze: 1 }); }
+    animal(1, 'chicken', grid(pen, 0.2, 0), 'chicken (horse farm pen)', { n: 3, len: 0.1, w: 0.06, col: '#b5651d', rect: pen, graze: 1 });
+    /* [CHOCO-HFARM3] farm dog trots the barnyard + drive edge; barn cat dozes/wanders by the stable door (barnyard gravel, off Main St) */
+    { const yard = [13.7, 40.1, 17.1, 40.75]; animal(1, 'dog', grid(yard, 0.35, 0), 'farm dog (horse farm barnyard)', { len: 0.2, w: 0.08, col: '#2b2118', rect: yard });
+      animal(1, 'cat', grid([13.7, 40.05, 15.2, 40.4], 0.2, 0), 'barn cat (horse farm stable)', { len: 0.1, w: 0.04, col: '#8a7a66', rect: [13.7, 40.05, 15.2, 40.4], graze: 1 }); } }
 
   /* ================= stepping ================= */
   const scanCars = () => { CARS = { 1: [], 2: [] }; for (const c of eng.cuts) for (let i = 0; i < c.cars.length; i++) { const q = eng.carPose(c, i), lv = Math.round(q.level); if (CARS[lv] && Math.abs(q.level - lv) < 0.05) CARS[lv].push({ x: q.x, y: q.y, mv: Math.abs(c.v) > 0.05, cut: c, len: c.cars[i].len }); } lastScan = T; };
