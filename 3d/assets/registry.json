@@ -1,0 +1,3995 @@
+{
+ "format": "layout3d-asset-registry/1",
+ "units": "inches (N scale 1:160)",
+ "axes": "Y up, front = +Z, origin: structures at footprint corner (x 0..w, z 0..d); instanced at ground centre",
+ "count": 146,
+ "assets": {
+  "kato-s248": {
+   "id": "kato-s248",
+   "name": "Kato Unitrack S248 straight",
+   "cat": "track",
+   "kit": "20-000 [verify part no.]",
+   "verify": "yes",
+   "size_in": [
+    9.906,
+    0.289,
+    0.984
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 3576,
+   "ok": true,
+   "builder": "L3D.assets['kato-s248'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack S248 straight",
+    "kit": "20-000 [verify part no.]",
+    "dims_mm": [
+     248,
+     25,
+     6.4
+    ],
+    "dims_in": [
+     9.764,
+     0.984,
+     0.25
+    ]
+   },
+   "match": null
+  },
+  "kato-s186": {
+   "id": "kato-s186",
+   "name": "Kato Unitrack S186 straight",
+   "cat": "track",
+   "kit": "20-010 [verify part no.]",
+   "verify": "yes",
+   "size_in": [
+    7.465,
+    0.289,
+    0.984
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 2694,
+   "ok": true,
+   "builder": "L3D.assets['kato-s186'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack S186 straight",
+    "kit": "20-010 [verify part no.]",
+    "dims_mm": [
+     186,
+     25,
+     6.4
+    ],
+    "dims_in": [
+     7.323,
+     0.984,
+     0.25
+    ]
+   },
+   "match": null
+  },
+  "kato-s124": {
+   "id": "kato-s124",
+   "name": "Kato Unitrack S124 straight",
+   "cat": "track",
+   "kit": "20-020 [verify part no.]",
+   "verify": "yes",
+   "size_in": [
+    5.024,
+    0.289,
+    0.984
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 1848,
+   "ok": true,
+   "builder": "L3D.assets['kato-s124'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack S124 straight",
+    "kit": "20-020 [verify part no.]",
+    "dims_mm": [
+     124,
+     25,
+     6.4
+    ],
+    "dims_in": [
+     4.882,
+     0.984,
+     0.25
+    ]
+   },
+   "match": null
+  },
+  "kato-s64": {
+   "id": "kato-s64",
+   "name": "Kato Unitrack S64 straight",
+   "cat": "track",
+   "kit": "20-040 [verify part no.]",
+   "verify": "yes",
+   "size_in": [
+    2.661,
+    0.289,
+    0.984
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 1056,
+   "ok": true,
+   "builder": "L3D.assets['kato-s64'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack S64 straight",
+    "kit": "20-040 [verify part no.]",
+    "dims_mm": [
+     64,
+     25,
+     6.4
+    ],
+    "dims_in": [
+     2.52,
+     0.984,
+     0.25
+    ]
+   },
+   "match": null
+  },
+  "kato-s62": {
+   "id": "kato-s62",
+   "name": "Kato Unitrack S62 straight",
+   "cat": "track",
+   "kit": "20-030 [verify part no.]",
+   "verify": "yes",
+   "size_in": [
+    2.583,
+    0.289,
+    0.984
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 966,
+   "ok": true,
+   "builder": "L3D.assets['kato-s62'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack S62 straight",
+    "kit": "20-030 [verify part no.]",
+    "dims_mm": [
+     62,
+     25,
+     6.4
+    ],
+    "dims_in": [
+     2.441,
+     0.984,
+     0.25
+    ]
+   },
+   "match": null
+  },
+  "kato-s45": {
+   "id": "kato-s45",
+   "name": "Kato Unitrack S45 straight",
+   "cat": "track",
+   "kit": "20-042 [verify part no.]",
+   "verify": "yes",
+   "size_in": [
+    1.933,
+    0.289,
+    0.984
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 768,
+   "ok": true,
+   "builder": "L3D.assets['kato-s45'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack S45 straight",
+    "kit": "20-042 [verify part no.]",
+    "dims_mm": [
+     45.5,
+     25,
+     6.4
+    ],
+    "dims_in": [
+     1.791,
+     0.984,
+     0.25
+    ]
+   },
+   "match": null
+  },
+  "kato-s29": {
+   "id": "kato-s29",
+   "name": "Kato Unitrack S29 straight",
+   "cat": "track",
+   "kit": "20-045 [verify part no.]",
+   "verify": "yes",
+   "size_in": [
+    1.283,
+    0.289,
+    0.984
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 534,
+   "ok": true,
+   "builder": "L3D.assets['kato-s29'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack S29 straight",
+    "kit": "20-045 [verify part no.]",
+    "dims_mm": [
+     29,
+     25,
+     6.4
+    ],
+    "dims_in": [
+     1.142,
+     0.984,
+     0.25
+    ]
+   },
+   "match": null
+  },
+  "kato-r282-45": {
+   "id": "kato-r282-45",
+   "name": "Kato Unitrack R282-45 curve",
+   "cat": "track",
+   "kit": "20-100/20-110",
+   "verify": null,
+   "size_in": [
+    8.268,
+    0.289,
+    4.096
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 3216,
+   "ok": true,
+   "builder": "L3D.assets['kato-r282-45'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack R282-45 curve",
+    "kit": "20-100/20-110",
+    "dims_mm": [
+     282,
+     45
+    ],
+    "verify": false
+   },
+   "match": null
+  },
+  "kato-r282-15": {
+   "id": "kato-r282-15",
+   "name": "Kato Unitrack R282-15 curve",
+   "cat": "track",
+   "kit": "20-100/20-110",
+   "verify": null,
+   "size_in": [
+    3.066,
+    0.289,
+    1.348
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 1128,
+   "ok": true,
+   "builder": "L3D.assets['kato-r282-15'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack R282-15 curve",
+    "kit": "20-100/20-110",
+    "dims_mm": [
+     282,
+     15
+    ],
+    "verify": false
+   },
+   "match": null
+  },
+  "kato-r315-45": {
+   "id": "kato-r315-45",
+   "name": "Kato Unitrack R315-45 curve",
+   "cat": "track",
+   "kit": "20-120/20-130",
+   "verify": null,
+   "size_in": [
+    9.187,
+    0.289,
+    4.476
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 3540,
+   "ok": true,
+   "builder": "L3D.assets['kato-r315-45'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack R315-45 curve",
+    "kit": "20-120/20-130",
+    "dims_mm": [
+     315,
+     45
+    ],
+    "verify": false
+   },
+   "match": null
+  },
+  "kato-r315-15": {
+   "id": "kato-r315-15",
+   "name": "Kato Unitrack R315-15 curve",
+   "cat": "track",
+   "kit": "20-120/20-130",
+   "verify": null,
+   "size_in": [
+    3.405,
+    0.289,
+    1.391
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 1254,
+   "ok": true,
+   "builder": "L3D.assets['kato-r315-15'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack R315-15 curve",
+    "kit": "20-120/20-130",
+    "dims_mm": [
+     315,
+     15
+    ],
+    "verify": false
+   },
+   "match": null
+  },
+  "kato-r348-45": {
+   "id": "kato-r348-45",
+   "name": "Kato Unitrack R348-45 curve",
+   "cat": "track",
+   "kit": "20-140/20-141 [verify]",
+   "verify": true,
+   "size_in": [
+    10.105,
+    0.289,
+    4.856
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 3900,
+   "ok": true,
+   "builder": "L3D.assets['kato-r348-45'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack R348-45 curve",
+    "kit": "20-140/20-141 [verify]",
+    "dims_mm": [
+     348,
+     45
+    ],
+    "verify": true
+   },
+   "match": null
+  },
+  "kato-r348-15": {
+   "id": "kato-r348-15",
+   "name": "Kato Unitrack R348-15 curve",
+   "cat": "track",
+   "kit": "20-140/20-141 [verify]",
+   "verify": true,
+   "size_in": [
+    3.742,
+    0.289,
+    1.435
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 1416,
+   "ok": true,
+   "builder": "L3D.assets['kato-r348-15'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack R348-15 curve",
+    "kit": "20-140/20-141 [verify]",
+    "dims_mm": [
+     348,
+     15
+    ],
+    "verify": true
+   },
+   "match": null
+  },
+  "kato-r381-30": {
+   "id": "kato-r381-30",
+   "name": "Kato Unitrack R381-30 curve",
+   "cat": "track",
+   "kit": "20-150/20-151 [verify]",
+   "verify": true,
+   "size_in": [
+    7.813,
+    0.289,
+    2.931
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 2892,
+   "ok": true,
+   "builder": "L3D.assets['kato-r381-30'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack R381-30 curve",
+    "kit": "20-150/20-151 [verify]",
+    "dims_mm": [
+     381,
+     30
+    ],
+    "verify": true
+   },
+   "match": null
+  },
+  "kato-r381-15": {
+   "id": "kato-r381-15",
+   "name": "Kato Unitrack R381-15 curve",
+   "cat": "track",
+   "kit": "20-150/20-151 [verify]",
+   "verify": true,
+   "size_in": [
+    4.075,
+    0.289,
+    1.48
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 1488,
+   "ok": true,
+   "builder": "L3D.assets['kato-r381-15'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack R381-15 curve",
+    "kit": "20-150/20-151 [verify]",
+    "dims_mm": [
+     381,
+     15
+    ],
+    "verify": true
+   },
+   "match": null
+  },
+  "kato-r414-30": {
+   "id": "kato-r414-30",
+   "name": "Kato Unitrack R414-30 curve",
+   "cat": "track",
+   "kit": "20-152 [verify; not in every catalogue]",
+   "verify": true,
+   "size_in": [
+    8.465,
+    0.289,
+    3.104
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 3144,
+   "ok": true,
+   "builder": "L3D.assets['kato-r414-30'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack R414-30 curve",
+    "kit": "20-152 [verify; not in every catalogue]",
+    "dims_mm": [
+     414,
+     30
+    ],
+    "verify": true
+   },
+   "match": null
+  },
+  "kato-r414-15": {
+   "id": "kato-r414-15",
+   "name": "Kato Unitrack R414-15 curve",
+   "cat": "track",
+   "kit": "20-152 [verify; not in every catalogue]",
+   "verify": true,
+   "size_in": [
+    4.414,
+    0.289,
+    1.524
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 1614,
+   "ok": true,
+   "builder": "L3D.assets['kato-r414-15'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack R414-15 curve",
+    "kit": "20-152 [verify; not in every catalogue]",
+    "dims_mm": [
+     414,
+     15
+    ],
+    "verify": true
+   },
+   "match": null
+  },
+  "kato-r481-15": {
+   "id": "kato-r481-15",
+   "name": "Kato Unitrack R481-15 curve",
+   "cat": "track",
+   "kit": "20-160",
+   "verify": null,
+   "size_in": [
+    5.095,
+    0.289,
+    1.614
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 1848,
+   "ok": true,
+   "builder": "L3D.assets['kato-r481-15'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack R481-15 curve",
+    "kit": "20-160",
+    "dims_mm": [
+     481,
+     15
+    ],
+    "verify": false
+   },
+   "match": null
+  },
+  "kato-r718-15": {
+   "id": "kato-r718-15",
+   "name": "Kato Unitrack R718-15 curve",
+   "cat": "track",
+   "kit": "20-170",
+   "verify": null,
+   "size_in": [
+    7.512,
+    0.289,
+    1.932
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 2730,
+   "ok": true,
+   "builder": "L3D.assets['kato-r718-15'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack R718-15 curve",
+    "kit": "20-170",
+    "dims_mm": [
+     718,
+     15
+    ],
+    "verify": false
+   },
+   "match": null
+  },
+  "kato-20-202": {
+   "id": "kato-20-202",
+   "name": "Kato Unitrack 20-202 #6 turnout left",
+   "cat": "track",
+   "kit": "20-202",
+   "verify": null,
+   "size_in": [
+    7.444,
+    0.289,
+    2.108
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 4572,
+   "ok": true,
+   "builder": "L3D.assets['kato-20-202'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack 20-202 #6 turnout left",
+    "kit": "20-202",
+    "dims_mm": [
+     186,
+     "R718-15"
+    ],
+    "note": "points, closure rails, frog casting, wing + guard rails, throw bar, switch-machine housing"
+   },
+   "match": null
+  },
+  "kato-20-203": {
+   "id": "kato-20-203",
+   "name": "Kato Unitrack 20-203 #6 turnout right",
+   "cat": "track",
+   "kit": "20-203",
+   "verify": null,
+   "size_in": [
+    7.444,
+    0.289,
+    2.136
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 4572,
+   "ok": true,
+   "builder": "L3D.assets['kato-20-203'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack 20-203 #6 turnout right",
+    "kit": "20-203",
+    "dims_mm": [
+     186,
+     "R718-15"
+    ],
+    "note": "points, closure rails, frog casting, wing + guard rails, throw bar, switch-machine housing"
+   },
+   "match": null
+  },
+  "kato-20-220": {
+   "id": "kato-20-220",
+   "name": "Kato Unitrack 20-220 #4 turnout left",
+   "cat": "track",
+   "kit": "20-220",
+   "verify": null,
+   "size_in": [
+    5.029,
+    0.289,
+    1.79
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 3986,
+   "ok": true,
+   "builder": "L3D.assets['kato-20-220'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack 20-220 #4 turnout left",
+    "kit": "20-220",
+    "dims_mm": [
+     126,
+     "R481-15"
+    ],
+    "note": "points, closure rails, frog casting, wing + guard rails, throw bar, switch-machine housing"
+   },
+   "match": null
+  },
+  "kato-20-221": {
+   "id": "kato-20-221",
+   "name": "Kato Unitrack 20-221 #4 turnout right",
+   "cat": "track",
+   "kit": "20-221",
+   "verify": null,
+   "size_in": [
+    5.029,
+    0.289,
+    1.818
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 3986,
+   "ok": true,
+   "builder": "L3D.assets['kato-20-221'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack 20-221 #4 turnout right",
+    "kit": "20-221",
+    "dims_mm": [
+     126,
+     "R481-15"
+    ],
+    "note": "points, closure rails, frog casting, wing + guard rails, throw bar, switch-machine housing"
+   },
+   "match": null
+  },
+  "kato-20-048": {
+   "id": "kato-20-048",
+   "name": "Kato Unitrack bumper (20-048)",
+   "cat": "track",
+   "kit": "20-048 [verify: Bumper C / Type A]",
+   "verify": "yes",
+   "size_in": [
+    2.441,
+    0.35,
+    0.984
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 220,
+   "ok": true,
+   "builder": "L3D.assets['kato-20-048'].build(batch, P)",
+   "meta": {
+    "cat": "track",
+    "name": "Kato Unitrack bumper (20-048)",
+    "kit": "20-048 [verify: Bumper C / Type A]",
+    "dims_mm": [
+     62,
+     25,
+     10
+    ]
+   },
+   "match": null
+  },
+  "walthers-933-3850": {
+   "id": "walthers-933-3850",
+   "name": "Walthers Cornerstone Merchant's Row I",
+   "cat": "structure",
+   "kit": "933-3850",
+   "verify": "height",
+   "size_in": [
+    7.493,
+    2.288,
+    3.597
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 398,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3850'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Merchant's Row I",
+    "kit": "933-3850",
+    "dims_in": [
+     7.5,
+     3.5,
+     2.6
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3850",
+    "merchant's row i\\b(?!i)"
+   ]
+  },
+  "walthers-933-3224": {
+   "id": "walthers-933-3224",
+   "name": "Walthers Cornerstone Merchant's Row II",
+   "cat": "structure",
+   "kit": "933-3224",
+   "verify": "height",
+   "size_in": [
+    6.391,
+    3.642,
+    4.053
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 398,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3224'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Merchant's Row II",
+    "kit": "933-3224",
+    "dims_in": [
+     6.25,
+     3.5,
+     2.4
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3224",
+    "merchant's row ii\\b"
+   ]
+  },
+  "walthers-933-3851": {
+   "id": "walthers-933-3851",
+   "name": "Walthers Cornerstone Merchant's Row III",
+   "cat": "structure",
+   "kit": "933-3851",
+   "verify": "height",
+   "size_in": [
+    6.65,
+    2.854,
+    4.06
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 398,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3851'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Merchant's Row III",
+    "kit": "933-3851",
+    "dims_in": [
+     6.375,
+     3.875,
+     2.6
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3851",
+    "merchant's row iii"
+   ]
+  },
+  "walthers-933-3858": {
+   "id": "walthers-933-3858",
+   "name": "Walthers Cornerstone Brick Church",
+   "cat": "structure",
+   "kit": "933-3858",
+   "verify": "footprint and height [EST in plan]",
+   "size_in": [
+    2.707,
+    6.447,
+    4.891
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 62,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3858'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Brick Church",
+    "kit": "933-3858",
+    "dims_in": [
+     3.5,
+     3.8,
+     2.2
+    ],
+    "height_steeple_in": 5.6,
+    "verify": "footprint and height [EST in plan]"
+   },
+   "match": [
+    "933-3858",
+    "church"
+   ]
+  },
+  "walthers-933-3263": {
+   "id": "walthers-933-3263",
+   "name": "Walthers Cornerstone Parkview Terrace (2-flat)",
+   "cat": "structure",
+   "kit": "933-3263",
+   "verify": "all",
+   "size_in": [
+    4.734,
+    3.594,
+    1.647
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 170,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3263'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Parkview Terrace (2-flat)",
+    "kit": "933-3263",
+    "dims_in": [
+     2.6,
+     3.4,
+     2
+    ],
+    "verify": "all"
+   },
+   "match": [
+    "933-3263",
+    "parkview"
+   ]
+  },
+  "walthers-933-3885": {
+   "id": "walthers-933-3885",
+   "name": "Walthers Cornerstone Modern Gas Station",
+   "cat": "structure",
+   "kit": "933-3885",
+   "verify": "height",
+   "size_in": [
+    6.004,
+    1.833,
+    4.921
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 228,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3885'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Modern Gas Station",
+    "kit": "933-3885",
+    "dims_in": [
+     5.75,
+     3.625,
+     1.2
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3885",
+    "gas station",
+    "65-139"
+   ]
+  },
+  "walthers-933-3891": {
+   "id": "walthers-933-3891",
+   "name": "Walthers Cornerstone Modern Shopping Center I",
+   "cat": "structure",
+   "kit": "933-3891",
+   "verify": "height",
+   "size_in": [
+    6.275,
+    2.092,
+    3.596
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 228,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3891'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Modern Shopping Center I",
+    "kit": "933-3891",
+    "dims_in": [
+     6.25,
+     3,
+     1.1
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3891",
+    "shopping center",
+    "grocery"
+   ]
+  },
+  "walthers-933-3239": {
+   "id": "walthers-933-3239",
+   "name": "Walthers Cornerstone Sunrise Feed Mill",
+   "cat": "structure",
+   "kit": "933-3239",
+   "verify": "height",
+   "size_in": [
+    9.178,
+    4.318,
+    3.711
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 830,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3239'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Sunrise Feed Mill",
+    "kit": "933-3239",
+    "dims_in": [
+     9,
+     2.4,
+     4.4
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3239",
+    "feed mill",
+    "farm supply",
+    "ag feed"
+   ]
+  },
+  "walthers-933-3235": {
+   "id": "walthers-933-3235",
+   "name": "Walthers Cornerstone Lumber & Millwork",
+   "cat": "structure",
+   "kit": "933-3235",
+   "verify": "height",
+   "size_in": [
+    5.669,
+    2.288,
+    5.719
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 162,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3235'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Lumber & Millwork",
+    "kit": "933-3235",
+    "dims_in": [
+     5.5,
+     5.5,
+     1.6
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3235",
+    "lumber"
+   ]
+  },
+  "walthers-933-3856": {
+   "id": "walthers-933-3856",
+   "name": "Walthers Cornerstone Coastal Steel Service (steel service center)",
+   "cat": "structure",
+   "kit": "933-3856 [verify kit no.]",
+   "verify": "height",
+   "size_in": [
+    10.554,
+    2.633,
+    6.939
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 160,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3856'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Coastal Steel Service (steel service center)",
+    "kit": "933-3856 [verify kit no.]",
+    "dims_in": [
+     10.5,
+     6.31,
+     3.2
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3856",
+    "coastal steel",
+    "pamlico steel"
+   ]
+  },
+  "walthers-933-3233": {
+   "id": "walthers-933-3233",
+   "name": "Riverton Pipe & Steel (kitbash pipe yard; not kit 933-3233)",
+   "cat": "structure",
+   "kit": "kitbash [RV2: HANDOFF 11e]",
+   "verify": "kit identity and height",
+   "size_in": [
+    5.812,
+    2.646,
+    6.02
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 632,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3233'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Riverton Pipe & Steel (Walthers 933-3233 [verify] / 933-3855 yard)",
+    "kit": "933-3233 / 933-3855 [verify]",
+    "dims_in": [
+     5.6,
+     5.7,
+     2.4
+    ],
+    "verify": "kit identity and height"
+   },
+   "match": [
+    "933-3233",
+    "pipe & steel"
+   ]
+  },
+  "walthers-933-3854": {
+   "id": "walthers-933-3854",
+   "name": "Walthers Cornerstone transload sheds + office (933-3854)",
+   "cat": "structure",
+   "kit": "933-3854 [verify name]",
+   "verify": "all",
+   "size_in": [
+    6.225,
+    1.666,
+    2.953
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 110,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3854'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone transload sheds + office (933-3854)",
+    "kit": "933-3854 [verify name]",
+    "dims_in": [
+     4,
+     2,
+     1.2
+    ],
+    "verify": "all"
+   },
+   "match": [
+    "933-3854",
+    "transload",
+    "building supply"
+   ]
+  },
+  "walthers-933-3860": {
+   "id": "walthers-933-3860",
+   "name": "Walthers Cornerstone Prairie Co-op grain elevator",
+   "cat": "structure",
+   "kit": "933-3860",
+   "verify": "height",
+   "size_in": [
+    5.29,
+    7.677,
+    3.82
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 68,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3860'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Prairie Co-op grain elevator",
+    "kit": "933-3860",
+    "dims_in": [
+     5.1875,
+     3.1875,
+     6.2
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3860",
+    "co-op",
+    "grain elevator",
+    "prairie"
+   ]
+  },
+  "walthers-933-3861": {
+   "id": "walthers-933-3861",
+   "name": "Walthers Cornerstone Down East Beverage distributor (933-3861)",
+   "cat": "structure",
+   "kit": "933-3861 [verify name]",
+   "verify": "height",
+   "size_in": [
+    10.568,
+    2.596,
+    5.561
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 232,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3861'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Down East Beverage distributor (933-3861)",
+    "kit": "933-3861 [verify name]",
+    "dims_in": [
+     10.6,
+     4.7,
+     1.9
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3861",
+    "beverage"
+   ]
+  },
+  "walthers-933-3862": {
+   "id": "walthers-933-3862",
+   "name": "Walthers Cornerstone Riverton Packaging (box plant, 933-3862)",
+   "cat": "structure",
+   "kit": "933-3862 [verify name]",
+   "verify": "height",
+   "size_in": [
+    11.964,
+    3.556,
+    9.646
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 394,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3862'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Riverton Packaging (box plant, 933-3862)",
+    "kit": "933-3862 [verify name]",
+    "dims_in": [
+     12,
+     6.75,
+     2.6
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3862",
+    "packaging",
+    "box co"
+   ]
+  },
+  "walthers-933-3863": {
+   "id": "walthers-933-3863",
+   "name": "Walthers Cornerstone UPS Hub (933-3863)",
+   "cat": "structure",
+   "kit": "933-3863",
+   "verify": "height",
+   "size_in": [
+    8.0,
+    3.189,
+    6.5
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 760,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3863'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone UPS Hub (933-3863)",
+    "kit": "933-3863",
+    "dims_in": [
+     12,
+     6.5,
+     1.9
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3863",
+    "ups"
+   ],
+   "size_src": "registry-sizes.json"
+  },
+  "walthers-933-3864": {
+   "id": "walthers-933-3864",
+   "name": "Walthers Cornerstone cold storage (Tidewater Foods kitbash, 933-3864)",
+   "cat": "structure",
+   "kit": "933-3864 [verify name]",
+   "verify": "height",
+   "size_in": [
+    11.967,
+    3.151,
+    6.734
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 716,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3864'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone cold storage (Tidewater Foods kitbash, 933-3864)",
+    "kit": "933-3864 [verify name]",
+    "dims_in": [
+     12,
+     3.75,
+     3
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3864",
+    "tidewater foods",
+    "cold storage"
+   ]
+  },
+  "walthers-933-3218": {
+   "id": "walthers-933-3218",
+   "name": "Walthers Cornerstone Medusa Cement terminal",
+   "cat": "structure",
+   "kit": "933-3218",
+   "verify": "height",
+   "size_in": [
+    5.758,
+    8.169,
+    4.626
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 720,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3218'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Medusa Cement terminal",
+    "kit": "933-3218",
+    "dims_in": [
+     5.375,
+     4.5,
+     6
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3218",
+    "medusa",
+    "cement"
+   ]
+  },
+  "walthers-933-3222": {
+   "id": "walthers-933-3222",
+   "name": "Walthers Cornerstone Mi-Jack Translift crane",
+   "cat": "structure",
+   "kit": "933-3222",
+   "verify": "height",
+   "size_in": [
+    4.493,
+    3.007,
+    3.317
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 132,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3222'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Mi-Jack Translift crane",
+    "kit": "933-3222",
+    "dims_in": [
+     4,
+     3.125,
+     3.6
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3222",
+    "mi-jack"
+   ]
+  },
+  "walthers-933-3200": {
+   "id": "walthers-933-3200",
+   "name": "Walthers Cornerstone Interstate Fuel & Oil loading rack",
+   "cat": "structure",
+   "kit": "933-3200",
+   "verify": "height",
+   "size_in": [
+    3.74,
+    2.58,
+    2.14
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 788,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3200'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Interstate Fuel & Oil loading rack",
+    "kit": "933-3200",
+    "dims_in": [
+     3.74,
+     2.58,
+     2.14
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3200",
+    "fuel & oil",
+    "tank farm rack"
+   ]
+  },
+  "walthers-933-3265": {
+   "id": "walthers-933-3265",
+   "name": "Walthers Cornerstone storage tanks",
+   "cat": "structure",
+   "kit": "933-3265 [verify]",
+   "verify": "all",
+   "size_in": [
+    2.325,
+    2.253,
+    2.325
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 328,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3265'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone storage tanks",
+    "kit": "933-3265 [verify]",
+    "dims_in": [
+     2.125,
+     2.125,
+     2
+    ],
+    "verify": "all"
+   },
+   "match": [
+    "933-3265",
+    "933-3893",
+    "tank farm",
+    "storage tank"
+   ]
+  },
+  "walthers-933-3258": {
+   "id": "walthers-933-3258",
+   "name": "Walthers Cornerstone Butterfly station platform (per section)",
+   "cat": "structure",
+   "kit": "933-3258",
+   "verify": "height",
+   "size_in": [
+    6.531,
+    1.23,
+    1.344
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 88,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3258'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone Butterfly station platform (per section)",
+    "kit": "933-3258",
+    "dims_in": [
+     6.13,
+     1.25,
+     1.1
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "933-3258",
+    "butterfly",
+    "platform"
+   ]
+  },
+  "walthers-933-3812": {
+   "id": "walthers-933-3812",
+   "name": "Walthers Cornerstone water tower [verify kit no.]",
+   "cat": "structure",
+   "kit": "933-3812 [verify]",
+   "verify": "kit no. and dims",
+   "size_in": [
+    2.461,
+    7.001,
+    2.461
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 1122,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3812'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone water tower [verify kit no.]",
+    "kit": "933-3812 [verify]",
+    "dims_in": [
+     2.2,
+     2.2,
+     5.5
+    ],
+    "verify": "kit no. and dims"
+   },
+   "match": [
+    "933-3812",
+    "water tower"
+   ]
+  },
+  "walthers-933-3268": {
+   "id": "walthers-933-3268",
+   "name": "Walthers Cornerstone truck/rail docks",
+   "cat": "structure",
+   "kit": "933-3268 [verify]",
+   "verify": "all",
+   "size_in": [
+    4.528,
+    1.836,
+    3.253
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 132,
+   "ok": true,
+   "builder": "L3D.assets['walthers-933-3268'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Walthers Cornerstone truck/rail docks",
+    "kit": "933-3268 [verify]",
+    "dims_in": [
+     6,
+     1,
+     0.3
+    ],
+    "verify": "all"
+   },
+   "match": [
+    "933-3268",
+    "truck dock"
+   ]
+  },
+  "ws-br4956": {
+   "id": "ws-br4956",
+   "name": "Woodland Scenics BR4956 Miss Molly's Diner",
+   "cat": "structure",
+   "kit": "BR4956",
+   "verify": "height",
+   "size_in": [
+    2.805,
+    1.476,
+    2.522
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 156,
+   "ok": true,
+   "builder": "L3D.assets['ws-br4956'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Woodland Scenics BR4956 Miss Molly's Diner",
+    "kit": "BR4956",
+    "dims_in": [
+     2.75,
+     2.4,
+     0.95
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "br4956",
+    "diner",
+    "grill"
+   ]
+  },
+  "mu-n-h00041": {
+   "id": "mu-n-h00041",
+   "name": "Modellbahn Union N-H00041 horse stable",
+   "cat": "structure",
+   "kit": "N-H00041",
+   "verify": "height",
+   "size_in": [
+    3.962,
+    1.292,
+    1.88
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 26,
+   "ok": true,
+   "builder": "L3D.assets['mu-n-h00041'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Modellbahn Union N-H00041 horse stable",
+    "kit": "N-H00041",
+    "dims_mm": [
+     95,
+     42
+    ],
+    "dims_in": [
+     3.74,
+     1.65,
+     1.5
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "n-h00041",
+    "stable"
+   ]
+  },
+  "isle-grain-bins": {
+   "id": "isle-grain-bins",
+   "name": "Iowa Scaled Engineering grain bins (corrugated, cone roof)",
+   "cat": "structure",
+   "kit": "Iowa Scaled Engineering N grain bin [verify part no.]",
+   "verify": "diameter/height",
+   "size_in": [
+    2.361,
+    2.6,
+    2.126
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 340,
+   "ok": true,
+   "builder": "L3D.assets['isle-grain-bins'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Iowa Scaled Engineering grain bins (corrugated, cone roof)",
+    "kit": "Iowa Scaled Engineering N grain bin [verify part no.]",
+    "dims_in": [
+     1.8,
+     1.8,
+     2
+    ],
+    "verify": "diameter/height"
+   },
+   "match": [
+    "iowa scaled",
+    "grain bin",
+    "bins"
+   ]
+  },
+  "dpm-51300": {
+   "id": "dpm-51300",
+   "name": "DPM 51300 Corner Turret Building",
+   "cat": "structure",
+   "kit": "DPM 51300",
+   "verify": "all",
+   "size_in": [
+    3.15,
+    3.31,
+    2.288
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 164,
+   "ok": true,
+   "builder": "L3D.assets['dpm-51300'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "DPM 51300 Corner Turret Building",
+    "kit": "DPM 51300",
+    "dims_in": [
+     2.4,
+     2.4,
+     2.3
+    ],
+    "verify": "all"
+   },
+   "match": [
+    "51300",
+    "turret",
+    "bank"
+   ]
+  },
+  "dpm-50200": {
+   "id": "dpm-50200",
+   "name": "DPM 50200 storefront (Pamlico Grocery) [verify kit]",
+   "cat": "structure",
+   "kit": "DPM 50200 [verify]",
+   "verify": "kit identity and dims",
+   "size_in": [
+    2.584,
+    2.51,
+    3.393
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 134,
+   "ok": true,
+   "builder": "L3D.assets['dpm-50200'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "DPM 50200 storefront (Pamlico Grocery) [verify kit]",
+    "kit": "DPM 50200 [verify]",
+    "dims_in": [
+     2.5,
+     3,
+     1.5
+    ],
+    "verify": "kit identity and dims"
+   },
+   "match": [
+    "50200"
+   ]
+  },
+  "dpm-modulars": {
+   "id": "dpm-modulars",
+   "name": "DPM Modulars low-relief wall (60103/60122/60132)",
+   "cat": "structure",
+   "kit": "DPM 60103 + 60122 + 60132",
+   "verify": "height",
+   "size_in": [
+    3.457,
+    3.324,
+    0.591
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 78,
+   "ok": true,
+   "builder": "L3D.assets['dpm-modulars'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "DPM Modulars low-relief wall (60103/60122/60132)",
+    "kit": "DPM 60103 + 60122 + 60132",
+    "dims_in": [
+     4,
+     0.4,
+     1.8
+    ],
+    "verify": "height"
+   },
+   "match": [
+    "modulars",
+    "60103",
+    "60122"
+   ]
+  },
+  "kitbash-polymers": {
+   "id": "kitbash-polymers",
+   "name": "Pamlico Polymers plastic-pellet silos + vacuum unloader (kitbash)",
+   "cat": "structure",
+   "kit": "kitbash [EST]",
+   "verify": "all",
+   "size_in": [
+    14.075,
+    5.191,
+    2.977
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 2030,
+   "ok": true,
+   "builder": "L3D.assets['kitbash-polymers'].build(batch, P)",
+   "meta": {
+    "cat": "structure",
+    "name": "Pamlico Polymers plastic-pellet silos + vacuum unloader (kitbash)",
+    "kit": "kitbash [EST]",
+    "dims_in": [
+     14,
+     3.5,
+     5.4
+    ],
+    "verify": "all"
+   },
+   "match": [
+    "polymers"
+   ]
+  },
+  "gen-store": {
+   "id": "gen-store",
+   "name": "Generic storefront (parameterized by footprint)",
+   "cat": "structure-generic",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    1.882,
+    2.215,
+    4.799
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 184,
+   "ok": true,
+   "builder": "L3D.assets['gen-store'].build(batch, P)",
+   "meta": {
+    "cat": "structure-generic",
+    "name": "Generic storefront (parameterized by footprint)",
+    "kind": "store"
+   },
+   "match": null
+  },
+  "gen-office": {
+   "id": "gen-office",
+   "name": "Generic office (parameterized by footprint)",
+   "cat": "structure-generic",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    4.983,
+    2.215,
+    4.674
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 186,
+   "ok": true,
+   "builder": "L3D.assets['gen-office'].build(batch, P)",
+   "meta": {
+    "cat": "structure-generic",
+    "name": "Generic office (parameterized by footprint)",
+    "kind": "office"
+   },
+   "match": null
+  },
+  "gen-warehouse": {
+   "id": "gen-warehouse",
+   "name": "Generic warehouse (parameterized by footprint)",
+   "cat": "structure-generic",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    7.384,
+    1.993,
+    5.918
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 98,
+   "ok": true,
+   "builder": "L3D.assets['gen-warehouse'].build(batch, P)",
+   "meta": {
+    "cat": "structure-generic",
+    "name": "Generic warehouse (parameterized by footprint)",
+    "kind": "warehouse"
+   },
+   "match": null
+  },
+  "gen-plant": {
+   "id": "gen-plant",
+   "name": "Generic plant (parameterized by footprint)",
+   "cat": "structure-generic",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    11.036,
+    5.413,
+    6.705
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 332,
+   "ok": true,
+   "builder": "L3D.assets['gen-plant'].build(batch, P)",
+   "meta": {
+    "cat": "structure-generic",
+    "name": "Generic plant (parameterized by footprint)",
+    "kind": "plant"
+   },
+   "match": null
+  },
+  "gen-house": {
+   "id": "gen-house",
+   "name": "Generic house (parameterized by footprint)",
+   "cat": "structure-generic",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.682,
+    1.919,
+    2.891
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 76,
+   "ok": true,
+   "builder": "L3D.assets['gen-house'].build(batch, P)",
+   "meta": {
+    "cat": "structure-generic",
+    "name": "Generic house (parameterized by footprint)",
+    "kind": "house"
+   },
+   "match": null
+  },
+  "gen-church": {
+   "id": "gen-church",
+   "name": "Generic church (parameterized by footprint)",
+   "cat": "structure-generic",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.461,
+    5.18,
+    4.909
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 62,
+   "ok": true,
+   "builder": "L3D.assets['gen-church'].build(batch, P)",
+   "meta": {
+    "cat": "structure-generic",
+    "name": "Generic church (parameterized by footprint)",
+    "kind": "church"
+   },
+   "match": null
+  },
+  "gen-barn": {
+   "id": "gen-barn",
+   "name": "Generic barn (parameterized by footprint)",
+   "cat": "structure-generic",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    4.225,
+    4.011,
+    5.463
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 14,
+   "ok": true,
+   "builder": "L3D.assets['gen-barn'].build(batch, P)",
+   "meta": {
+    "cat": "structure-generic",
+    "name": "Generic barn (parameterized by footprint)",
+    "kind": "barn"
+   },
+   "match": null
+  },
+  "gen-shed": {
+   "id": "gen-shed",
+   "name": "Generic shed (parameterized by footprint)",
+   "cat": "structure-generic",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    1.624,
+    0.923,
+    1.28
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 14,
+   "ok": true,
+   "builder": "L3D.assets['gen-shed'].build(batch, P)",
+   "meta": {
+    "cat": "structure-generic",
+    "name": "Generic shed (parameterized by footprint)",
+    "kind": "shed"
+   },
+   "match": null
+  },
+  "gen-station": {
+   "id": "gen-station",
+   "name": "Generic depot (parameterized by footprint)",
+   "cat": "structure-generic",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    5.413,
+    1.796,
+    2.879
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 14,
+   "ok": true,
+   "builder": "L3D.assets['gen-station'].build(batch, P)",
+   "meta": {
+    "cat": "structure-generic",
+    "name": "Generic depot (parameterized by footprint)",
+    "kind": "station"
+   },
+   "match": null
+  },
+  "gen-gin": {
+   "id": "gen-gin",
+   "name": "Generic cotton gin (parameterized by footprint)",
+   "cat": "structure-generic",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    11.405,
+    4.22,
+    6.447
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 226,
+   "ok": true,
+   "builder": "L3D.assets['gen-gin'].build(batch, P)",
+   "meta": {
+    "cat": "structure-generic",
+    "name": "Generic cotton gin (parameterized by footprint)",
+    "kind": "gin"
+   },
+   "match": null
+  },
+  "gen-silo": {
+   "id": "gen-silo",
+   "name": "Generic silo (parameterized by footprint)",
+   "cat": "structure-generic",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    1.845,
+    5.217,
+    2.473
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 396,
+   "ok": true,
+   "builder": "L3D.assets['gen-silo'].build(batch, P)",
+   "meta": {
+    "cat": "structure-generic",
+    "name": "Generic silo (parameterized by footprint)",
+    "kind": "silo"
+   },
+   "match": null
+  },
+  "gen-tanks": {
+   "id": "gen-tanks",
+   "name": "Generic tanks (parameterized by footprint)",
+   "cat": "structure-generic",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    5.906,
+    2.621,
+    3.199
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 328,
+   "ok": true,
+   "builder": "L3D.assets['gen-tanks'].build(batch, P)",
+   "meta": {
+    "cat": "structure-generic",
+    "name": "Generic tanks (parameterized by footprint)",
+    "kind": "tanks"
+   },
+   "match": null
+  },
+  "gen-watertower": {
+   "id": "gen-watertower",
+   "name": "Generic water tower (parameterized by footprint)",
+   "cat": "structure-generic",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.275,
+    7.247,
+    2.239
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 1120,
+   "ok": true,
+   "builder": "L3D.assets['gen-watertower'].build(batch, P)",
+   "meta": {
+    "cat": "structure-generic",
+    "name": "Generic water tower (parameterized by footprint)",
+    "kind": "watertower"
+   },
+   "match": null
+  },
+  "gen-minor": {
+   "id": "gen-minor",
+   "name": "Generic minor detail (parameterized by footprint)",
+   "cat": "structure-generic",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.215,
+    0.728,
+    1.797
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 12,
+   "ok": true,
+   "builder": "L3D.assets['gen-minor'].build(batch, P)",
+   "meta": {
+    "cat": "structure-generic",
+    "name": "Generic minor detail (parameterized by footprint)",
+    "kind": "minor"
+   },
+   "match": null
+  },
+  "tree-oak": {
+   "id": "tree-oak",
+   "name": "Deciduous tree (oak, broad crown)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    4.272,
+    4.911,
+    4.524
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 264,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Deciduous tree (oak, broad crown)",
+    "h_in": [
+     3,
+     4.5
+    ],
+    "note": "40-60 ft"
+   },
+   "match": null
+  },
+  "tree-maple": {
+   "id": "tree-maple",
+   "name": "Deciduous tree (maple/sweetgum, upright)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.738,
+    4.34,
+    3.016
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 184,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Deciduous tree (maple/sweetgum, upright)",
+    "h_in": [
+     3,
+     4.5
+    ]
+   },
+   "match": null
+  },
+  "tree-young": {
+   "id": "tree-young",
+   "name": "Young hardwood / understory",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.911,
+    1.581,
+    0.925
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 104,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Young hardwood / understory",
+    "h_in": [
+     1.5,
+     2.5
+    ]
+   },
+   "match": null
+  },
+  "tree-pine": {
+   "id": "tree-pine",
+   "name": "Loblolly pine (tall bare trunk, high crown)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.536,
+    6.624,
+    2.563
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 204,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Loblolly pine (tall bare trunk, high crown)",
+    "h_in": [
+     4.1,
+     6
+    ],
+    "note": "55-80 ft"
+   },
+   "match": null
+  },
+  "tree-cedar": {
+   "id": "tree-cedar",
+   "name": "Eastern red cedar / conifer cone",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    1.218,
+    2.457,
+    1.166
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 72,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Eastern red cedar / conifer cone",
+    "h_in": [
+     2,
+     3.5
+    ]
+   },
+   "match": null
+  },
+  "tree-cypress": {
+   "id": "tree-cypress",
+   "name": "Bald cypress (swamp, flared base)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    1.981,
+    5.683,
+    2.354
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 104,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Bald cypress (swamp, flared base)",
+    "h_in": [
+     3.5,
+     5
+    ]
+   },
+   "match": null
+  },
+  "bush": {
+   "id": "bush",
+   "name": "Bush / shrub",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.386,
+    0.326,
+    0.455
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 100,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Bush / shrub",
+    "h_in": [
+     0.3,
+     0.6
+    ]
+   },
+   "match": null
+  },
+  "hedge": {
+   "id": "hedge",
+   "name": "Hedgerow segment",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    1.268,
+    0.625,
+    0.52
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 80,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Hedgerow segment",
+    "h_in": [
+     0.5,
+     0.8
+    ]
+   },
+   "match": null
+  },
+  "grass-tuft": {
+   "id": "grass-tuft",
+   "name": "Grass / weed tuft",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.091,
+    0.146,
+    0.093
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 27,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Grass / weed tuft",
+    "h_in": [
+     0.08,
+     0.15
+    ]
+   },
+   "match": null
+  },
+  "reed": {
+   "id": "reed",
+   "name": "Marsh reeds",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.228,
+    0.348,
+    0.223
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 21,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Marsh reeds",
+    "h_in": [
+     0.2,
+     0.4
+    ]
+   },
+   "match": null
+  },
+  "utility-pole": {
+   "id": "utility-pole",
+   "name": "Wood utility pole (35 ft) with crossarm + insulators",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.086,
+    2.239,
+    0.6
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 128,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Wood utility pole (35 ft) with crossarm + insulators",
+    "h_in": [
+     2.6
+    ]
+   },
+   "match": null
+  },
+  "streetlight": {
+   "id": "streetlight",
+   "name": "Cobra-head streetlight (25 ft)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.814,
+    1.933,
+    0.147
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 60,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Cobra-head streetlight (25 ft)",
+    "h_in": [
+     1.9
+    ]
+   },
+   "match": null
+  },
+  "ns-signal": {
+   "id": "ns-signal",
+   "name": "NS-style searchlight/tri-light mast signal",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.271,
+    1.745,
+    0.25
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 192,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "NS-style searchlight/tri-light mast signal",
+    "h_in": [
+     2
+    ]
+   },
+   "match": null
+  },
+  "crossbuck": {
+   "id": "crossbuck",
+   "name": "Crossbuck with flashers",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.453,
+    1.12,
+    0.207
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 140,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Crossbuck with flashers",
+    "h_in": [
+     1
+    ]
+   },
+   "match": null
+  },
+  "crossing-gate": {
+   "id": "crossing-gate",
+   "name": "Crossing gate mechanism + arm (lowered)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.238,
+    1.12,
+    0.207
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 84,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Crossing gate mechanism + arm (lowered)",
+    "h_in": [
+     1
+    ]
+   },
+   "match": null
+  },
+  "relay-hut": {
+   "id": "relay-hut",
+   "name": "Signal relay hut / bungalow",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.886,
+    1.132,
+    0.763
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 48,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Signal relay hut / bungalow",
+    "dims_in": [
+     0.6,
+     0.45,
+     0.6
+    ]
+   },
+   "match": null
+  },
+  "milepost": {
+   "id": "milepost",
+   "name": "Milepost / whistle post",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.089,
+    0.541,
+    0.089
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 36,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Milepost / whistle post",
+    "h_in": [
+     0.45
+    ]
+   },
+   "match": null
+  },
+  "dumpster": {
+   "id": "dumpster",
+   "name": "Dumpster (8 yd)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.46,
+    0.418,
+    0.556
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 24,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Dumpster (8 yd)",
+    "dims_in": [
+     0.45,
+     0.26,
+     0.33
+    ]
+   },
+   "match": null
+  },
+  "pallets": {
+   "id": "pallets",
+   "name": "Pallet stack",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.672,
+    0.274,
+    0.313
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 60,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Pallet stack",
+    "dims_in": [
+     0.3,
+     0.2,
+     0.3
+    ]
+   },
+   "match": null
+  },
+  "boat": {
+   "id": "boat",
+   "name": "Jon boat (14 ft) with outboard",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    1.208,
+    0.219,
+    0.369
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 36,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Jon boat (14 ft) with outboard",
+    "dims_in": [
+     1.05,
+     0.1,
+     0.33
+    ]
+   },
+   "match": null
+  },
+  "billboard": {
+   "id": "billboard",
+   "name": "Billboard (14 x 48 ft)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    3.617,
+    3.324,
+    0.554
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 48,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Billboard (14 x 48 ft)",
+    "dims_in": [
+     3.6,
+     2.6,
+     0.1
+    ]
+   },
+   "match": null
+  },
+  "cotton-module": {
+   "id": "cotton-module",
+   "name": "Cotton module (round-module wrapped, 32 ft)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.446,
+    0.566,
+    0.566
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 24,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Cotton module (round-module wrapped, 32 ft)",
+    "dims_in": [
+     2.4,
+     0.6,
+     0.6
+    ]
+   },
+   "match": null
+  },
+  "veh-sedan": {
+   "id": "veh-sedan",
+   "name": "Sedan",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    1.229,
+    0.356,
+    0.546
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 220,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Sedan",
+    "dims_in": [
+     1.16,
+     0.36,
+     0.45
+    ],
+    "proto": "15.5 ft"
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "veh-suv": {
+   "id": "veh-suv",
+   "name": "SUV",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    1.383,
+    0.487,
+    0.62
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 196,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "SUV",
+    "dims_in": [
+     1.24,
+     0.45,
+     0.48
+    ],
+    "proto": "16.5 ft"
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "veh-pickup": {
+   "id": "veh-pickup",
+   "name": "Pickup (crew cab)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    1.531,
+    0.504,
+    0.598
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 220,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Pickup (crew cab)",
+    "dims_in": [
+     1.43,
+     0.45,
+     0.5
+    ],
+    "proto": "19 ft"
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "veh-semi": {
+   "id": "veh-semi",
+   "name": "Semi tractor + 53 ft dry van",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    5.413,
+    1.07,
+    0.723
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 484,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Semi tractor + 53 ft dry van",
+    "dims_in": [
+     5.6,
+     0.85,
+     0.64
+    ],
+    "proto": "tractor 22 ft + 53 ft trailer"
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "veh-boxtruck": {
+   "id": "veh-boxtruck",
+   "name": "Box truck (24 ft)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    1.866,
+    0.874,
+    0.647
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 276,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Box truck (24 ft)",
+    "dims_in": [
+     1.8,
+     0.75,
+     0.6
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "veh-ups": {
+   "id": "veh-ups",
+   "name": "UPS package car (P-80)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    1.807,
+    0.751,
+    0.714
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 208,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "UPS package car (P-80)",
+    "dims_in": [
+     1.6,
+     0.68,
+     0.55
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "veh-tow": {
+   "id": "veh-tow",
+   "name": "Tow truck (rollback)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.507,
+    0.837,
+    0.704
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 288,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Tow truck (rollback)",
+    "dims_in": [
+     1.6,
+     0.6,
+     0.55
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "veh-schoolbus": {
+   "id": "veh-schoolbus",
+   "name": "School bus (40 ft)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    3.134,
+    0.812,
+    0.753
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 208,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "School bus (40 ft)",
+    "dims_in": [
+     3,
+     0.8,
+     0.6
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "veh-tractor": {
+   "id": "veh-tractor",
+   "name": "Farm tractor (row-crop)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    1.243,
+    0.775,
+    0.639
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 232,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Farm tractor (row-crop)",
+    "dims_in": [
+     1.05,
+     0.65,
+     0.6
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "person-stand": {
+   "id": "person-stand",
+   "name": "Person (stand)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.068,
+    0.445,
+    0.121
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 140,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Person (stand)",
+    "h_in": [
+     0.43
+    ],
+    "note": "low-poly posed figure"
+   },
+   "match": null
+  },
+  "person-walk": {
+   "id": "person-walk",
+   "name": "Person (walk)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.136,
+    0.444,
+    0.121
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 140,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Person (walk)",
+    "h_in": [
+     0.43
+    ],
+    "note": "low-poly posed figure"
+   },
+   "match": null
+  },
+  "person-worker": {
+   "id": "person-worker",
+   "name": "Person (worker)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.08,
+    0.458,
+    0.121
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 200,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Person (worker)",
+    "h_in": [
+     0.43
+    ],
+    "note": "low-poly posed figure"
+   },
+   "match": null
+  },
+  "person-farmer": {
+   "id": "person-farmer",
+   "name": "Person (farmer)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.114,
+    0.471,
+    0.121
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 220,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Person (farmer)",
+    "h_in": [
+     0.43
+    ],
+    "note": "low-poly posed figure"
+   },
+   "match": null
+  },
+  "person-sit": {
+   "id": "person-sit",
+   "name": "Person (sit)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.157,
+    0.397,
+    0.08
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 116,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Person (sit)",
+    "h_in": [
+     0.43
+    ],
+    "note": "low-poly posed figure"
+   },
+   "match": null
+  },
+  "fence-board": {
+   "id": "fence-board",
+   "name": "White board fence (horse farm)",
+   "cat": "path",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    4.024,
+    0.355,
+    0.024
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 174,
+   "ok": true,
+   "builder": "L3D.assets['fence-board'].build(batch, P)",
+   "meta": {
+    "cat": "path",
+    "name": "White board fence (horse farm)",
+    "h_in": 0.3
+   },
+   "match": null
+  },
+  "fence-chain": {
+   "id": "fence-chain",
+   "name": "Chain-link fence (6 ft)",
+   "cat": "path",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    4.024,
+    0.5,
+    0.024
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 124,
+   "ok": true,
+   "builder": "L3D.assets['fence-chain'].build(batch, P)",
+   "meta": {
+    "cat": "path",
+    "name": "Chain-link fence (6 ft)",
+    "h_in": 0.45
+   },
+   "match": null
+  },
+  "fence-wire": {
+   "id": "fence-wire",
+   "name": "Farm wire fence",
+   "cat": "path",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    4.024,
+    0.35,
+    0.024
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 102,
+   "ok": true,
+   "builder": "L3D.assets['fence-wire'].build(batch, P)",
+   "meta": {
+    "cat": "path",
+    "name": "Farm wire fence",
+    "h_in": 0.3
+   },
+   "match": null
+  },
+  "pier": {
+   "id": "pier",
+   "name": "Wooden pier / dock",
+   "cat": "path",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    3.05,
+    0.74,
+    0.5
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 144,
+   "ok": true,
+   "builder": "L3D.assets['pier'].build(batch, P)",
+   "meta": {
+    "cat": "path",
+    "name": "Wooden pier / dock",
+    "w_in": 0.5
+   },
+   "match": null
+  },
+  "loading-dock": {
+   "id": "loading-dock",
+   "name": "Concrete truck/rail dock with bumpers",
+   "cat": "path",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    3,
+    0.42,
+    0.3
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 72,
+   "ok": true,
+   "builder": "L3D.assets['loading-dock'].build(batch, P)",
+   "meta": {
+    "cat": "path",
+    "name": "Concrete truck/rail dock with bumpers",
+    "h_in": 0.3
+   },
+   "match": null
+  },
+  "tree-longleaf": {
+   "id": "tree-longleaf",
+   "name": "Longleaf pine (tall, sparse tufted crown)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.575,
+    7.405,
+    2.261
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 268,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Longleaf pine (tall, sparse tufted crown)",
+    "h_in": [
+     4.5,
+     6
+    ],
+    "note": "60-80 ft"
+   },
+   "match": null
+  },
+  "tree-sweetgum": {
+   "id": "tree-sweetgum",
+   "name": "Sweetgum (pyramidal crown)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.785,
+    5.784,
+    2.594
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 204,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Sweetgum (pyramidal crown)",
+    "h_in": [
+     3,
+     4.5
+    ]
+   },
+   "match": null
+  },
+  "tree-oak-live": {
+   "id": "tree-oak-live",
+   "name": "Southern live oak (wide spreading)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    7.105,
+    3.414,
+    6.671
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 324,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Southern live oak (wide spreading)",
+    "h_in": [
+     2.6,
+     3.8
+    ],
+    "note": "40-55 ft tall, wider than tall"
+   },
+   "match": null
+  },
+  "spanish-moss": {
+   "id": "spanish-moss",
+   "name": "Spanish moss drape (cluster)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.531,
+    0.447,
+    0.099
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 60,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Spanish moss drape (cluster)",
+    "h_in": [
+     0.6,
+     1
+    ]
+   },
+   "match": null
+  },
+  "cypress-knees": {
+   "id": "cypress-knees",
+   "name": "Cypress knees (cluster)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.798,
+    0.168,
+    0.779
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 90,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Cypress knees (cluster)",
+    "h_in": [
+     0.1,
+     0.2
+    ]
+   },
+   "match": null
+  },
+  "kudzu": {
+   "id": "kudzu",
+   "name": "Kudzu blanket (drapes over edge trees/poles)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.788,
+    1.774,
+    2.187
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 240,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Kudzu blanket (drapes over edge trees/poles)",
+    "h_in": [
+     0.8,
+     2.5
+    ]
+   },
+   "match": null
+  },
+  "understory": {
+   "id": "understory",
+   "name": "Understory shrub (yaupon / wax myrtle)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.858,
+    1.029,
+    0.905
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 56,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Understory shrub (yaupon / wax myrtle)",
+    "h_in": [
+     0.3,
+     0.7
+    ]
+   },
+   "match": null
+  },
+  "wildflowers": {
+   "id": "wildflowers",
+   "name": "Wildflower patch",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.5,
+    0.298,
+    0.317
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 167,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Wildflower patch",
+    "h_in": [
+     0.06,
+     0.1
+    ]
+   },
+   "match": null
+  },
+  "cattails": {
+   "id": "cattails",
+   "name": "Cattails / rushes clump",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.468,
+    0.525,
+    0.398
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 168,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Cattails / rushes clump",
+    "h_in": [
+     0.3,
+     0.45
+    ],
+    "note": "4-6 ft"
+   },
+   "match": null
+  },
+  "rock": {
+   "id": "rock",
+   "name": "Fieldstone / small outcrop",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.734,
+    0.285,
+    0.572
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 100,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Fieldstone / small outcrop",
+    "h_in": [
+     0.1,
+     0.3
+    ]
+   },
+   "match": null
+  },
+  "crop-tobacco": {
+   "id": "crop-tobacco",
+   "name": "Tobacco plant (flue-cured, mid-season)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    0.328,
+    0.388,
+    0.313
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 136,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Tobacco plant (flue-cured, mid-season)",
+    "h_in": [
+     0.25,
+     0.3
+    ],
+    "note": "3.5-4.5 ft; rows 4 ft"
+   },
+   "match": null
+  },
+  "crop-cotton": {
+   "id": "crop-cotton",
+   "name": "Cotton plants (open bolls), 1 ft run",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.383,
+    0.33,
+    0.219
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 200,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Cotton plants (open bolls), 1 ft run",
+    "h_in": [
+     0.2,
+     0.25
+    ],
+    "note": "3-4 ft; rows 38 in"
+   },
+   "match": null
+  },
+  "crop-soy": {
+   "id": "crop-soy",
+   "name": "Soybean row segment (canopy), 1 ft",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.395,
+    0.202,
+    0.172
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 20,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Soybean row segment (canopy), 1 ft",
+    "h_in": [
+     0.12,
+     0.16
+    ],
+    "note": "2-2.5 ft; rows 30 in"
+   },
+   "match": null
+  },
+  "crop-corn": {
+   "id": "crop-corn",
+   "name": "Corn stalks, short run",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    1.801,
+    0.78,
+    0.421
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 208,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Corn stalks, short run",
+    "h_in": [
+     0.5,
+     0.65
+    ],
+    "note": "7-9 ft; rows 30 in"
+   },
+   "match": null
+  },
+  "crop-lo": {
+   "id": "crop-lo",
+   "name": "Crop row far-LOD block (internal)",
+   "cat": "instanced",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    2.362,
+    0.197,
+    1.181
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 12,
+   "ok": true,
+   "builder": "L3D.geo(id)",
+   "meta": {
+    "cat": "instanced",
+    "name": "Crop row far-LOD block (internal)"
+   },
+   "match": null
+  },
+  "car-boxcar": {
+   "id": "car-boxcar",
+   "name": "boxcar car",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    5.098,
+    1.276,
+    0.799
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 512,
+   "ok": true,
+   "builder": "L3D.assets['car-boxcar'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "boxcar car",
+    "len_in": 5.1,
+    "liveries": [
+     "NS 470112",
+     "CSXT 138556",
+     "ABOX 50771",
+     "BNSF 726031"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "car-reefer": {
+   "id": "car-reefer",
+   "name": "reefer car",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    5.776,
+    1.276,
+    0.799
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 512,
+   "ok": true,
+   "builder": "L3D.assets['car-reefer'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "reefer car",
+    "len_in": 6.5,
+    "liveries": [
+     "ARMN 765410",
+     "UPFE 455123"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "car-covered_hopper": {
+   "id": "car-covered_hopper",
+   "name": "covered hopper car",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    4.701,
+    1.161,
+    0.799
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 796,
+   "ok": true,
+   "builder": "L3D.assets['car-covered_hopper'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "covered hopper car",
+    "len_in": 4.7,
+    "liveries": [
+     "ADMX 44610",
+     "NS 250331",
+     "CSXT 255118",
+     "TILX 401227"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "car-hopper": {
+   "id": "car-hopper",
+   "name": "hopper car",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    4.134,
+    0.923,
+    0.807
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 668,
+   "ok": true,
+   "builder": "L3D.assets['car-hopper'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "hopper car",
+    "len_in": 4,
+    "liveries": [
+     "NS 102544",
+     "CSXT 830871"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "car-gondola": {
+   "id": "car-gondola",
+   "name": "gondola car",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    4.353,
+    0.697,
+    0.812
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 568,
+   "ok": true,
+   "builder": "L3D.assets['car-gondola'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "gondola car",
+    "len_in": 4.2,
+    "liveries": [
+     "NS 196210",
+     "CSXT 700345"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "car-tank": {
+   "id": "car-tank",
+   "name": "tank car",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    4.492,
+    1.157,
+    0.795
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 720,
+   "ok": true,
+   "builder": "L3D.assets['car-tank'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "tank car",
+    "len_in": 4.6,
+    "liveries": [
+     "GATX 220781",
+     "UTLX 642204",
+     "PROX 44513"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "car-flat": {
+   "id": "car-flat",
+   "name": "flat car",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    5.551,
+    1.164,
+    0.817
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 232,
+   "ok": true,
+   "builder": "L3D.assets['car-flat'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "flat car",
+    "len_in": 5.6,
+    "liveries": [
+     "TTPX 801122"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "car-coil": {
+   "id": "car-coil",
+   "name": "coil car",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    4.136,
+    1.038,
+    0.792
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 260,
+   "ok": true,
+   "builder": "L3D.assets['car-coil'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "coil car",
+    "len_in": 3.8,
+    "liveries": [
+     "NS 165303"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "car-centerbeam": {
+   "id": "car-centerbeam",
+   "name": "centerbeam car",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    6.02,
+    1.406,
+    0.799
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 628,
+   "ok": true,
+   "builder": "L3D.assets['car-centerbeam'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "centerbeam car",
+    "len_in": 6,
+    "liveries": [
+     "TTZX 86518"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "car-autorack": {
+   "id": "car-autorack",
+   "name": "autorack car",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    7.012,
+    1.512,
+    0.799
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 904,
+   "ok": true,
+   "builder": "L3D.assets['car-autorack'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "autorack car",
+    "len_in": 6.9,
+    "liveries": [
+     "TTGX 952018",
+     "TTGX 980271"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "car-well": {
+   "id": "car-well",
+   "name": "well car",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    5.248,
+    1.512,
+    0.799
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 812,
+   "ok": true,
+   "builder": "L3D.assets['car-well'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "well car",
+    "len_in": 5.3,
+    "liveries": [
+     "DTTX 784022"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "car-amfleet": {
+   "id": "car-amfleet",
+   "name": "amfleet car",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    6.402,
+    0.949,
+    0.787
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 632,
+   "ok": true,
+   "builder": "L3D.assets['car-amfleet'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "amfleet car",
+    "len_in": 6.4,
+    "liveries": [
+     "AMTK 82615"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "loco-et44": {
+   "id": "loco-et44",
+   "name": "ET44 locomotive",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    5.587,
+    1.157,
+    0.768
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 760,
+   "ok": true,
+   "builder": "L3D.assets['loco-et44'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "ET44 locomotive",
+    "len_in": 4.6,
+    "roads": [
+     "NS",
+     "CSX",
+     "BNSF",
+     "CLNA",
+     "RJC",
+     "Amtrak"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "loco-sd70": {
+   "id": "loco-sd70",
+   "name": "SD70 locomotive",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    5.567,
+    1.189,
+    0.768
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 760,
+   "ok": true,
+   "builder": "L3D.assets['loco-sd70'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "SD70 locomotive",
+    "len_in": 4.3,
+    "roads": [
+     "NS",
+     "CSX",
+     "BNSF",
+     "CLNA",
+     "RJC",
+     "Amtrak"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "loco-es44": {
+   "id": "loco-es44",
+   "name": "ES44 locomotive",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    5.488,
+    1.157,
+    0.768
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 748,
+   "ok": true,
+   "builder": "L3D.assets['loco-es44'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "ES44 locomotive",
+    "len_in": 4.6,
+    "roads": [
+     "NS",
+     "CSX",
+     "BNSF",
+     "CLNA",
+     "RJC",
+     "Amtrak"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "loco-gp38": {
+   "id": "loco-gp38",
+   "name": "GP38 locomotive",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    4.437,
+    1.15,
+    0.78
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 748,
+   "ok": true,
+   "builder": "L3D.assets['loco-gp38'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "GP38 locomotive",
+    "len_in": 3.6,
+    "roads": [
+     "NS",
+     "CSX",
+     "BNSF",
+     "CLNA",
+     "RJC",
+     "Amtrak"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "loco-gp15": {
+   "id": "loco-gp15",
+   "name": "GP15 locomotive",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    4.158,
+    1.182,
+    0.822
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 748,
+   "ok": true,
+   "builder": "L3D.assets['loco-gp15'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "GP15 locomotive",
+    "len_in": 3.3,
+    "roads": [
+     "NS",
+     "CSX",
+     "BNSF",
+     "CLNA",
+     "RJC",
+     "Amtrak"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "loco-gp40": {
+   "id": "loco-gp40",
+   "name": "GP40 locomotive",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    4.476,
+    1.192,
+    0.822
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 760,
+   "ok": true,
+   "builder": "L3D.assets['loco-gp40'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "GP40 locomotive",
+    "len_in": 3.8,
+    "roads": [
+     "NS",
+     "CSX",
+     "BNSF",
+     "CLNA",
+     "RJC",
+     "Amtrak"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "loco-sd40": {
+   "id": "loco-sd40",
+   "name": "SD40 locomotive",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    5.202,
+    1.192,
+    0.822
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 748,
+   "ok": true,
+   "builder": "L3D.assets['loco-sd40'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "SD40 locomotive",
+    "len_in": 4.1,
+    "roads": [
+     "NS",
+     "CSX",
+     "BNSF",
+     "CLNA",
+     "RJC",
+     "Amtrak"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "loco-p42": {
+   "id": "loco-p42",
+   "name": "P42 locomotive",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    5.173,
+    1.075,
+    0.752
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 176,
+   "ok": true,
+   "builder": "L3D.assets['loco-p42'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "P42 locomotive",
+    "len_in": 4.4,
+    "roads": [
+     "NS",
+     "CSX",
+     "BNSF",
+     "CLNA",
+     "RJC",
+     "Amtrak"
+    ]
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  },
+  "loco-et44-csx": {
+   "id": "loco-et44-csx",
+   "name": "ET44AH locomotive (CSX)",
+   "cat": "rollingstock",
+   "kit": null,
+   "verify": null,
+   "size_in": [
+    5.587,
+    1.157,
+    0.768
+   ],
+   "size_axes": "x(len/width) y(height) z(depth)",
+   "tris": 760,
+   "ok": true,
+   "builder": "L3D.assets['loco-et44-csx'].build(batch, P)",
+   "meta": {
+    "cat": "rollingstock",
+    "name": "ET44AH locomotive (CSX)",
+    "len_in": 4.6,
+    "roads": [
+     "CSX"
+    ],
+    "base": "loco-et44",
+    "rr": "CSX"
+   },
+   "match": null,
+   "size_src": "registry-sizes.json"
+  }
+ }
+}

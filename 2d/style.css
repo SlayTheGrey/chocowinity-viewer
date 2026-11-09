@@ -1,0 +1,32 @@
+*{box-sizing:border-box}body{margin:0;font:13px system-ui,sans-serif;background:#1d2126;color:#e6e6e6;overflow:hidden}
+#top{height:40px;display:flex;align-items:center;gap:10px;padding:0 8px;background:#2a3038;border-bottom:1px solid #444;white-space:nowrap;overflow:hidden}
+.grp{display:flex;gap:4px;align-items:center}button,select,input{background:#3a424d;color:#eee;border:1px solid #556;border-radius:4px;padding:3px 7px;font:inherit}button:hover{background:#4a5563}
+#main{position:absolute;top:40px;left:0;right:0;bottom:0;display:flex}#cv{flex:1;display:block;background:#2b3a2e}
+#side{width:330px;overflow-y:auto;background:#22272e;border-left:1px solid #444;display:flex;flex-direction:column}
+.box{padding:6px 8px;border-bottom:1px solid #3a3f47}.box h3{margin:2px 0 5px;font-size:13px;color:#9cd}.grow{flex:1;min-height:120px}
+#log{font:11px monospace;max-height:260px;overflow-y:auto}#log div{padding:1px 0;border-bottom:1px dotted #333}#log .warn{color:#f99}#log .radio{color:#9df}#log .ai{color:#cf9}#log .disp{color:#fd8}
+#cards table{width:100%;border-collapse:collapse;font-size:11px}#cards td{padding:2px 3px;border-bottom:1px solid #333}#cards tr.done td{color:#7c7;text-decoration:line-through}
+.clock{font:bold 16px monospace;color:#fd6}#tip{position:fixed;pointer-events:none;background:#000c;padding:4px 7px;border-radius:4px;display:none;max-width:320px;font-size:12px;z-index:5}
+#toast{position:fixed;left:50%;top:60px;transform:translateX(-50%);background:#a33;padding:6px 14px;border-radius:5px;display:none;z-index:6}
+#help{position:fixed;inset:0;background:#000a;display:flex;align-items:center;justify-content:center;z-index:9}#help.hidden{display:none}
+#help .in{background:#2a3038;max-width:760px;padding:16px 22px;border-radius:8px;max-height:90vh;overflow:auto}.small{font-size:11px;color:#aaa}
+.dcc{background:#11161b;border-radius:10px;padding:8px}.dcc-head{display:flex;justify-content:space-between}.dcc-steps{cursor:pointer;color:#8cf}
+.dcc-lcd{background:#9bb07a;color:#122;font:bold 14px monospace;padding:5px;border-radius:4px;margin:5px 0;display:flex;justify-content:space-between}
+.dcc-knob{width:84px;height:84px;border-radius:50%;margin:4px auto;background:radial-gradient(#555,#222);position:relative;cursor:ns-resize;border:2px solid #666}
+.dcc-ind{position:absolute;left:39px;top:6px;width:4px;height:36px;background:#fc3;transform-origin:2px 36px;border-radius:2px}
+.dcc-row{display:flex;gap:4px;margin:4px 0;flex-wrap:wrap}.dcc-row.small{font-size:11px}.dcc-row input{width:3.2em}.estop{background:#a22!important}
+.dcc-f{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}.dcc-f button{font-size:10px;padding:2px}.dcc-f button.on{background:#d90;color:#000}
+#vols label{display:flex;justify-content:space-between;font-size:11px}#vols input{width:170px}
+
+.pop{position:fixed;top:48px;left:3%;width:min(94%,1100px);max-height:80vh;overflow:auto;background:#1d2420f2;color:#ddd;border:1px solid #567;border-radius:6px;padding:8px 12px;z-index:30;font-size:12px}
+.pop .x{float:right}.pop h2{margin:2px 0 6px;font-size:15px}.pop h3{margin:8px 0 3px;font-size:13px}
+.pop table{border-collapse:collapse;width:100%}.pop td,.pop th{border-bottom:1px solid #333;padding:2px 4px;text-align:left;vertical-align:top}
+.tb,.sb{font-size:11px;margin:1px;padding:1px 4px;border:1px solid #444;border-radius:3px;background:#222;color:#ddd;cursor:pointer}
+.tb.n{color:#6e6}.tb.r{color:#fa4}.tb.occ{outline:2px solid #e33}.sb.held{background:#611}.blk{display:inline-block;margin:1px 6px 1px 0;color:#fc8}
+.car{display:inline-block;background:#345;margin:1px;padding:0 3px;border-radius:2px}.done{opacity:.45;text-decoration:line-through}#voiceb.on{background:#264}
+
+/* FIX: .pop panels had no hidden rule, so the X (and toggles) could not close them */
+.hidden{display:none!important}.pop .x,#help .x{cursor:pointer;position:relative;z-index:2}#help .in{position:relative}#help .x{position:absolute;right:8px;top:6px}
+
+/* ROUND4 radio feed */
+#radiofeed{font:12px system-ui,sans-serif;max-height:220px;overflow-y:auto;background:#11161b;border-radius:4px;padding:3px 5px}#radiofeed .rf{padding:1px 0}#radiofeed b{color:#8cf}#radiofeed .disp b{color:#fd6}#radiofeed .ym b{color:#fa6}#radiofeed .det b{color:#aaa}#radiofeed .cond b{color:#9e9}#radiofeed .amtrak b{color:#c9f}
