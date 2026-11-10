@@ -433,13 +433,64 @@ const LIFE = (() => {
           /* [CH-MOTION-CLIPS] keep skinned scene+clips for people; still build bind-pose HI instance for far LOD */
           if (SKIN_KINDS[k]) {
             let sk = false; gl.scene.traverse(m => { if (m.isSkinnedMesh) sk = true; });
-            SKAS[id] = { id, scene: gl.scene, clips: gl.animations || [], skinned: sk, ws: 1.018 }; skParsed++;
+            { let footOff = 0; try { gl.scene.updateMatrixWorld(true); const bb = new T.Box3().setFromObject(gl.scene); if (!bb.isEmpty() && isFinite(bb.min.y)) footOff = bb.min.y / 25.4; } catch (_) {}
+            SKAS[id] = { id, scene: gl.scene, clips: gl.animations || [], skinned: sk, ws: 1.018, footOff }; skParsed++; }
           }
           const g = hiGeo(gl.scene); if (!g) { API.hi.err.push('empty ' + id); return; } const m = new T.InstancedMesh(g, L3D.mat(k === 'forklift' ? 'glossy' : 'plain'), CAP[k]); m.name = 'life3d-hi-' + id; m.frustumCulled = false; m.count = 0; m.instanceMatrix.setUsage(T.DynamicDrawUsage); { const w = new T.Color(1, 1, 1); for (let i = 0; i < CAP[k]; i++) m.setColorAt(i, w); } /* shared material compiles with instance colour: unset = black */ sc.add(m); HI[k].push(m); API.hi.ready++;
         } catch (e) { API.hi.err.push(id + ': ' + e); } }, e => API.hi.err.push(id + ': ' + e)); } catch (e) { API.hi.err.push(id + ': ' + e); } } } };
   const camPos = () => { /* [CH-MOTION-CLIPS] prefer viewer camera used by Fly/Walk shots */ const c = (window.__choco && window.__choco.camera) || (window.__layout3d && window.__layout3d.api && window.__layout3d.api.camera); return c ? c.position : null; };
   const _p = new THREE.Vector3(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _e = new THREE.Euler(), _m = new THREE.Matrix4(), _c = new THREE.Color();
   const deck = li => { const L = window.LAYOUT; return (L.levels[li - 1] && L.levels[li - 1].deck) || L.deckHeights[li - 1]; };
+  /* [CHOCO-FEET] shared surface-top + skinned foot offset. R37 A1 walkTop/surfTop lived in logistics.js but life3d always used deck+0.012, so skinned walk/idle/work people sank into sidewalks (top 0.05) / pads / platforms. Pose lerp is xz-only — y is set fresh each frame after the lerp. */
+  const SURF_WALK = 0.05, SURF_SWALK = 0.022 + 0.0369, SURF_PAD = 0.016, SURF_APRON = 0.012, SURF_LOT = 0.012, SURF_MAX = 0.32;
+  const _inRect = (x, z, r) => r && x >= r[0] && x <= r[2] && z >= r[1] && z <= r[3];
+  const _inPoly = (x, z, P) => { let c = false; for (let i = 0, j = P.length - 1; i < P.length; j = i++) if ((P[i][1] > z) !== (P[j][1] > z) && x < (P[j][0] - P[i][0]) * (z - P[i][1]) / ((P[j][1] - P[i][1]) || 1e-9) + P[i][0]) c = !c; return c; };
+  let _surfRC = null; const _SURFM = {}, _SURFC = {};
+  const _lotTop = (li, x, z) => {
+    const L = window.LAYOUT && window.LAYOUT.levels[li - 1]; let best = SURF_LOT;
+    if (!L) return best;
+    for (const l of L.lots || []) {
+      const hit = (l.r && _inRect(x, z, l.r)) || (l.pts && l.pts.length >= 3 && _inPoly(x, z, l.pts));
+      if (!hit) continue;
+      if (l.kind === 'walk') best = Math.max(best, l.pts ? SURF_SWALK : SURF_WALK);
+      else if (l.kind === 'pad') best = Math.max(best, SURF_PAD);
+      else if (l.kind === 'apron') best = Math.max(best, SURF_APRON);
+      else if (l.kind === 'parking' || l.kind === 'court' || l.kind === 'autolot') best = Math.max(best, SURF_LOT);
+    }
+    return best;
+  };
+  const _rayTop = (li, x, z) => {
+    try {
+      if (typeof THREE === 'undefined') return null;
+      const key = li + ':' + Math.round(x * 20) + ':' + Math.round(z * 20); if (key in _SURFC) return _SURFC[key];
+      const sc = (window.__layout3d && window.__layout3d.api && window.__layout3d.api.scene) || (window.__choco && window.__choco.scene);
+      if (!sc) return null;
+      let M = _SURFM[li]; if (!M) { const Lv = sc.getObjectByName('L' + li); if (!Lv) return (_SURFC[key] = null); M = _SURFM[li] = []; Lv.traverse(o => { if (o.isMesh && !o.isSkinnedMesh && o.visible !== false) M.push(o); }); }
+      if (!_surfRC) _surfRC = new THREE.Raycaster();
+      const g = deck(li); _surfRC.set(new THREE.Vector3(x, g + SURF_MAX, z), new THREE.Vector3(0, -1, 0)); _surfRC.far = SURF_MAX + 0.03;
+      let r = 0; const N = new THREE.Vector3();
+      for (const h of _surfRC.intersectObjects(M, false)) { if (!h.face) continue; N.copy(h.face.normal).transformDirection(h.object.matrixWorld); if (N.y < 0.6) continue; r = Math.max(0, Math.min(SURF_MAX, h.point.y - g)); break; }
+      return (_SURFC[key] = r);
+    } catch (_) { return null; }
+  };
+  const surfaceTop = (li, x, z) => {
+    let t = _lotTop(li, x, z);
+    const take = (r) => {
+      if (r == null) return;
+      /* Ignore roof/canopy hits: only raise when no raised lot, or ray is near the lot top (SWALK/ramp). */
+      if (t <= SURF_LOT + 1e-6) { if (r > t) t = r; }
+      else if (r >= t - 0.01 && r <= t + 0.035) t = Math.max(t, r);
+    };
+    try { const G = window.L3D && L3D.logistics; if (G && typeof G.surfTop === 'function') take(G.surfTop(li, x, z)); } catch (_) {}
+    take(_rayTop(li, x, z));
+    return t;
+  };
+  const personY = (a) => {
+    const x = a._rx != null ? a._rx : a.x, z = a._ry != null ? a._ry : a.y;
+    const fo = (a._footOff != null) ? a._footOff : 0;
+    return deck(a.li) + surfaceTop(a.li, x, z) - fo + (a.fly ? 2.5 + 0.6 * Math.sin(a.id + performance.now() / 900) : 0);
+  };
+  API.surfaceTop = surfaceTop; API.personY = personY;
   const keyOf = a => { if (a.kind === 'person') return a.crew || a.type === 'crew' ? 'worker' : 'walk'; if (a.kind === 'machine') return a.type === 'forklift' ? 'forklift' : 'tractor'; if (a.kind === 'animal') return a.fly ? 'bird' : a.type === 'deer' ? 'deer' : (a.type === 'horse' || a.type === 'pony') ? (a.wTo ? 'horse' : 'horseg') : a.type === 'cow' ? 'cow' : a.type === 'goat' ? 'goat' : a.type === 'chicken' ? 'chick' : a.type === 'heron' ? 'heron' : 'dog'; const t = TY[a.type]; return typeof t === 'function' ? t(a) : t || 'sedan'; };
   const frame = () => { requestAnimationFrame(frame); const H = window.__ops3d; if (H && H.engine && API.eng !== H.engine) API.attach(H); if (!API.L || !window.__choco || !window.LAYOUT) return; if (!M) build(); if (!hiStarted) hiStart(); const cp = camPos(), hn = {}; for (const k in HI) for (const m of HI[k]) hn[m.name] = 0;
     if (!hidOld) { window.__choco.scene.traverse(o => { if (o.isInstancedMesh && o.userData && o.userData.mk && /^(car:|person)/.test(o.userData.mk)) { o.visible = false; hidOld = true; } }); }
@@ -453,7 +504,9 @@ const LIFE = (() => {
         if (jump || a.mode === 'park' && a.v === 0) { a._rx = a.x; a._ry = a.y; a._ra = a.a; }
         else { const kpos = 1 - Math.exp(-12 * dt), kh = 1 - Math.exp(-14 * dt); a._rx += (a.x - a._rx) * kpos; a._ry += (a.y - a._ry) * kpos; a._ra += a0 * kh; }
       }
-      const y = deck(a.li) + 0.012 + (a.fly ? 2.5 + 0.6 * Math.sin(a.id + performance.now() / 900) : 0); _p.set(a._rx, y, a._ry); _q.setFromEuler(_e.set(0, -a._ra, 0));
+      const _isPerson = (k === 'walk' || k === 'worker');
+      if (_isPerson) { a._footOff = 0; } /* HI bind is grounded; skinned overrides below */
+      const y = _isPerson ? personY(a) : (deck(a.li) + 0.012 + (a.fly ? 2.5 + 0.6 * Math.sin(a.id + performance.now() / 900) : 0)); a._renderY = y; _p.set(a._rx, y, a._ry); _q.setFromEuler(_e.set(0, -a._ra, 0));
       if (md && md[1] !== 1) _s.set(a.len / md[1], 1, a.w / md[2]); else if (k === 'walk' || k === 'worker') _s.setScalar(1); else _s.setScalar(a.type === 'pony' ? 0.72 : 1);
       _m.compose(_p, _q, _s);
       /* [CH-MOTION-CLIPS] people near camera: skinned clip playback; far: HI bind-pose instance; else low shapes */
@@ -468,7 +521,8 @@ const LIFE = (() => {
             const dt = Math.min(0.05, ((performance.now() - (a._skt || performance.now())) / 1000) || 0.016); a._skt = performance.now();
             const moving = a.mode === 'walk' || (a._lrx != null && Math.hypot(a._rx - a._lrx, a._ry - a._lry) > 0.0005);
             const clip = skWantClip(a, k);
-            o.root.position.set(a._rx, y, a._ry); o.root.rotation.set(0, -a._ra, 0); o.root.visible = true;
+            { const A = SKAS[assetId]; a._footOff = (A && A.footOff) || 0; const yS = personY(a); a._renderY = yS; o.root.position.set(a._rx, yS, a._ry); }
+            o.root.rotation.set(0, -a._ra, 0); o.root.visible = true;
             skApply(o, clip, dt, moving);
             a._lrx = a._rx; a._lry = a._ry; a._clip = clip;
             continue;
