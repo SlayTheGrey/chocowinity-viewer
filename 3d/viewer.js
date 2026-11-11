@@ -439,13 +439,101 @@ for (const o of LV) {
   for (const lb of L.labels) { const c = document.createElement('canvas'), g = c.getContext('2d'); g.font = 'bold 26px sans-serif'; const w = Math.min(900, g.measureText(lb.text).width + 14); c.width = w; c.height = 36;
     g.fillStyle = lb.kind === 'turnout' ? '#ffe9c8e8' : '#ffffffe0'; g.fillRect(0, 0, w, 36); g.fillStyle = '#111'; g.font = 'bold 26px sans-serif'; g.fillText(lb.text, 7, 27);
     const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: false })); sp.scale.set(w / 36 * 0.55, 0.55, 1); sp.position.set(lb.x, y + (lb.kind === 'turnout' ? 1.2 : 2.6), lb.y); sp.renderOrder = 10; o.labels.add(sp); }
-  /* [CHOCO-NAMES] */ function QS0names() { try { return new URLSearchParams(location.search).get('names') !== '0'; } catch (e) { return true; } } o.names = new THREE.Group(); o.names.name = 'choco-names'; /* [CHOCO-BL] found by labels3d declutter */ o.names.visible = !(document.getElementById('names') && !document.getElementById('names').checked) && QS0names(); /* [CHOCO-NAMES-ON] default on */ o.g.add(o.names); { const NG = [[/^CCF /, 'Coastal Carolina Foods (CCF)'], [/^PSR /, 'Pamlico Scrap & Recycling (PSR)'], [/^FF /, 'Beaufort Farm Supply (FF)'], [/^(Marsden|RIP )/, 'Marsden Yard'], [/^TL /, 'Chocowinity Transload (TL)'], [/Pamlico Grill/, 'Pamlico Grill'], [/Quick Mart/, 'Quick Mart'],
-      [/^GCF /, 'GCF Pulp Mill'], [/^WL /, 'WL Lumber Mill'], [/^PR /, 'Pamlico Propane (PR)'], [/^Nutrien /, 'Nutrien'], [/Tire & Auto/, 'Pamlico Tire & Auto'], [/Gas & Grocery/, 'Gas & Grocery'], [/Pamlico Hardware/, 'Pamlico Hardware'], [/Baptist Church/, 'Missionary Baptist Church'], [/^UPS /, 'UPS Customer Center'], [/^HF /, 'Horse Farm']];
-    for (const [re, text] of NG) { const ss = (L.structures || []).filter(q => re.test(q.name || '') && q.r); if (!ss.length) continue; let x0 = 1e9, z0 = 1e9, x1 = -1e9, z1 = -1e9, h = 0, A = 0, cx = 0, cz = 0;
-      for (const q of ss) { const [a0, b0, a1, b1] = q.r, ar = Math.abs((a1 - a0) * (b1 - b0)); x0 = Math.min(x0, a0); z0 = Math.min(z0, b0); x1 = Math.max(x1, a1); z1 = Math.max(z1, b1); h = Math.max(h, q.h || 1); cx += (a0 + a1) / 2 * ar; cz += (b0 + b1) / 2 * ar; A += ar; }
-      const c = document.createElement('canvas'), gx = c.getContext('2d'); gx.font = '600 30px sans-serif'; const w = Math.ceil(gx.measureText(text).width) + 24; c.width = w; c.height = 44;
-      gx.fillStyle = 'rgba(20,28,36,0.78)'; gx.beginPath(); gx.roundRect ? gx.roundRect(0, 0, w, 44, 10) : gx.rect(0, 0, w, 44); gx.fill(); gx.fillStyle = '#fff'; gx.font = '600 30px sans-serif'; gx.fillText(text, 12, 32);
-      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(c), depthTest: true, transparent: true })); sp.scale.set(w / 44 * 1.15, 1.15, 1); sp.position.set(cx / A, y + h + 2.0, cz / A); if (text === 'Marsden Yard') sp.position.set(85, y + 3.0, 11.2);   /* [CHOCO-YARDLBL] was the area centroid of every Marsden/RIP structure incl. the mechanical/lube sheds at y~98 -> floated over the CCF tanks (x~15, y~50); now over the classification tracks T14-T17 (x 56-115, y 8-16) */ sp.renderOrder = 11; sp.userData.nm = text; o.names.add(sp); } }
+  /* [CHOCO-NAMES] building / industry name sprites. Names from layout + ops only; no invented titles. Toggle #names / B. Styled like car/loco chips; readable in Walk and Fly. */
+  function QS0names() { try { return new URLSearchParams(location.search).get('names') !== '0'; } catch (e) { return true; } }
+  o.names = new THREE.Group(); o.names.name = 'choco-names'; /* [CHOCO-BL] found by labels3d declutter */
+  o.names.visible = !(document.getElementById('names') && !document.getElementById('names').checked) && QS0names(); /* [CHOCO-NAMES-ON] default on */
+  o.g.add(o.names);
+  {
+    const clean = n => String(n || '').replace(/\s*\(.*?\)|\s*\[.*?\]/g, '').trim();
+    /* Display strings are taken from ops industry names or the layout structure name itself. */
+    const IND = [
+      { re: /^CCF /, text: 'CCF' },
+      { re: /^PSR /, text: 'Pamlico Scrap & Recycling' },
+      { re: /^FF /, text: 'Beaufort Farm Supply' },
+      { re: /^(Marsden |RIP )/, text: 'Marsden Yard', at: 'office' },
+      { re: /^TL /, text: 'Chocowinity Transload' },
+      { re: /^GCF /, text: 'Global Cellulose Fibers' },
+      { re: /^WL /, text: 'WL lumber mill' },
+      { re: /^PR /, text: 'PR propane' },
+      { re: /^Nutrien /, text: 'Nutrien', at: 'dome' },
+      { re: /^UPS /, text: 'UPS Customer Center' },
+      { re: /^US-17 Speedway/, text: 'US-17 Speedway' }
+    ];
+    const used = new Set();
+    const addName = (text, ss, at, pri) => {
+      if (!ss.length || !text) return;
+      let h = 0, A = 0, cx = 0, cz = 0;
+      for (const q of ss) { const [a0, b0, a1, b1] = q.r, ar = Math.abs((a1 - a0) * (b1 - b0)); h = Math.max(h, q.h || 1); cx += (a0 + a1) / 2 * ar; cz += (b0 + b1) / 2 * ar; A += ar; used.add(q); }
+      let px = cx / (A || 1), pz = cz / (A || 1), rh = h;
+      if (at === 'office' || at === 'dome') {
+        const pref = at === 'dome'
+          ? (ss.find(q => /storage dome/i.test(q.name || '')) || ss.find(q => /control room|office/i.test(q.name || '')) || ss[0])
+          : (ss.find(q => /office/i.test(q.name || '') && q.r) || ss[0]);
+        const [a0, b0, a1, b1] = pref.r; px = (a0 + a1) / 2; pz = (b0 + b1) / 2; rh = pref.h || 1;
+      }
+      const fs = 26, pad = 16, ch = 34;
+      /* [CHOCO-NAMES] canvas is sized to the drawn string (no 384px cap, no sliced glyphs). */
+      const mk = (str) => {
+        const c = document.createElement('canvas'), gx = c.getContext('2d');
+        gx.font = '600 ' + fs + 'px system-ui,sans-serif';
+        const tw = Math.ceil(gx.measureText(str).width) + pad;
+        c.width = tw; c.height = ch; gx.font = '600 ' + fs + 'px system-ui,sans-serif';
+        gx.fillStyle = 'rgba(15,23,42,0.85)'; gx.beginPath(); gx.roundRect ? gx.roundRect(0, 0, tw, ch, 8) : gx.rect(0, 0, tw, ch); gx.fill();
+        gx.fillStyle = '#fff'; gx.fillText(str, 8, ch - 8);
+        const tx = new THREE.CanvasTexture(c); tx.generateMipmaps = false; tx.minFilter = THREE.LinearFilter;
+        return { tx, tw };
+      };
+      const full = mk(text), SHORTS = { 'Pamlico Missionary Baptist Church': 'Missionary Baptist Church' };
+      const shortT = SHORTS[text] ? mk(SHORTS[text]) : null;
+      const first = shortT || full, tw = first.tw;
+      const NUDGE = { 'WL lumber mill': [3.2, 14], 'Thompson Farm Supply': [-7, -3],'Pamlico Missionary Baptist Church': [0, 6], 'Global Cellulose Fibers': [0, 5.5], 'PR propane': [1.5, 0] };
+      const nd = NUDGE[text]; if (nd) { px += nd[0]; pz += nd[1]; }
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: first.tx, depthTest: true, depthWrite: false, transparent: true, sizeAttenuation: false }));
+      const hh = (ch / 30) * 0.038, ww = hh * tw / ch; sp.scale.set(ww, hh, 1); sp.center.set(0.5, 0);
+      sp.position.set(px, y + rh + 0.12, pz); sp.renderOrder = 11;
+      sp.userData = { nm: text, deck: y, roof: y + rh, w: tw, h: ch, pri: pri || 1, baseY: y + rh + 0.12, stagger: 0, texFull: full, texShort: shortT };
+      o.names.add(sp);
+    };
+    for (const g of IND) { const ss = (L.structures || []).filter(q => g.re.test(q.name || '') && q.r); if (ss.length) addName(g.text, ss, g.at, 2); }
+    /* Standalone named town buildings — layout name, parentheticals stripped. Skip generics and anything already in an industry group. */
+    const SKIP = /^(Mill house|Ranch house|Quick Mart fuel canopy|US-17 Speedway canopy|HF |RIP )/i;
+    for (const q of (L.structures || [])) {
+      if (!q.name || !q.r || used.has(q) || SKIP.test(q.name)) continue;
+      if (/^(backyard|lineside|farm:|industry:|MOW:|sign:)/i.test(q.name)) continue;
+      if (/tank \d|bin \d|fuel canopy|canopy$|wheelset|lube tank/i.test(q.name)) continue;
+      const text = clean(q.name); if (!text || text.length < 2) continue;
+      addName(text, [q], null, 1);
+    }
+    /* Alternate height in tight xz clusters (downtown strip, Speedway/ABC) so chips do not stack. */
+    const kids = o.names.children, seen = new Set();
+    for (let i = 0; i < kids.length; i++) {
+      if (seen.has(i)) continue;
+      const cl = [], stack = [i];
+      while (stack.length) {
+        const k = stack.pop(); if (seen.has(k)) continue; seen.add(k); cl.push(kids[k]);
+        for (let j = 0; j < kids.length; j++) {
+          if (seen.has(j)) continue;
+          const a = kids[k].position, b = kids[j].position;
+          if (Math.abs((kids[k].userData.deck || 0) - (kids[j].userData.deck || 0)) < 0.5 && Math.hypot(a.x - b.x, a.z - b.z) < 6.5) stack.push(j);
+        }
+      }
+      if (cl.length < 2) continue;
+      cl.sort((a, b) => a.position.x - b.position.x);
+      const yPat = [0.15, 1.55, 0.45, 2.0], zPat = [0.2, 1.55, 0.5, 1.65], xPat = [0.15, -1.25, 1.05, 0.2], cid = i;
+      cl.forEach((sp, k) => {
+        sp.userData.yOff = yPat[k % 4];
+        sp.userData.zOff = zPat[k % 4];
+        sp.userData.xOff = xPat[k % 4];
+        sp.userData.cluster = cid;
+        if (sp.userData.baseX == null) sp.userData.baseX = sp.position.x;
+        if (sp.userData.baseZ == null) sp.userData.baseZ = sp.position.z;
+        sp.position.x = sp.userData.baseX + sp.userData.xOff;
+        sp.position.y = sp.userData.baseY + sp.userData.yOff;
+        sp.position.z = sp.userData.baseZ - sp.userData.zOff;
+      });
+    }
+  }
   o.bt.meshes(o.g, _shadowKeys); o.bt = null;
 }
 // ------------------------------------------------------------------ rolling stock: low-poly N-scale models (1:160), vertex-coloured; instance colour tints white parts
@@ -652,7 +740,7 @@ renderer.domElement.addEventListener('mousedown', e => { if (LOOKM(MODE) && !plc
 addEventListener('mouseup', () => walk.drag = null);
 addEventListener('mousemove', e => { if (!LOOKM(MODE) || plc.isLocked || !walk.drag) return; const dx = e.clientX - walk.drag[0], dy = e.clientY - walk.drag[1]; walk.drag = [e.clientX, e.clientY];
   _e.setFromQuaternion(camera.quaternion, 'YXZ'); _e.y -= dx * 0.004 / ZOOM.k; _e.x = Math.max(-1.5, Math.min(1.5, _e.x - dy * 0.004 / ZOOM.k)); camera.quaternion.setFromEuler(_e); });
-const _f = new THREE.Vector3(), _r = new THREE.Vector3();
+const _f = new THREE.Vector3(), _r = new THREE.Vector3(), _nameV = new THREE.Vector3();
 function updateWalk(dt) {
   const sp = (KEY.ShiftLeft || KEY.ShiftRight ? 100 : 50) * dt * (walk.spd || 1); /* [HEIGHT] seated rolls slower */ camera.getWorldDirection(_f); _f.y = 0; _f.normalize(); _r.set(-_f.z, 0, _f.x);
   let mx = 0, mz = 0; if (KEY.KeyW || KEY.ArrowUp) { mx += _f.x; mz += _f.z; } if (KEY.KeyS || KEY.ArrowDown) { mx -= _f.x; mz -= _f.z; } if (KEY.KeyD || KEY.ArrowRight) { mx += _r.x; mz += _r.z; } if (KEY.KeyA || KEY.ArrowLeft) { mx -= _r.x; mz -= _r.z; }
@@ -757,7 +845,132 @@ function loop(now) {
   const shwarm = SHCLEAR === 2; if (SHCLEAR === 3) SHCLEAR = 2; else if (shwarm) { renderer.shadowMap.needsUpdate = true; SHCLEAR = 0; }   // boot: frame 2 (lights set up) does one real shadow pass so the depth programs are compiled too, frame 3 clears
   let shp = null; if (SHCLEAR === 1) { shp = [sun.position.clone(), sun.target.position.clone()]; sun.position.y += 1e5; sun.target.position.y += 1e5; sun.target.updateMatrixWorld(); renderer.shadowMap.needsUpdate = true; SHCLEAR = 0; }
   if (L3D.ambience && L3D.ambience.update) L3D.ambience.update(dt);
-  /* [CHOCO-NAMES] fade: full within 70 in, gone past 150 in or closer than 3 in */ for (const o of LV) if (o.names && o.names.visible && o.g.visible !== false) for (const sp of o.names.children) { const d = camera.position.distanceTo(sp.position); sp.material.opacity = d < 3 ? 0 : d < 70 ? 1 : Math.max(0, 1 - (d - 70) / 80); sp.visible = sp.material.opacity > 0.02; }
+  /* [CHOCO-NAMES] fade: visible up close (Walk/Fly). Hide a label when the camera is above an upper deck that covers it in plan, or the camera-to-label ray hits that deck/fascia slab, or the chip would draw on a higher deck. Hide chips cut off by the viewport. Stagger, then drop leftover overlaps (stores before industries). */
+  {
+    const cam = camera.position, cand = [];
+    const underUpper = (sp) => {
+      const own = sp.userData.deck || 0;
+      for (const lv of LV) if (lv.deck > own + 0.5 && cam.y > lv.deck + 0.5 && onBoard(lv, sp.userData.baseX != null ? sp.userData.baseX : sp.position.x, sp.userData.baseZ != null ? sp.userData.baseZ : sp.position.z, 0)) return true;
+      return false;
+    };
+    const slabHit = (sp, ox, oy, oz) => {
+      const lx = ox != null ? ox : sp.position.x, ly = oy != null ? oy : sp.position.y, lz = oz != null ? oz : sp.position.z, dy = ly - cam.y, own = sp.userData.deck || 0;
+      for (const lv of LV) {
+        if (lv.deck <= own + 0.5) continue;
+        const thick = lv.L.id === 1 ? 4.75 : 2.75, yTop = lv.deck + 0.08, yBot = lv.deck - thick;
+        if (Math.abs(dy) < 1e-9) { if (cam.y >= yBot && cam.y <= yTop && onBoard(lv, (cam.x + lx) / 2, (cam.z + lz) / 2, -0.25)) return true; continue; }
+        let t0 = (yBot - cam.y) / dy, t1 = (yTop - cam.y) / dy; if (t0 > t1) { const s = t0; t0 = t1; t1 = s; }
+        const a = Math.max(0.02, t0), b = Math.min(0.98, t1); if (a > b) continue;
+        for (const tt of [a, (a + b) / 2, b]) { if (onBoard(lv, cam.x + tt * (lx - cam.x), cam.z + tt * (lz - cam.z), -0.25)) return true; }
+      }
+      return false;
+    };
+    const chipOnUpper = (c) => {
+      const own = c.sp.userData.deck || 0;
+      for (const lv of LV) {
+        if (lv.deck <= own + 0.5) continue;
+        for (const r of lv.L.boards) {
+          let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9, n = 0;
+          for (const [x, z] of [[r[0], r[1]], [r[2], r[1]], [r[2], r[3]], [r[0], r[3]]]) {
+            _nameV.set(x, lv.deck, z).project(camera);
+            if (_nameV.z < -1 || _nameV.z > 1) continue;
+            const sx = (_nameV.x * 0.5 + 0.5) * innerWidth, sy = (-_nameV.y * 0.5 + 0.5) * innerHeight;
+            minx = Math.min(minx, sx); maxx = Math.max(maxx, sx); miny = Math.min(miny, sy); maxy = Math.max(maxy, sy); n++;
+          }
+          if (n < 2) continue;
+          const ox = Math.max(0, Math.min(c.x1, maxx) - Math.max(c.x0, minx));
+          const oy = Math.max(0, Math.min(c.y1, maxy) - Math.max(c.y0, miny));
+          if (ox * oy > c.pw * c.ph * 0.2) return true;
+        }
+      }
+      return false;
+    };
+    const hangOff = (c) => {
+      const own = c.sp.userData.deck || 0, lv = LV.find(o => Math.abs(o.deck - own) < 0.5);
+      if (!lv) return false;
+      let minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9, n = 0;
+      for (const r of lv.L.boards) for (const [x, z] of [[r[0], r[1]], [r[2], r[1]], [r[2], r[3]], [r[0], r[3]]]) {
+        _nameV.set(x, lv.deck, z).project(camera);
+        if (_nameV.z < -1 || _nameV.z > 1) continue;
+        const sx = (_nameV.x * 0.5 + 0.5) * innerWidth, sy = (-_nameV.y * 0.5 + 0.5) * innerHeight;
+        minx = Math.min(minx, sx); maxx = Math.max(maxx, sx); miny = Math.min(miny, sy); maxy = Math.max(maxy, sy); n++;
+      }
+      if (n < 2) return false;
+      const pad = 10;
+      return c.x0 < minx - pad || c.x1 > maxx + pad || c.y0 < miny - pad || c.y1 > maxy + pad;
+    };
+    /* [CHOCO-NAMES] edge occlusion: a chip whose left/right end sits behind an upper deck would draw sliced by depth test; drop it instead. */
+    const _eV = new THREE.Vector3(), _rc = new THREE.Raycaster(), _rd = new THREE.Vector3();
+    const edgeHit = (c) => {
+      if (!L3 || c.d < 120 || c.d > 400 || cam.y < (c.sp.userData.deck || 0) + 1) return false;
+      const ud = c.sp.userData;
+      if (ud.occN != null && (nfr + (ud.occN | 0)) % 12 !== 0) return !!ud.occ;
+      ud.occN = ud.occN == null ? (Math.random() * 12) | 0 : ud.occN;
+      _nameV.copy(c.sp.position).project(camera); const zz = _nameV.z;
+      const mx = (c.x0 + c.x1) / 2, hw = (c.x1 - c.x0) / 2 / 1.55; let hit = false;
+      for (const fx of [mx - hw, mx, mx + hw]) for (const fy of [c.y1 - 2, c.y1 - (c.y1 - c.y0) / 3]) {
+        _eV.set(fx / innerWidth * 2 - 1, -(fy / innerHeight * 2 - 1), zz).unproject(camera);
+        _rd.copy(_eV).sub(cam); const dist = _rd.length(); _rd.normalize();
+        _rc.camera = camera; _rc.set(cam, _rd); _rc.near = 0; _rc.far = dist * 0.995;
+        if (_rc.intersectObject(L3.g, true).length) { hit = true; break; }
+      }
+      ud.occ = hit; return hit;
+    };
+        const proj = (c) => { _nameV.copy(c.sp.position).project(camera); c.sx = (_nameV.x * 0.5 + 0.5) * innerWidth; c.sy = (-_nameV.y * 0.5 + 0.5) * innerHeight; c.clip = _nameV.z; };
+    const box = (c) => { c.x0 = c.sx - c.pw / 2; c.x1 = c.sx + c.pw / 2; c.y0 = c.sy - c.ph; c.y1 = c.sy; };
+    const overlaps = (a, b) => a.x0 < b.x1 - 2 && b.x0 < a.x1 - 2 && a.y0 < b.y1 - 2 && b.y0 < a.y1 - 2;
+    const MARGIN = 6;
+    for (const o of LV) if (o.names && o.names.visible && o.g.visible !== false) for (const sp of o.names.children) {
+      const ud = sp.userData || {}, d = cam.distanceTo(sp.position);
+      let op = d < 300 ? 1 : Math.max(0, 1 - (d - 300) / 120);
+      if (ud.deck != null && cam.y < ud.deck - 0.25) op = 0;
+      if (ud.texShort) { const f = d < 150 ? ud.texFull : ud.texShort; if (sp.material.map !== f.tx) { sp.material.map = f.tx; sp.material.needsUpdate = true; } ud.w = f.tw; }
+      const yOff = ud.yOff || 0, zOff = ud.zOff || 0, xOff = ud.xOff || 0;
+      if (ud.baseX == null) ud.baseX = sp.position.x;
+      if (ud.baseZ == null) ud.baseZ = sp.position.z;
+      sp.position.x = ud.baseX + xOff;
+      sp.position.y = (ud.baseY != null ? ud.baseY : sp.position.y) + yOff;
+      sp.position.z = ud.baseZ - zOff;
+      if (op > 0.02 && (underUpper(sp) || slabHit(sp))) op = 0;
+      sp.material.opacity = op; sp.visible = op > 0.02;
+      if (sp.visible) {
+        const shrink = d <= 80 ? 1 : Math.max(0.40, 1 - (d - 80) / 250);
+        const hh = ((ud.h || 34) / 30) * 0.034 * shrink, ww = hh * (ud.w || 80) / (ud.h || 34);
+        sp.scale.set(ww, hh, 1);
+        const c = { sp, d, pw: (ud.w || 80) * shrink * 1.55, ph: (ud.h || 34) * shrink * 1.45, pri: ud.pri || 1, baseY: ud.baseY != null ? ud.baseY : sp.position.y - yOff, lift: yOff };
+        proj(c); box(c);
+        if (c.clip < -1 || c.clip > 1 || c.x0 < MARGIN || c.x1 > innerWidth - MARGIN || c.y0 < MARGIN || c.y1 > innerHeight - MARGIN || chipOnUpper(c) || hangOff(c) || edgeHit(c)) { sp.visible = false; sp.material.opacity = 0; continue; }
+        cand.push(c);
+      }
+    }
+    if (cand.length > 1) {
+      cand.sort((a, b) => (b.pri - a.pri) || (a.d - b.d));
+      for (let i = 1; i < cand.length; i++) {
+        const a = cand[i]; if (!a.sp.visible) continue;
+        const aUd = a.sp.userData || {}, sameCl = (b) => a.d < 90 && b.d < 90 && aUd.cluster != null && aUd.cluster === (b.sp.userData || {}).cluster;
+        for (let n = 0; n < 16; n++) {
+          let hit = null;
+          for (let j = 0; j < i; j++) { const b = cand[j]; if (b.sp.visible && overlaps(a, b)) { hit = b; break; } }
+          if (!hit) break;
+          const mate = sameCl(hit);
+          if (!mate && a.lift >= 2.6) { a.sp.visible = false; a.sp.material.opacity = 0; break; }
+          a.lift = Math.min(mate ? 3.4 : 2.6, a.lift + 0.22);
+          a.zPush = (a.zPush || 0) + (mate ? 0.18 : 0.08);
+          if (mate) a.xPush = (a.xPush || 0) + 0.28 * Math.sign((aUd.baseX || 0) - (hit.sp.userData.baseX || 0) || 1);
+          a.sp.position.x = (aUd.baseX != null ? aUd.baseX : a.sp.position.x) + (aUd.xOff || 0) + (a.xPush || 0);
+          a.sp.position.y = a.baseY + a.lift;
+          a.sp.position.z = (aUd.baseZ != null ? aUd.baseZ : a.sp.position.z) - (aUd.zOff || 0) - a.zPush;
+          proj(a); box(a);
+          if (!mate && (a.y0 < MARGIN || chipOnUpper(a))) { a.sp.visible = false; a.sp.material.opacity = 0; break; }
+        }
+        if (!a.sp.visible) continue;
+        for (let j = 0; j < i; j++) {
+          const b = cand[j];
+          if (b.sp.visible && overlaps(a, b) && !sameCl(b)) { a.sp.visible = false; a.sp.material.opacity = 0; break; }
+        }
+      }
+    }
+  }
   renderer.render(scene, camera); nfr++; acc += real; if (shwarm) SHCLEAR = 1; if (shp) { sun.position.copy(shp[0]); sun.target.position.copy(shp[1]); sun.target.updateMatrixWorld(); }
   if (acc >= 0.5) { STATS.fps = nfr / acc; STATS.calls = renderer.info.render.calls; STATS.tris = renderer.info.render.triangles; nfr = 0; acc = 0;
     (() => { const S = $('stats'); let t = S.querySelector('.stats-txt'); if (!t) { t = document.createElement('span'); t.className = 'stats-txt'; S.appendChild(t); } return t; })().textContent = /* [CHOCO-STATS] text in a child span so the minimise button survives */ `${STATS.fps.toFixed(0)} fps  ${STATS.calls} draw calls  ${(STATS.tris / 1000).toFixed(0)}k tris\n${MODE}${MODE === 'cab' || MODE === 'chase' ? ' · ' + (TRAINS[SEL] || {}).sym : ''} · ${SIM.paused ? 'paused' : SIM.mph + ' mph'} · quality ${Q}${renderer.shadowMap.enabled ? ' · shadows' : ''}`; }
